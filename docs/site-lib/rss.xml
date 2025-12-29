@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Database Designer Wiki]]></title><description><![CDATA[Obsidian digital garden]]></description><link>http://github.com/dylang/node-rss</link><image><url>site-lib/media/favicon.png</url><title>Database Designer Wiki</title><link></link></image><generator>Webpage HTML Export plugin for Obsidian</generator><lastBuildDate>Mon, 29 Dec 2025 01:14:20 GMT</lastBuildDate><atom:link href="site-lib/rss.xml" rel="self" type="application/rss+xml"/><pubDate>Mon, 29 Dec 2025 01:14:17 GMT</pubDate><ttl>60</ttl><dc:creator></dc:creator><item><title><![CDATA[Welcome]]></title><description><![CDATA[ <img alt="Plagues" src="assets/generic/library-header.png" referrerpolicy="no-referrer" target="_self" style="max-width: 100%;"> A Free, Open Source Solution That Allows You To Create Backends Without Code Database Designer is an offline, no-code PostgreSQL modeling tool that auto-generates SQL, documentation, and C# Entity Framework with PQC-resistant security. Windows • Linux (Soon) • Fully Offline • Post Quantum Computing Resistant • No BS ## How It WorksDatabase Designer provides a visual, schema-first workflow for building application backends. It generates:✅ Complete SQL files — schemas, tables, references, and indexes ready to deploy
+📘 Markdown documentation — clean, exportable, and team-friendly
+💻 Entity Framework–ready C# classes — plug-and-play with your applicationsInstead of writing raw SQL or juggling migrations manually, you:
+Design tables visually Define relationships and constraints explicitly Generate schemas, documentation, and code artifacts Keep everything offline and under your control The tool is designed to stay out of your runtime — it helps you design systems, not lock you into them.<br><img alt="left" height="140" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 140px; max-width: 100%;">Hey, you idiot! Don't just stand there staring—get over here already!I'm Masuki-chan, the mascot for this Database Designer thing you've got open. I've been waiting forever for someone to finally use it properly!Designing databases doesn't have to be all boring and tedious like building stupid walls, y'know? With me around, you'll whip up perfect schemas, SQL files, docs, and even C# models in no time! Then you can stop wasting hours and actually focus on creating awesome stuff!You do not link it into your application.
+You design, export, and implement however you want.Typical workflow:
+Create or open a project
+Define schemas and tables
+Add columns, indexes, and relationships
+Validate structure
+Export SQL / docs / models No runtime dependency No forced framework No surprises Code:<br>
+<a data-tooltip-position="top" aria-label="https://raw.githubusercontent.com/non-ai-licenses/non-ai-licenses/main/NON-AI-MPL-2.0" rel="noopener nofollow" class="external-link is-unresolved" href="https://raw.githubusercontent.com/non-ai-licenses/non-ai-licenses/main/NON-AI-MPL-2.0" target="_self">NON-AI MPL 2.0</a>This software is licensed under MPL 2.0 with the following exception:
+You may not offer this software, or any derivative work, as a hosted service, SaaS, or online application to third parties without explicit written permission from the copyright holder.
+Artwork:
+© Kennaness — NO AI training. NO reproduction. NO exceptions.
+Unauthorized use of the artwork — including copying, distribution, modification, or inclusion in any machine-learning training dataset — is strictly prohibited and will be prosecuted to the fullest extent of the law.
+]]></description><link>welcome.html</link><guid isPermaLink="false">Welcome.md</guid><pubDate>Mon, 29 Dec 2025 01:08:41 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[1. General Setup]]></title><description><![CDATA[You can find Database Designer on <a data-tooltip-position="top" aria-label="https://store.steampowered.com/app/4098880/Database_Designer/" rel="noopener nofollow" class="external-link is-unresolved" href="https://store.steampowered.com/app/4098880/Database_Designer/" target="_self">Steam</a> or
+<br><a data-tooltip-position="top" aria-label="https://walkerdev.itch.io/database-designer" rel="noopener nofollow" class="external-link is-unresolved" href="https://walkerdev.itch.io/database-designer" target="_self"> Itch.io</a> Start by launching Database Designer For Steam, you can simply head to your library and click "Start".
+For Itch.io, go to the location you extracted the .zip file to and click "Database Designer.exe" Leave the opening CMD to startup; this is completely part of Database Designer and handles a few things at the backend
+<br><img alt="Pasted image 20251228135731.png" src="assets/how-to/pasted-image-20251228135731.png" target="_self">At this point, you will be at the starting screen!<br>
+💜 Hotkeys Exist In Database Designer! <img alt="left" height="100" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 100px; max-width: 100%;">
+Database Designer has two shortcuts you can use from the start!
+Alt + M will (m)ute the sounds
+Alt + L will toggle the (l)ower bar's visibility ### 3. Creating an account
+To create an account with Database Designer, start by clicking the login button and create user.
+<br><img alt="Pasted image 20251228142547.png" src="assets/how-to/pasted-image-20251228142547.png" target="_self" style="width: 600px; max-width: 100%;"><br><img alt="Pasted image 20251228142724.png" src="assets/how-to/pasted-image-20251228142724.png" target="_self" style="width: 600px; max-width: 100%;">
+Now, set a username and password. The password must have an uppercase and lowercase letter, a symbol and be 12+ characters long. It's important to click "Continue" when done and not just switch to another tab.
+<br><img alt="Pasted image 20251228142916.png" src="assets/how-to/pasted-image-20251228142916.png" target="_self" style="width: 600px; max-width: 100%;"><br>
+💜 Switching Tabs Resets Login Data!
+<img alt="left" height="100" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 100px; max-width: 100%;">
+It may not look like it, but every time you switch back to the Basics Tab, the Username and Password information is reset!
+You will have to reenter the information and click continue.
+"But Why?" Mainly to help make sure your credentials are secured! Select an avatar PFP and click continue.<br>
+<img alt="Pasted image 20251228143551.png" src="assets/how-to/pasted-image-20251228143551.png" target="_self" style="width: 600px; max-width: 100%;"> Validate the information entered; if it looks good, click Finalize.<br>
+<img alt="Pasted image 20251228143710.png" src="assets/how-to/pasted-image-20251228143710.png" target="_self" style="width: 600px; max-width: 100%;"> Take the code from the next page and save it somewhere secure. In future updates, this code will allow you to reset your password. Do not share this code with ANYONE.<br>
+<img alt="Pasted image 20251228143917.png" src="assets/how-to/pasted-image-20251228143917.png" target="_self" style="width: 600px; max-width: 100%;"> ]]></description><link>tutorials-for-users/1.-general-setup.html</link><guid isPermaLink="false">Tutorials For Users/1. General Setup.md</guid><pubDate>Mon, 29 Dec 2025 01:04:01 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[Coming Soon...]]></title><link>tutorials-for-developers/coming-soon....html</link><guid isPermaLink="false">Tutorials For Developers/Coming Soon....md</guid><pubDate>Sun, 28 Dec 2025 23:51:14 GMT</pubDate></item><item><title><![CDATA[5. Creating Your First Table And Using The Table Viewer]]></title><description><![CDATA[To begin, start by clicking "Table Editor". You will see a UI similar to the file editor appear.<img alt="Pasted image 20251228162321.png" src="assets/how-to/pasted-image-20251228162321.png" target="_self" style="width: 600px; max-width: 100%;">💜Hard To Read? Change The Transparency! <br>
+<img alt="left" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 200px; max-width: 100%;">
+Sometimes, it might be hard to see what's happening because of what's going on in the background!
+To change this, slide the slider at the top right to change the transparency of the background!
+You can change transparency for windows separately, allowing you to prioritize some and ignore others if need be!
+Click the + button to open the table creation UI.
+You have the option of creating a completely new table and schema, or using a template.There must not be a table with the same name at the same schema.
+Templates with names will use their own table name unless it's taken at the area; at that point the table name you enter will be added in!
+Enter Schema&nbsp;(optional) – Leave blank for "public" schema. Use quotes for multi-part schemas (e.g.,&nbsp;"my.schema").
+Enter Table Name&nbsp;– Dots and spaces are automatically converted to underscores.
+Add Description&nbsp;(optional) – Describe the table's purpose.
+Click&nbsp;Finalize&nbsp;to create an empty table. You can add columns, indexes, and relationships afterward. Click&nbsp;Templates&nbsp;to open the template browser. Select a template to pre‑populate the table with: Columns with data types Indexes Foreign‑key relationships Custom SQL rows The table name you enter will be prefixed to each template table name (e.g.,&nbsp;mytable_users). Click&nbsp;Finalize&nbsp;to create all tables defined in the template. Names may contain: letters, numbers, underscores, parentheses, hyphens, equals, plus, commas, colons, semicolons, slashes, backslashes, exclamation, question marks, @, square brackets, curly braces, spaces, periods, and double quotes. Duplicate schema‑qualified table names are not allowed. Click&nbsp;Default&nbsp;to clear any selected template and return to manual table creation.From here, you can go back to the Table Editor. There are a few options you have;You can type at the top to find certain items, clicking the reload button to update the UI and clicking search will look for items.Typing Schema.Na will for example show"Schema_Name.Table"
+"Schema_Name.Table2"
+"Schema_Name_Goes.Table" and
+"Schema_Nap.Table"You can go back and forth between your searches through the button to the left of the inputfield to search through items.For now, the home and downloads page does nothing, but this will change in v1.2!<br><img alt="Pasted image 20251228165608.png" src="assets/how-to/pasted-image-20251228165608.png" target="_self" style="width: 600px; max-width: 100%;">]]></description><link>tutorials-for-users/5.-creating-your-first-table-and-using-the-table-viewer.html</link><guid isPermaLink="false">Tutorials For Users/5. Creating Your First Table And Using The Table Viewer.md</guid><pubDate>Sun, 28 Dec 2025 23:46:05 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[8. Best Practices]]></title><description><![CDATA[Databases are like towers; follow these tips to ensure you have a good foundation and don't end up needing to remake everything. Aim for at least 3NF (Third Normal Form) unless you have a specific reason to denormalize (e.g., read performance in reporting).
+PLEASE READ <a data-href="9. Understanding 3NF" href="tutorials-for-users/9.-understanding-3nf.html" class="internal-link" target="_self" rel="noopener nofollow">9. Understanding 3NF</a> Eliminate redundant data by splitting related information into separate tables. Use reference columns (foreign keys) instead of duplicating values. Tip: The designer’s reference validation on build will catch broken or dangling references early. Use singular, PascalCase or snake_case table names consistently (e.g., UserProfile, user_profile).
+Column names should be clear and descriptive (e.g., EmailAddress instead of email or str).
+Prefix related tables with a common schema (e.g., Auth.User, Auth.Role, Auth.Permission).
+Avoid reserved keywords (the build process auto-escapes C# keywords, but better to avoid them upfront). Every table should have a single, stable primary key.
+Prefer surrogate keys (e.g., Id BIGINT with SERIAL or IDENTITY) over natural keys for simplicity and performance.
+Mark the primary key column with Is Primary checked.
+Use Is Unique + Is Not Null for natural keys when needed. Enforce data integrity at the database level: NOT NULL for required fields
+UNIQUE for alternate keys (e.g., username, email)
+CHECK constraints for simple domain rules (e.g., Age &gt;= 0 AND Age &lt;= 150)
+Default values for common fallbacks (e.g., CreatedAt DEFAULT NOW()) The designer supports all of these directly in the row editor. Add indexes on: Foreign key columns (improves joins)
+Columns used in WHERE, ORDER BY, or GROUP BY clauses
+Frequently searched text fields (consider GIN for JSONB or full-text) Avoid over-indexing — each index adds write overhead.
+Use the Add Index option to create composite or partial indexes when needed. Design one-to-many, many-to-many, and one-to-one relationships using reference columns.
+Set appropriate On Delete / On Update actions (e.g., CASCADE, RESTRICT, SET NULL).
+Visualize relationships in the designer before building — broken references will block export. Fill in Table Description and Column Description fields.
+Exported Markdown documentation pulls directly from these — good habits here save time later.
+When creating templates, add rich overviews and per-table descriptions for future users. For file uploads or sensitive binary data: Use the built-in SecureMedia and SecureMediaSession types.
+Mark columns as Media or Encrypted (Non-Media) as appropriate. This ensures encryption at rest and controlled access patterns. It is however a custom type, so if you know what you're doing you can select something like bytes and set it to an array. Run Build Check frequently during design.
+Fix all validation errors before exporting — this prevents runtime surprises.
+Test generated SQL in a local PostgreSQL instance if possible. Create Row Templates for common patterns (e.g., Audit fields, Soft-delete, Multilingual).
+Create Project Templates for full application blueprints (e.g., Blog CMS, E-commerce core).
+Version your templates — the tool auto-increments v1, v2, etc. Use appropriate data types (e.g., INTEGER instead of BIGINT unless needed).
+Prefer fixed-length types when possible (e.g., CHAR(2) for country codes).
+For large text, consider TEXT over VARCHAR without limit.
+Enable array types only when truly needed — they can complicate queries. Design with future changes in mind: Add new columns as nullable first
+Use soft-delete (IsDeleted BOOLEAN DEFAULT FALSE) instead of hard deletes
+Version configuration tables rather than altering core schema Use a paper and pencil to draft what you want to do before you do it. Using PsuedoCode to draft out a template of what you want to have working and figuring out the limitations + things to set for future updates (Even if you don't actively use them yet) is always a SSS+
+By following these practices, your databases will be cleaner, safer, faster, and much easier to maintain as your application grows. ]]></description><link>tutorials-for-users/8.-best-practices.html</link><guid isPermaLink="false">Tutorials For Users/8. Best Practices.md</guid><pubDate>Sun, 28 Dec 2025 23:44:46 GMT</pubDate></item><item><title><![CDATA[9. Understanding 3NF]]></title><description><![CDATA[3NF means: "Don't repeat information that doesn't need to be repeated. If something can be looked up from another table, put it there instead."Imagine you're building a database to organize everything in the Muv-Luv universe — cadets, their TSF mechs, squadrons, etc.You stuff everything into one giant table:Problems:
+"Valkyries" is repeated over and over.
+"Japanese" shows up every single time someone uses a Japanese TSF.
+"Lieutenant" is copied for everyone with Takemikazuchi.
+If the UN decides to rename all Japanese TSFs to "Imperial Guard Type", you have to change it in every single row. One mistake and your data is broken forever.
+Adding a new Valkyrie cadet? Type "Valkyries" and "Japanese" again. So annoying.
+This is redundant and dangerous; your data will be CHOMP'd because you forgot to update one row.Split repeating info into its own tables.Now it's perfect:
+Change the squadron name once → fixed everywhere.
+Rename all Japanese TSFs? Just edit one row in the TSF table.
+Add a new cadet to Valkyries piloting Takemikazuchi? Just put Squadron ID 10 and TSF ID 30. No typing the same words again.
+Everything stays clean, no repeats, and changing one thing doesn't break the whole database.]]></description><link>tutorials-for-users/9.-understanding-3nf.html</link><guid isPermaLink="false">Tutorials For Users/9. Understanding 3NF.md</guid><pubDate>Sun, 28 Dec 2025 23:40:13 GMT</pubDate></item><item><title><![CDATA[7. Exporting Your Project And Creating Templates]]></title><description><![CDATA[The Build page in the Database Designer allows you to validate your project, export it as ready-to-use database artifacts (SQL, C# models, EF Core DbContext, documentation), and create reusable Table Templates or full Project Templates for sharing or future reuse.
+From the main designer, open the Build page (usually via a "Build Project" button or menu).
+Click Build Check to run a validation pass.
+<img alt="Build Project button" src="assets/how-to/pasted-image-20251228180637.png" target="_self">This checks for common issues, especially broken references (e.g., a foreign key pointing to a non-existent table or column). Any errors appear in the validation summary with clickable buttons that open a viewer for the problematic reference.
+Fix all reported errors before proceeding.
+Re-run Build Check until no errors remain.
+Once validation passes:
+Click Export → this switches to the build output panel.
+Click Build Project.
+The tool generates and saves the following files in a versioned folder (GeneratedDB/vX) inside your project directory:A success message appears briefly, and the button temporarily changes to "Built!".You can view all generated builds by clicking View Builds, which opens the GeneratedDB folder in your file explorer.<br><img alt="Pasted image 20251228182612.png" src="assets/how-to/pasted-image-20251228182612.png" target="_self" style="width: 600px; max-width: 100%;">Table templates let you package a subset of your tables (with rows, references, indexes, and optional descriptions) for reuse in other projects.
+In the Build page, click Export Specific Rows.
+Select one or more tables from the list on the left.
+(Optional) Add a custom description for each selected table in the editable grid on the right.
+Fill in template metadata: Pack Name (required)
+Overview (required)
+Author Name (required)
+Company, Website, License, Note (optional) Upload optional visuals: Banner Image (previewed instantly)
+Author Profile Picture (PFP) Review the summary on the right panel.
+Click Build Row Template when validation shows no errors.
+The template is saved as a .DsgnRowTmplate file inside a versioned folder under Projects/YourProject/Row Templates/PackName/vX, along with banner and PFP images if provided.These templates can later be imported into new or existing projects to quickly add pre-designed table structures.Project templates package an entire encrypted session (all tables, settings, etc.) for complete project reuse.<br><img alt="Pasted image 20251228182700.png" src="assets/how-to/pasted-image-20251228182700.png" target="_self" style="width: 600px; max-width: 100%;">
+In the Build page, click Export Template.
+Choose the project to template (typically your current one).
+Provide the same metadata as row templates: Pack Name, Overview, Author Name (required)
+Company, Website, License, Note (optional)
+Banner and Author PFP (optional) Click Build Project Template once validation passes.
+This creates a versioned folder under Projects/YourProject/Project Templates/PackName/vX containing:
+A .DsgnRowTmplate file with encrypted session data (using the public key "GLORYTOMANKIND")
+Banner and PFP images if uploaded
+Project templates allow full project blueprints to be shared and loaded elsewhere while keeping data encrypted.
+Always run Build Check first — it catches reference and integrity issues early.
+Use meaningful Pack Names and Overviews — they appear when browsing templates later.
+Include a banner and author image for professional-looking template listings.
+Templates are versioned automatically (v1, v2, …) so you can iterate without overwriting previous releases.
+With these export and template features, you can go from design to production-ready SQL/C# code in seconds, and easily share or reuse your database designs across projects!]]></description><link>tutorials-for-users/7.-exporting-your-project-and-creating-templates.html</link><guid isPermaLink="false">Tutorials For Users/7. Exporting Your Project And Creating Templates.md</guid><pubDate>Sun, 28 Dec 2025 23:27:04 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[6. Adding Data To Your First Table]]></title><description><![CDATA[To work with a specific table:
+Open your project in the OpenSilver Simulator or the drag-and-drop XAML Designer.
+Navigate through the visual tree or editor interface to locate the desired table item (e.g., a DataGrid instance).
+Click the table item to select it.
+<img alt="Table selection in the editor" src="assets/how-to/pasted-image-20251228170141.png" target="_self">Once selected, you'll gain access to advanced editing options, including adding new data structures. You can view values to the middle row and the detailed information for each to the right. You also have the option to delete and edit rows as you please.When a table is selected, you have three primary options for extending its structure:
+This creates a standard column for holding data fields or attributes.
+Ideal for adding simple properties like text, numbers, dates, or custom templates.
+After adding, configure the column's header, binding, width, and editing behavior in the properties panel.
+<br><img alt="Adding a new column" src="assets/how-to/pasted-image-20251228172157.png" target="_self">
+Enables indexing on the column for improved performance, uniqueness enforcement, or sorted display.
+Useful for primary keys and search optimization
+Configure index type (e.g., unique, non-unique) and apply it to one or more columns.
+<br><img alt="Adding an index option" src="assets/how-to/pasted-image-20251228172545.png" target="_self">
+Allows defining relationships between tables (similar to foreign keys).
+Supports data integrity by linking to primary keys in related tables.
+Great for relational data models, such as linking a "Orders" table to a "Customers" table.
+<br><img alt="Creating reference columns" src="assets/how-to/pasted-image-20251228172659.png" target="_self">To delete your table, you can click the "Delete Table" button twice within 10 seconds.]]></description><link>tutorials-for-users/6.-adding-data-to-your-first-table.html</link><guid isPermaLink="false">Tutorials For Users/6. Adding Data To Your First Table.md</guid><pubDate>Sun, 28 Dec 2025 23:05:47 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[4. Customizing Your Project]]></title><description><![CDATA[You can get a general overview of your project anytime by clicking the "General Projects" button on the desktop.<img alt="Pasted image 20251228153546.png" src="assets/how-to/pasted-image-20251228153546.png" target="_self" style="width: 800px; max-width: 100%;">Clicking Clear Screen removes all UI objects from it besides the basics; very useful for when you have a lot of pages open on your screen!Clicking Set Wallpaper opens the file browser, allowing you to replace the BG with your own.<br><img alt="Pasted image 20251228154001.png" src="assets/how-to/pasted-image-20251228154001.png" target="_self" style="width: 600px; max-width: 100%;">
+This supports PNGs, JPGs and GIFs. The project will also remember the wallpaper you select the next time you open it.Atop this, you can click "Edit Project". This will allow you to set the name of the project, the biography for it and a logo for it. The logo will auto update as soon as it's changed and can be a .PNG, .JPG or .GIF.<br><img alt="Pasted image 20251228154359.png" src="assets/how-to/pasted-image-20251228154359.png" target="_self" style="width: 600px; max-width: 100%;">You can also delete the project, which will send you back to a "No Project Selected" scene.The next time you open the projects list or information window, you will see the updates.<br><img alt="Pasted image 20251228154905.png" src="assets/how-to/pasted-image-20251228154905.png" target="_self" style="width: 600px; max-width: 100%;"><br><img alt="Pasted image 20251228154929.png" src="assets/how-to/pasted-image-20251228154929.png" target="_self" style="width: 600px; max-width: 100%;">]]></description><link>tutorials-for-users/4.-customizing-your-project.html</link><guid isPermaLink="false">Tutorials For Users/4. Customizing Your Project.md</guid><pubDate>Sun, 28 Dec 2025 21:40:31 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[3. Creating Your First Project]]></title><description><![CDATA[
+Start by clicking "Projects". From here, you can select to either create a new project or create an example. For this project, we will simply create a new project.
+<img alt="Pasted image 20251228151034.png" src="assets/how-to/pasted-image-20251228151034.png" target="_self" style="width: 600px; max-width: 100%;">
+2. Start by setting any project and row templates that you may like.<br><img alt="Pasted image 20251228151248.png" src="assets/how-to/pasted-image-20251228151248.png" target="_self" style="width: 600px; max-width: 100%;"><br>
+💜 BYOB (Bring Your Own Bemplates(?)) <img alt="left" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 200px; max-width: 100%;">
+Want to add your own templates to Database Designer's Rows or Projects UI?
+Go to DatabaseDesignData and find the folder for your account! From there,
+Project Templates Go To "DatabaseDesignerData\YOURUSERNAME\Project Templates"
+Row Templates Go To "DatabaseDesignerData\YOURUSERNAME\Row Templates"
+More On How To Make Your Own Later! Set a Project Name and Description, then click Enter!
+<br><img alt="Pasted image 20251228151955.png" src="assets/how-to/pasted-image-20251228151955.png" target="_self" style="width: 600px; max-width: 100%;"><br>
+<img alt="Pasted image 20251228152720.png" src="assets/how-to/pasted-image-20251228152720.png" target="_self" style="width: 600px; max-width: 100%;">💜OMGOMGOMGOMGOMGOMG!!! <br>
+<img alt="left" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 200px; max-width: 100%;">
+OMG HI AUNTIE MIRA! CAN YOU SEE ME?
+LOOK AT THE WORK I-
+Oh wait we're at work, my bad! 😅💦
+]]></description><link>tutorials-for-users/3.-creating-your-first-project.html</link><guid isPermaLink="false">Tutorials For Users/3. Creating Your First Project.md</guid><pubDate>Sun, 28 Dec 2025 20:30:15 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[2. Logging In And Music]]></title><description><![CDATA[
+Go to the startup screen once more and click login, then find your account
+<img alt="Pasted image 20251228144141.png" src="assets/how-to/pasted-image-20251228144141.png" target="_self" style="width: 600px; max-width: 100%;"><br><img alt="Pasted image 20251228144520.png" src="assets/how-to/pasted-image-20251228144520.png" target="_self" style="width: 600px; max-width: 100%;">
+Enter your password into the field and click enter
+<br><img alt="Pasted image 20251228144554.png" src="assets/how-to/pasted-image-20251228144554.png" target="_self" style="width: 600px; max-width: 100%;"><br>
+💜 Error 500??? Completely Normal <img alt="left" src="assets/masuki-chan/masuki_chan.png" target="_self" style="width: 200px; max-width: 100%;">
+Database Designer's security exists on a completely local API due to the goals around programming it earlier on!
+When a login error occurs, it appears as an Error 500 for this reason!
+Not to fear, it realistically means (Most Common) You typed in the wrong password
+There is an error with accessing the directory Database Designer is installed into or
+The backend API isn't working (Unlikely since the login screen wouldn't pop up when you click it) Once logged in, you can close the login screen!
+<br><img alt="Pasted image 20251228145454.png" src="assets/how-to/pasted-image-20251228145454.png" target="_self" style="width: 600px; max-width: 100%;">Wanting to change the volume of the music playing? Beyond Alt + M, you can look to the bottom right bar to see the settings available to you!Clicking the first will set the volume to 0 whereas the second will open or close the volume slider.<br><img alt="Pasted image 20251228145828.png" src="assets/how-to/pasted-image-20251228145828.png" target="_self" style="width: 600px; max-width: 100%;">Within Database Designer exists two song lists; the BECOME AS DUST album and Custom Songs.The BECOME AS D[U]ST album is a track of 20 songs composed by WalkerDev, based off of Nier, Muv-Luv and other media. The Custom Songs album lists any songs you place within the custom songs folder for playing, although as of v1.0 the playing aspect does not yet work and is WIP. You can create a folder for custom songs within your computer's default "Music" folder.<br><img alt="Pasted image 20251228150120.png" src="assets/how-to/pasted-image-20251228150120.png" target="_self" style="width: 600px; max-width: 100%;">]]></description><link>tutorials-for-users/2.-logging-in-and-music.html</link><guid isPermaLink="false">Tutorials For Users/2. Logging In And Music.md</guid><pubDate>Sun, 28 Dec 2025 20:07:46 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;.&quot;&gt;&lt;/figure&gt;</content:encoded></item></channel></rss>
