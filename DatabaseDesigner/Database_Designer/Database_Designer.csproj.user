@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup />
+  <ItemGroup>
+    <Compile Update="BasicDatabaseDesigner.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Build.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="ConfirmDeleteTable.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="CreateNewTableTemplateSelection.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="CreateTable.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DatabaseComposition.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DatabaseDesigner.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DatabaseTemplates.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DatabaseViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DateTimeInfo.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="DeleteProjectConfirm.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="EditProjectData.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="FAQ.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="FolderViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="GeneralPanel.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="ImageHelper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Login.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="LogoutConfirm.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MainDesigner.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MiraMiniPopup.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="MusicPlayer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Projects.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Roadmap.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="ProjectsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="WarningTables.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="BasicDatabaseDesigner.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Build.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="ConfirmDeleteTable.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="CreateNewTableTemplateSelection.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="CreateTable.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DatabaseComposition.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DatabaseDesigner.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DatabaseTemplates.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DatabaseViewer.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DateTimeInfo.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="DeleteProjectConfirm.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="EditProjectData.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="FAQ.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="FolderViewer.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="GeneralPanel.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Login.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="LogoutConfirm.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="MainDesigner.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="MiraMiniPopup.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="MusicPlayer.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Projects.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Roadmap.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="ProjectsView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="WarningTables.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>

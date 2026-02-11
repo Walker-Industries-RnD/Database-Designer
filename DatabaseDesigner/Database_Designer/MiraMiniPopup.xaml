@@ -1,0 +1,61 @@
+﻿<Page
+    x:Class="Database_Designer.MiraMiniPopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Database_Designer" Width="600" Height="260">
+
+    <Grid MaxWidth="600" MaxHeight="260" MinHeight="260" MinWidth="600" Visibility="Visible" IsEnabled="True" Name="MiraMiniPopupUI"
+ Width="600" Height="260">
+
+        <StackPanel MinHeight="260" MaxHeight="40">
+            <Grid MinHeight="40">
+                <Rectangle Fill="#454138" Stroke="Transparent" Height="40" VerticalAlignment="Top" Margin="0,0,4,0" />
+                <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                    <Image Margin="8,4,4,4"
+    Source="Assets/Images/WILogoNoText.png"
+    HorizontalAlignment="Left"
+    MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                    <TextBlock Foreground="#FFFFFF"
+        FontSize="18"
+        FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+        VerticalAlignment="Center"
+        Text="Mira UI" />
+                </StackPanel>
+                <StackPanel Width="81" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,-3" Height="39" >
+                    <Button Name = "ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Foreground>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <Grid VerticalAlignment="Top" MinHeight="220" MaxHeight="220">
+                <Image Stretch="Fill"
+                           VerticalAlignment="Top"
+                           MinHeight="220" MaxHeight="220"
+                           Source="Assets/Images/BG.png" HorizontalAlignment="Left" />
+                <Image HorizontalAlignment="Left"
+                           Source="Assets/Images/Mira/Neutral.png" Width="224" Name="MiraPopupImg" />
+
+                <StackPanel Margin="216,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="376" Height="216" Orientation="Vertical" Background="#00D4D4D4" >
+                    <TextBlock FontSize="20" LineHeight="14" Padding="0,40,40,0"
+             MaxWidth="360" MinWidth="360" MinHeight="100"
+             FontFamily="Assets/Fonts/Inter_28pt-Light.ttf"
+             Text="Welcome to Database Designer. I’m Mira; the one in charge of hardware development and I’ll be helping you create your backend." TextWrapping="Wrap" Name="MiraMiniText">
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <Button Foreground="AliceBlue"
+          Background="#9D9785"
+          MinWidth="340"
+          HorizontalAlignment="Left"
+          Content="Next" Width="340" Height="40" Margin="10,20,0,0" Name="MiraMiniButton" FontFamily="Assets/Fonts/Inter_28pt-Light.ttf" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Grid>
+
+
+</Page>

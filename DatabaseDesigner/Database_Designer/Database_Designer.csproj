@@ -1,0 +1,1397 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <DefineSilverlight>true</DefineSilverlight>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
+    <PackageReference Include="Ceras" Version="4.1.7" />
+    <PackageReference Include="Data.HashFunction.Blake3" Version="3.1.2" />
+    <PackageReference Include="EasyCompressor.LZ4" Version="2.1.0" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.3.8" />
+    <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="OpenSilver" Version="3.3.1" />
+    <PackageReference Include="OpenSilver.Themes.Modern" Version="3.3.*" />
+    <PackageReference Include="rm.Trie" Version="1.6.0" />
+    <PackageReference Include="System.Data.HashFunction.Interfaces" Version="2.0.0" />
+    <PackageReference Include="z440.atl.core" Version="7.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="BasicDatabaseDesigner.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Build.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfirmDeleteTable.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CreateNewTableTemplateSelection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CreateTable.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseComposition.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseDesigner.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseTemplates.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseViewer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DateTimeInfo.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DeleteProjectConfirm.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EditProjectData.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FAQ.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FolderViewer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GeneralPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Login.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LogoutConfirm.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainDesigner.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MiraMiniPopup.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MusicPlayer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Projects.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ProjectsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Roadmap.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TablesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WarningTables.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="BasicDatabaseDesigner.xaml.cs" />
+    <Compile Include="Build.xaml.cs" />
+    <Compile Include="ConfirmDeleteTable.xaml.cs" />
+    <Compile Include="CreateNewTableTemplateSelection.xaml.cs" />
+    <Compile Include="CreateTable.xaml.cs" />
+    <Compile Include="DatabaseComposition.xaml.cs" />
+    <Compile Include="DatabaseDesigner.xaml.cs" />
+    <Compile Include="DatabaseTemplates.xaml.cs" />
+    <Compile Include="DatabaseViewer.xaml.cs" />
+    <Compile Include="DateTimeInfo.xaml.cs" />
+    <Compile Include="DeleteProjectConfirm.xaml.cs" />
+    <Compile Include="EditProjectData.xaml.cs" />
+    <Compile Include="FAQ.xaml.cs" />
+    <Compile Include="FolderViewer.xaml.cs" />
+    <Compile Include="GeneralPanel.xaml.cs" />
+    <Compile Include="ImageHelper.cs" />
+    <Compile Include="Login.xaml.cs" />
+    <Compile Include="LogoutConfirm.xaml.cs" />
+    <Compile Include="MainDesigner.xaml.cs" />
+    <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="MiraMiniPopup.xaml.cs" />
+    <Compile Include="MusicPlayer.xaml.cs" />
+    <Compile Include="Projects.xaml.cs" />
+    <Compile Include="ProjectsView.xaml.cs" />
+    <Compile Include="Roadmap.xaml.cs" />
+    <Compile Include="TablesView.xaml.cs" />
+    <Compile Include="WarningTables.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\DBDesignerTemplate.json" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Black.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-BlackItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Bold.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-BoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraBold.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraLight.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraLightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Italic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Light.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-LightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Medium.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-MediumItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Regular.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-SemiBold.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-SemiBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Thin.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ThinItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Black.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-BlackItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Bold.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-BoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraBold.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraLight.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraLightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Italic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Light.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-LightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Medium.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-MediumItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Regular.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-SemiBold.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-SemiBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Thin.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ThinItalic.ttf" />
+    <Content Include="Assets\Images\app.ico" />
+    <Content Include="Assets\Images\AresPFP.jpg" />
+    <Content Include="Assets\Images\BG.png" />
+    <Content Include="Assets\Images\BGAlt.png" />
+    <Content Include="Assets\Images\BlackLogo.png" />
+    <Content Include="Assets\Images\BlankArtAboutUs.png" />
+    <Content Include="Assets\Images\Classroom1.png" />
+    <Content Include="Assets\Images\Classroom2.png" />
+    <Content Include="Assets\Images\Close.png" />
+    <Content Include="Assets\Images\DarkBG.png" />
+    <Content Include="Assets\Images\DatabaseDesigner.png" />
+    <Content Include="Assets\Images\DBDesignerBannerTemplate.png" />
+    <Content Include="Assets\Images\DBDesignerBG.png" />
+    <Content Include="Assets\Images\Default PFP.png" />
+    <Content Include="Assets\Images\DesignerTestGraphic.png" />
+    <Content Include="Assets\Images\ErickPFP.png" />
+    <Content Include="Assets\Images\Grid.png" />
+    <Content Include="Assets\Images\JPenaPFP.png" />
+    <Content Include="Assets\Images\Kenna98.jpg" />
+    <Content Include="Assets\Images\Kennaness.png" />
+    <Content Include="Assets\Images\LightBG.png" />
+    <Content Include="Assets\Images\loadinganim.gif" />
+    <Content Include="Assets\Images\Lock.png" />
+    <Content Include="Assets\Images\Logos\BasicDatabaseDesigner.png" />
+    <Content Include="Assets\Images\Logos\ControlPanel.png" />
+    <Content Include="Assets\Images\Logos\CreateTableTemplate.png" />
+    <Content Include="Assets\Images\Logos\DatabaseComposition.png" />
+    <Content Include="Assets\Images\Logos\DatabaseDesigner.png" />
+    <Content Include="Assets\Images\Logos\DatabaseTemplates.png" />
+    <Content Include="Assets\Images\Logos\DatabaseViewer.png" />
+    <Content Include="Assets\Images\Logos\EditProject.png" />
+    <Content Include="Assets\Images\Logos\FAQ.png" />
+    <Content Include="Assets\Images\Logos\File.png" />
+    <Content Include="Assets\Images\Logos\Folder.png" />
+    <Content Include="Assets\Images\Logos\FolderViewer.png" />
+    <Content Include="Assets\Images\Logos\Login.png" />
+    <Content Include="Assets\Images\Logos\LogoutConfirm.png" />
+    <Content Include="Assets\Images\Logos\MainDesigner.png" />
+    <Content Include="Assets\Images\Logos\MiraMiniPopupLogo.png" />
+    <Content Include="Assets\Images\Logos\Projects.png" />
+    <Content Include="Assets\Images\Logos\Roadmap.png" />
+    <Content Include="Assets\Images\Logos\Templates%28MainDesigner%29.png" />
+    <Content Include="Assets\Images\LowerBGNew.png" />
+    <Content Include="Assets\Images\Minimize.png" />
+    <Content Include="Assets\Images\Mira1.png" />
+    <Content Include="Assets\Images\Mira2.png" />
+    <Content Include="Assets\Images\Mira3.png" />
+    <Content Include="Assets\Images\Mira4.png" />
+    <Content Include="Assets\Images\Mira5.png" />
+    <Content Include="Assets\Images\MiraArt.png" />
+    <Content Include="Assets\Images\MiraBaddie.png" />
+    <Content Include="Assets\Images\MiraGraphic1.png" />
+    <Content Include="Assets\Images\MiraGraphic2.png" />
+    <Content Include="Assets\Images\MiraLineart.png" />
+    <Content Include="Assets\Images\MiraLineartAboutUs.png" />
+    <Content Include="Assets\Images\MiraNoGlasses.png" />
+    <Content Include="Assets\Images\miravertical.png" />
+    <Content Include="Assets\Images\Mira\Angry.png" />
+    <Content Include="Assets\Images\Mira\Happy.png" />
+    <Content Include="Assets\Images\Mira\MyBad.png" />
+    <Content Include="Assets\Images\Mira\Nervous.png" />
+    <Content Include="Assets\Images\Mira\Neutral.png" />
+    <Content Include="Assets\Images\Mira\THISDOESNTEXIST.png" />
+    <Content Include="Assets\Images\Mira\Ummm.png" />
+    <Content Include="Assets\Images\NewMira.png" />
+    <Content Include="Assets\Images\Non-Descript Row Banner.png" />
+    <Content Include="Assets\Images\Non-Descript Template Project Banner.png" />
+    <Content Include="Assets\Images\OlderWallpaper.png" />
+    <Content Include="Assets\Images\opening.gif" />
+    <Content Include="Assets\Images\PFPs\Ellipse 1.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 10.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 11.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 12.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 13.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 14.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 15.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 17.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 18.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 2.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 3.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 4.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 5.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 6.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 7.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 8.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 9.png" />
+    <Content Include="Assets\Images\PFPs\image.png" />
+    <Content Include="Assets\Images\ProjectExporterToolLogo.png" />
+    <Content Include="Assets\Images\Team\Database_AM_Weakness.png" />
+    <Content Include="Assets\Images\Team\Database_Chubu_Paper.png" />
+    <Content Include="Assets\Images\Team\Database_Erick_Evil.png" />
+    <Content Include="Assets\Images\Team\Database_John_Default.png" />
+    <Content Include="Assets\Images\Team\Database_Lisa_Nails.png" />
+    <Content Include="Assets\Images\Team\Database_Walker_Default.png" />
+    <Content Include="Assets\Images\TemplateImage.png" />
+    <Content Include="Assets\Images\UpperBGNew.png" />
+    <Content Include="Assets\Images\VolumeUI\BecomeAsDustCover.png" />
+    <Content Include="Assets\Images\VolumeUI\Before.png" />
+    <Content Include="Assets\Images\VolumeUI\Music.png" />
+    <Content Include="Assets\Images\VolumeUI\Next.png" />
+    <Content Include="Assets\Images\VolumeUI\NotFound.png" />
+    <Content Include="Assets\Images\VolumeUI\Pause.png" />
+    <Content Include="Assets\Images\VolumeUI\Play.png" />
+    <Content Include="Assets\Images\VolumeUI\Repeat.png" />
+    <Content Include="Assets\Images\VolumeUI\Shuffle.png" />
+    <Content Include="Assets\Images\VolumeUI\Stop.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol0.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol1.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol2.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol3.png" />
+    <Content Include="Assets\Images\WalkerDev.png" />
+    <Content Include="Assets\Images\WhiteLogo.png" />
+    <Content Include="Assets\Images\WILogoNoText.png" />
+    <Content Include="Assets\Images\WILogoWText.png" />
+    <Content Include="Assets\Images\Window.png" />
+    <Content Include="Assets\PariahAPI\appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PariahAPI\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PariahAPI\Pariah API.deps.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PariahAPI\Pariah API.runtimeconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PariahAPI\Pariah API.staticwebassets.endpoints.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Sounds\Album\A Fragile Longing - Piano Ver.mp3" />
+    <Content Include="Assets\Sounds\Album\A Fragile Longing.mp3" />
+    <Content Include="Assets\Sounds\Album\BloodStainedEthics.mp3" />
+    <Content Include="Assets\Sounds\Album\Confabulation.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Castle - Forgotten.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Castle - Memories.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Castle - Reminisce.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Pyre - Ascent.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Pyre - Summit.mp3" />
+    <Content Include="Assets\Sounds\Album\E.R.I.C. PROTOCOL.mp3" />
+    <Content Include="Assets\Sounds\Album\Existence Unwilling.mp3" />
+    <Content Include="Assets\Sounds\Album\Memory Shaped Coffin - Possession.mp3" />
+    <Content Include="Assets\Sounds\Album\Memory Shaped Coffin - Sin Covered Longing.mp3" />
+    <Content Include="Assets\Sounds\Album\Pariah%27s Tomb.mp3" />
+    <Content Include="Assets\Sounds\Album\Raindrops From Data.mp3" />
+    <Content Include="Assets\Sounds\Album\Sanguine Cathedral.mp3" />
+    <Content Include="Assets\Sounds\Album\Silent Departure.mp3" />
+    <Content Include="Assets\Sounds\Album\Snow Covered Memories.mp3" />
+    <Content Include="Assets\Sounds\Album\The Loss of Personification.mp3" />
+    <Content Include="Assets\Sounds\Album\Trance.mp3" />
+    <Content Include="Assets\Sounds\SFX\Build.mp3" />
+    <Content Include="Assets\Sounds\SFX\ButtonClick.mp3" />
+    <Content Include="Assets\Sounds\SFX\Close.mp3" />
+    <Content Include="Assets\Sounds\SFX\SFX1.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX2.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX3.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX4.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX5.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX6.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX8.MP3" />
+    <Content Include="Assets\Templates\Projects\Template.DsgnRowTmplate" />
+    <Content Include="DBDesignerTemplateRows.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\Images\back.svg" />
+    <None Include="Assets\PariahAPI\aspnetcorev2_inprocess.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\blake3_dotnet.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\BouncyCastle.Crypto.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Ceras.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\clretwrc.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\clrgc.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\clrjit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\coreclr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\createdump.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Data.HashFunction.Blake3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Data.HashFunction.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Data.HashFunction.Interfaces.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\DatabaseDesigner.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\EasyCompressor.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\EasyCompressor.LZ4.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\hostfxr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\hostpolicy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\K4os.Compression.LZ4.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\K4os.Compression.LZ4.Streams.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\K4os.Hash.xxHash.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Konscious.Security.Cryptography.Argon2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Konscious.Security.Cryptography.Blake2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Antiforgery.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authentication.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authentication.BearerToken.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authentication.Cookies.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authentication.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authentication.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authentication.OAuth.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authorization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Authorization.Policy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Components.Authorization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Components.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Components.Endpoints.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Components.Forms.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Components.Server.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Components.Web.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Connections.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.CookiePolicy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Cors.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Cryptography.Internal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.DataProtection.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.DataProtection.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.DataProtection.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Diagnostics.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Diagnostics.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Diagnostics.HealthChecks.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.HostFiltering.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Hosting.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Hosting.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Html.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.Connections.Common.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.Connections.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.Features.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Http.Results.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.HttpLogging.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.HttpOverrides.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.HttpsPolicy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Identity.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Localization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Localization.Routing.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Metadata.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.ApiExplorer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Cors.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.DataAnnotations.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Formatters.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Formatters.Xml.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Localization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.Razor.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.RazorPages.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.TagHelpers.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Mvc.ViewFeatures.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.OutputCaching.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.RateLimiting.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Razor.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Razor.Runtime.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.RequestDecompression.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.ResponseCaching.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.ResponseCaching.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.ResponseCompression.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Rewrite.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Routing.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Routing.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.HttpSys.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.IIS.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.IISIntegration.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.Kestrel.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.Kestrel.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.Kestrel.Transport.NamedPipes.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.Kestrel.Transport.Quic.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.Session.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.SignalR.Common.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.SignalR.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.SignalR.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.SignalR.Protocols.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.StaticFiles.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.WebSockets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.AspNetCore.WebUtilities.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.CSharp.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.DiaSymReader.Native.amd64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Caching.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Caching.Memory.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.Binder.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.CommandLine.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.EnvironmentVariables.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.FileExtensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.Ini.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.KeyPerFile.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.UserSecrets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Configuration.Xml.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.DependencyInjection.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.DependencyInjection.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Diagnostics.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Diagnostics.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Diagnostics.HealthChecks.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Features.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.FileProviders.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.FileProviders.Composite.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.FileProviders.Embedded.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.FileProviders.Physical.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.FileSystemGlobbing.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Hosting.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Hosting.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Http.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Identity.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Identity.Stores.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Localization.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Localization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.Abstractions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.Configuration.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.Console.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.Debug.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.EventLog.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.EventSource.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Logging.TraceSource.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.ObjectPool.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Options.ConfigurationExtensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Options.DataAnnotations.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Options.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Extensions.WebEncoders.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.JSInterop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Net.Http.Headers.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.OpenApi.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.VisualBasic.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.VisualBasic.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Win32.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Microsoft.Win32.Registry.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\mscordaccore.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\mscordbi.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\mscorlib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\mscorrc.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\msquic.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\netstandard.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Newtonsoft.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Pariah API.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Pariah API.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Pariah API.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\PariahCybersecurity.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Swashbuckle.AspNetCore.Swagger.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Swashbuckle.AspNetCore.SwaggerGen.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\Swashbuckle.AspNetCore.SwaggerUI.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.AppContext.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Buffers.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Collections.Concurrent.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Collections.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Collections.Immutable.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Collections.NonGeneric.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Collections.Specialized.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ComponentModel.Annotations.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ComponentModel.DataAnnotations.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ComponentModel.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ComponentModel.EventBasedAsync.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ComponentModel.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ComponentModel.TypeConverter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Configuration.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Console.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Data.Common.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Data.DataSetExtensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Data.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Data.HashFunction.Interfaces.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.Contracts.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.Debug.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.DiagnosticSource.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.EventLog.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.EventLog.Messages.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.FileVersionInfo.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.Process.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.StackTrace.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.TextWriterTraceListener.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.Tools.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.TraceSource.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Diagnostics.Tracing.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Drawing.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Drawing.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Dynamic.Runtime.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Formats.Asn1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Formats.Tar.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Globalization.Calendars.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Globalization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Globalization.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Compression.Brotli.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Compression.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Compression.FileSystem.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Compression.Native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Compression.ZipFile.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.FileSystem.AccessControl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.FileSystem.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.FileSystem.DriveInfo.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.FileSystem.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.FileSystem.Watcher.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.IsolatedStorage.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.MemoryMappedFiles.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Pipelines.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Pipes.AccessControl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.Pipes.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.IO.UnmanagedMemoryStream.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Linq.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Linq.Expressions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Linq.Parallel.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Linq.Queryable.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Memory.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Http.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Http.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.HttpListener.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Mail.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.NameResolution.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.NetworkInformation.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Ping.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Quic.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Requests.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Security.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.ServicePoint.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.Sockets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.WebClient.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.WebHeaderCollection.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.WebProxy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.WebSockets.Client.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Net.WebSockets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Numerics.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Numerics.Vectors.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ObjectModel.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Private.CoreLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Private.DataContractSerialization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Private.Uri.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Private.Xml.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Private.Xml.Linq.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.DispatchProxy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.Emit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.Emit.ILGeneration.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.Emit.Lightweight.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.Metadata.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Reflection.TypeExtensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Resources.Reader.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Resources.ResourceManager.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Resources.Writer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.CompilerServices.Unsafe.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.CompilerServices.VisualC.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Handles.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.InteropServices.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.InteropServices.JavaScript.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.InteropServices.RuntimeInformation.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Intrinsics.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Loader.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Numerics.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Serialization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Serialization.Formatters.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Serialization.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Serialization.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Runtime.Serialization.Xml.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.AccessControl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Claims.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Algorithms.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Cng.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Csp.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Encoding.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.OpenSsl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Pkcs.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Primitives.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.X509Certificates.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Cryptography.Xml.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Principal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.Principal.Windows.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Security.SecureString.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ServiceModel.Web.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ServiceProcess.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Text.Encoding.CodePages.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Text.Encoding.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Text.Encoding.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Text.Encodings.Web.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Text.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Text.RegularExpressions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Channels.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Overlapped.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.RateLimiting.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Tasks.Dataflow.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Tasks.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Tasks.Extensions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Tasks.Parallel.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Thread.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.ThreadPool.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Threading.Timer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Transactions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Transactions.Local.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.ValueTuple.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Web.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Web.HttpUtility.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Windows.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.Linq.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.ReaderWriter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.Serialization.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.XDocument.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.XmlDocument.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.XmlSerializer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.XPath.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\System.Xml.XPath.XDocument.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\PariahAPI\WindowsBase.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DatabaseDesigner.dll" />
+    <None Include="Database_Designer.csproj.user" />
+    <None Include="g0v0dzsd.wja~" />
+    <None Include="PariahCybersecurity.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="DatabaseDesigner">
+      <HintPath>DatabaseDesigner.dll</HintPath>
+    </Reference>
+    <Reference Include="PariahCybersecurity">
+      <HintPath>PariahCybersecurity.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

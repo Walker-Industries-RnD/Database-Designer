@@ -1,0 +1,301 @@
+﻿{
+  "Name": "Simple 2-Way Chat Server",
+  "Overview": "A minimal real-time chat backend with users, rooms, and persistent messages. Ideal for testing WebSocket servers, authentication flows, and message history.",
+  "AuthorName": "WalkerDev",
+  "Company": "Walker Industries",
+  "Website": "www.walkerindustries.xyz",
+  "License": "MIT + Malicious Affiliation Ban",
+  "Note": "Test template - feel free to modify!",
+  "Data": {
+    "sessionName": "ChatServer-Test",
+    "sessionDescription": "Simple 2-way chat server template",
+    "lastEdited": "2025-12-18T00:00:00Z",
+    "sessionLogo": null,
+    "tables": [
+      {
+        "tableName": "users",
+        "description": "Chat application users",
+        "schemaName": "public",
+        "rows": [
+          {
+            "name": "id",
+            "description": "Primary key",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Uuid",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": true,
+            "isUnique": false,
+            "isNotNull": false,
+            "defaultValue": "gen_random_uuid()",
+            "defaultIsPostgresFunction": true,
+            "check": null
+          },
+          {
+            "name": "username",
+            "description": "Unique username",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Text",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": true,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "display_name",
+            "description": "Display name shown in chat",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Text",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "created_at",
+            "description": "Account creation timestamp",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Timestamp",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": "now()",
+            "defaultIsPostgresFunction": true,
+            "check": null
+          }
+        ],
+        "references": [],
+        "indexes": [
+          {
+            "tableName": "public.users",
+            "indexName": "users_username_idx",
+            "columnNames": [ "username" ],
+            "indexType": "Basic",
+            "condition": null,
+            "expression": null,
+            "indexTypeCustom": null,
+            "useJsonbPathOps": null
+          }
+        ]
+      },
+      {
+        "tableName": "chat_rooms",
+        "description": "Chat rooms/channels",
+        "schemaName": "public",
+        "rows": [
+          {
+            "name": "id",
+            "description": "Primary key",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Uuid",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": true,
+            "isUnique": false,
+            "isNotNull": false,
+            "defaultValue": "gen_random_uuid()",
+            "defaultIsPostgresFunction": true,
+            "check": null
+          },
+          {
+            "name": "name",
+            "description": "Room name",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Text",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": true,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "created_by",
+            "description": "User who created the room",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Uuid",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "created_at",
+            "description": "Room creation time",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Timestamp",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": "now()",
+            "defaultIsPostgresFunction": true,
+            "check": null
+          }
+        ],
+        "references": [
+          {
+            "mainTable": "public.chat_rooms",
+            "refTable": "public.users",
+            "foreignKey": "created_by",
+            "refTableKey": "id",
+            "onDeleteAction": "SetNull",
+            "onUpdateAction": "NoAction"
+          }
+        ],
+        "indexes": []
+      },
+      {
+        "tableName": "messages",
+        "description": "Chat messages",
+        "schemaName": "public",
+        "rows": [
+          {
+            "name": "id",
+            "description": "Primary key",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Uuid",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": true,
+            "isUnique": false,
+            "isNotNull": false,
+            "defaultValue": "gen_random_uuid()",
+            "defaultIsPostgresFunction": true,
+            "check": null
+          },
+          {
+            "name": "room_id",
+            "description": "Room this message belongs to",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Uuid",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "sender_id",
+            "description": "User who sent the message",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Uuid",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "content",
+            "description": "Message text",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Text",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": null,
+            "defaultIsPostgresFunction": false,
+            "check": null
+          },
+          {
+            "name": "sent_at",
+            "description": "When message was sent",
+            "encryptedAndNOTMedia": false,
+            "media": false,
+            "rowType": "Timestamp",
+            "limit": null,
+            "isArray": false,
+            "arrayLimit": null,
+            "isPrimary": false,
+            "isUnique": false,
+            "isNotNull": true,
+            "defaultValue": "now()",
+            "defaultIsPostgresFunction": true,
+            "check": null
+          }
+        ],
+        "references": [
+          {
+            "mainTable": "public.messages",
+            "refTable": "public.chat_rooms",
+            "foreignKey": "room_id",
+            "refTableKey": "id",
+            "onDeleteAction": "Cascade",
+            "onUpdateAction": "NoAction"
+          },
+          {
+            "mainTable": "public.messages",
+            "refTable": "public.users",
+            "foreignKey": "sender_id",
+            "refTableKey": "id",
+            "onDeleteAction": "SetNull",
+            "onUpdateAction": "NoAction"
+          }
+        ],
+        "indexes": [
+          {
+            "tableName": "public.messages",
+            "indexName": "messages_room_sent_idx",
+            "columnNames": [ "room_id", "sent_at" ],
+            "indexType": "Basic",
+            "condition": null,
+            "expression": null,
+            "indexTypeCustom": null,
+            "useJsonbPathOps": null
+          }
+        ]
+      }
+    ],
+    "windowStatuses": {}
+  }
+}

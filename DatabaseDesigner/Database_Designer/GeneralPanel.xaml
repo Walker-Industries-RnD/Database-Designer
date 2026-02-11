@@ -1,0 +1,197 @@
+﻿<Page
+    x:Class="Database_Designer.GeneralPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Database_Designer" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignWidth="1360" d:DesignHeight="933.9999389648438" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+
+    <Grid x:Name="MainPanel" MaxWidth="833" MaxHeight="775" MinHeight="775" MinWidth="833" Visibility="Visible"  >
+
+
+        <StackPanel Width="833">
+            <Grid MinHeight="40">
+                <Rectangle Fill="#454138" Stroke="Transparent" Height="40" VerticalAlignment="Top" Margin="0,0,4,0" />
+                <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                    <Image Margin="8,4,4,4"
+  Source="Assets/Images/WILogoNoText.png"
+  HorizontalAlignment="Left"
+  MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                    <TextBlock Foreground="#FFFFFF"
+      FontSize="18"
+      FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+      VerticalAlignment="Center"
+      Text="General Project" />
+                </StackPanel>
+                <StackPanel Width="83" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,-3" Height="39" >
+                    <Button Name = "ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Foreground>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            <Grid VerticalAlignment="Top" Visibility="Visible">
+                <Image Stretch="Fill"
+                  VerticalAlignment="Top"
+                  MinHeight="240" MaxHeight="240"
+                  Source="Assets/Images/UpperBGNew.png" Height="240" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel Margin="0,5,0,20" Height="131">
+                        <Grid Height="85">
+                            <TextBlock MaxHeight="70" MinHeight="70"
+                                  VerticalAlignment="Center"
+                                  FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                                  FontSize="71"
+                                  Text="00:00" Name="TIme" Foreground="White" Margin="8,0,0,0" Height="88" >
+                            </TextBlock>
+                            <TextBlock
+                                  FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                                  FontSize="22"
+                                  VerticalAlignment="Bottom"
+                                  Text="xm" Name="TimeXM" Foreground="White" Margin="192,10,8,0" TextAlignment="Center" >
+                            </TextBlock>
+                            <TextBlock
+       FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+       FontSize="22"
+       VerticalAlignment="Bottom"
+       Text="00" Name="Seconds" Height="50" Margin="192,-30,8,0" Foreground="White" TextAlignment="Center" />
+                        </Grid>
+                        <TextBlock
+                              FontSize="28"
+                              FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                              Text="February 27th, 2205" Name="Date" Foreground="White" Height="47" >
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <Grid VerticalAlignment="Top" Visibility="Visible" Height="498">
+                <Rectangle Stroke="Gray" StrokeThickness="1" Fill="#FF454138" />
+                <Image Stretch="UniformToFill"
+                  VerticalAlignment="Top"
+                  Source="/Database_Designer;component/assets/images/lowerbgnew.png" Visibility="Visible" Height="496" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                </StackPanel>
+                <StackPanel Margin="32,88,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="256" Height="384" Orientation="Vertical" Background="#00D4D4D4" >
+                    <Image Source="/Database_Designer;component/assets/images/wilogonotext.png" Height="257" Width="253" />
+                    <TextBlock Text="Database Designer" FontSize="24" Height="35" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Margin="0,10,0,0" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock Text="“Create Worlds, Not Walls.”" FontSize="17" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Margin="0,0,0,0" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Margin="296,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="512" Height="384" Orientation="Vertical" Background="#00D4D4D4" >
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="-------------------------------------------------------------------------------" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="[ SYSTEM DIAGNOSTIC - Database Designer v1E ]" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+
+
+
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="-------------------------------------------------------------------------------" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Height="136" Background="#00D4D4D4" >
+                        <Image Source="/Database_Designer;component/assets/images/whitelogo.png" Width="160" Name="ProjectImg" />
+                        <StackPanel Width="346" Orientation="Vertical" Background="#00D4D4D4" >
+                            <TextBlock FontSize="16" Height="24" TextAlignment="Justify" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text=":: Project Overview" >
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock FontSize="16" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳  Name: Database Designer Test" TextWrapping="NoWrap" Name="Name" TextTrimming="CharacterEllipsis" >
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock FontSize="16" Height="42" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳  Description: A Test Of The Project Creation Capabilities Within Database Designer" TextWrapping="Wrap" IsEnabled="True" Foreground="White" Name="Desc" TextTrimming="CharacterEllipsis" MinHeight="42" MaxHeight="42" />
+                            <TextBlock FontSize="16" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳  Last Save: 11/6/2025, 10:46PM" Visibility="Visible" Name="LastEdited" >
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock FontSize="16" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳ Hash: 33203408435208" Name="Hash" >
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Height="42" Background="#00D4D4D4" >
+                        <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳ Table Count: 99.9k" Margin="16,0,0,0" Name="TableCount" >
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳ Row Count: 99.9k" Margin="16,0,0,0" Name="RowCount" >
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳ Reference Count: 99.9k" Margin="16,0,0,0" Name="RefCount" >
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="-------------------------------------------------------------------------------" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock FontSize="16" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text=":: User Overview" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock FontSize="16" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳ Username: R. Bartmoss" Name="Username" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Justify" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳  Total Amount Of Projects: 14" Name="ProjectsCount" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock FontSize="16" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="↳  Date Created 1/1/2025, 10:46PM" Name="AccCreated" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Text="-------------------------------------------------------------------------------" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock FontSize="16" Height="24" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Margin="0,10,0,0" Text="-------------------------------------------------------------------------------" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="800" Height="64" Orientation="Horizontal" Background="#00D4D4D4" Margin="32,0,0,8" >
+                    <Button Content="Clear Screen" Width="253" Height="34" Background="#FF9D9785" Margin="4,10,0,0" FontSize="13" Name="ClearScreen" />
+                    <Button Content="Set Wallpaper" Width="253" Height="34" Background="#FF9D9785" Margin="4,10,0,0" FontSize="13" Name="SetWallpaper" />
+                    <Button Content="Edit Project Info" Width="253" Height="34" Background="#FF8C3434" Margin="4,10,0,0" FontSize="13" Name="EditProjectInfo" />
+
+                </StackPanel>
+            </Grid>
+
+        </StackPanel>
+    </Grid>
+
+</Page>
