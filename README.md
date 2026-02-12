@@ -6,6 +6,16 @@
 
 <p align="center"> <strong>Windows • Linux (Soon) • Fully Offline • Post Quantum Computing Resistant • No BS</strong> </p>
 
+
+
+This github contains *all* the code for Database Designer in it's form when released; messy, digusting and functional (somehow)!
+Beyond this, a few things project wise has to be cleaned up eventually (Such as unused images and the like)!
+I'll possibly one day clean it but for now we are good
+
+Honestly, I want to focus on adding more stuff, and I really don’t want to touch the code for now beyond serious errors (Like the closing window issue and any issues with file generation).
+
+
+
 ## How It Works
 
 **Database Designer** provides a visual, schema-first workflow for building application backends. It generates:
@@ -26,13 +36,6 @@ Instead of writing raw SQL or juggling migrations manually, you:
     
 
 The tool is designed to stay **out of your runtime** — it helps you _design_ systems, not lock you into them.
-
-
-
-This github contains *all* the code for Database Designer in it's form when released; messy, digusting and functional (somehow)!
-Beyond this, a few things project wise has to be cleaned up eventually (Such as unused images and the like)!
-I'll possibly one day clean it but for now we are good
-
 
 
 ---
