@@ -27,6 +27,14 @@ Instead of writing raw SQL or juggling migrations manually, you:
 
 The tool is designed to stay **out of your runtime** — it helps you _design_ systems, not lock you into them.
 
+
+
+This github contains *all* the code for Database Designer in it's form when released; messy, digusting and functional (somehow)!
+Beyond this, a few things project wise has to be cleaned up eventually (Such as unused images and the like)!
+I'll possibly one day clean it but for now we are good
+
+
+
 ---
 
 ## 📖 Useful Links
@@ -36,6 +44,9 @@ For full documentation, guides, and tutorials, check out the **official wiki**:
 
 Want to get the app or support the project? Head over to **Steam**:  
 [Database Designer on Steam](https://store.steampowered.com/app/4098880/Database_Designer/)
+
+Want to see how your data is protected? Look at **Pariah Cybersecurity**;
+[Pariah Cybersecurity Wiki](https://github.com/Walker-Industries-RnD/PariahCybersecurity)
 
 
 ---
