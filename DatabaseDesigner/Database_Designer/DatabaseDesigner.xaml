@@ -1,0 +1,133 @@
+﻿<Page
+    x:Class="Database_Designer.DatabaseDesigner"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Database_Designer" Width="1310" Height="910" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignWidth="1360" d:DesignHeight="914" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+
+    <Grid x:Name="AboutDatabaseDesignerUI" MaxWidth="1310" MaxHeight="910" MinHeight="910" Width="1310" MinWidth="1310" Visibility="Visible"  >
+
+
+        <StackPanel MinHeight="910" MaxHeight="910">
+            <Grid MinHeight="40">
+                <Rectangle Fill="#454138" Stroke="Transparent" Height="40" VerticalAlignment="Top" Margin="0,0,12,0" />
+                <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                    <Image Margin="8,4,4,4"
+   Source="Assets/Images/WILogoNoText.png"
+   HorizontalAlignment="Left"
+   MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                    <TextBlock Foreground="#FFFFFF"
+       FontSize="18"
+       FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+       VerticalAlignment="Center"
+       Text="Database Designer" />
+                </StackPanel>
+                <StackPanel Width="71" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,-3" Height="39" >
+                    <Button Name = "ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Foreground>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            <Grid MaxHeight="860" MinHeight="860" Width="1298" HorizontalAlignment="Left" Visibility="Visible">
+                <Grid.Background>
+                    <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                </Grid.Background>
+                <Image Source="/Database_Designer;component/assets/images/miralineartaboutus.png" Margin="808,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1080" Height="864" />
+                <StackPanel Margin="80,56,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="656" Height="768" Orientation="Vertical" Background="#00D4D4D4" Visibility="Visible" Name="Main" >
+                    <Image Source="/Database_Designer;component/assets/images/blacklogo.png" Height="207" />
+                    <Image Source="/Database_Designer;component/assets/images/databasedesigner.png" Height="108" Margin="0,20,0,0" />
+                    <TextBlock FontSize="18" Height="104" TextAlignment="Center" TextWrapping="Wrap" Width="582" Margin="0,20,0,30" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Text="Database Designer makes creating PostgreSQL databases simple—no coding required! It automatically generates SQL files, Markdown documentation, Dapper-friendly C# classes, and full models/entities for easy integration. " Foreground="Black" />
+                    <Button Content="Roadmap" Height="44" Width="580" Margin="0,12,0,0" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Name="AboutRoadmapButton" >
+                        <Button.Background>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Background>
+                    </Button>
+                    <Button Content="F&amp;Q" Height="44" Width="580" Margin="0,6,0,0" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Name="AboutFAQButton" >
+                        <Button.Background>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Background>
+                    </Button>
+                    <Button Height="44" Width="580" Margin="0,6,0,0" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Content="Credits" Name="CreditsButton" >
+                        <Button.Background>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Background>
+                    </Button>
+                    <Button Content="Walker Industries" Height="44" Width="580" Margin="0,6,0,0" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Name="AboutWebsite" >
+                        <Button.Background>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Background>
+                    </Button>
+                </StackPanel>
+                <StackPanel Margin="80,56,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="656" Height="768" Orientation="Vertical" Background="#00D4D4D4" Name="Credits" Visibility="Collapsed" >
+                    <Image Source="/Database_Designer;component/assets/images/blacklogo.png" Height="207" />
+                    <Image Source="/Database_Designer;component/assets/images/databasedesigner.png" Height="108" Margin="0,20,0,0" />
+                    <TextBlock FontSize="18" Height="27" TextAlignment="Center" TextWrapping="Wrap" Width="582" Margin="0,20,0,10" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Text="Credits:" Foreground="Black" >
+                    </TextBlock>
+                    <StackPanel Height="303" Orientation="Horizontal" Background="#00D4D4D4" >
+                        <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" Width="656" Height="303" >
+                            <StackPanel Orientation="Vertical" Background="#00D4D4D4" >
+                                <Grid Height="136" Background="#00F0F0F0">
+                                    <Image Source="/Database_Designer;component/Assets/Images/Team/Database_Walker_Default.png" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="149" Height="137" Stretch="Fill" />
+                                    <TextBlock Text="WalkerDev" FontSize="26" Margin="152,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" />
+                                    <TextBlock Text="Founder / Lead Dev" FontSize="15" Margin="152,64,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" TextWrapping="Wrap" Width="128" />
+                                    <HyperlinkButton Content="His YouTube" NavigateUri="https://www.youtube.com/@walkerdev1" TargetName="_blank" Margin="152,104,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Cursor="Hand" Foreground="#FF0051FF" />
+                                    <TextBlock Text="&quot;Don't be afraid of change—Think of it as something that'll open the door to deeper, more precious feelings for you in the future.&quot;" FontSize="19" Margin="340,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="96" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" FontStyle="Italic" Width="287" TextWrapping="Wrap" Foreground="#FF000001" />
+                                </Grid>
+
+                                <Grid Height="136" Background="#00F0F0F0">
+                                    <Image Source="/Database_Designer;component/Assets/Images/Team/Database_Lisa_Nails.png" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="149" Height="137" Stretch="Fill" />
+                                    <TextBlock Text="KennaJoSmith" FontSize="26" Margin="152,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" />
+                                    <TextBlock Text="Lead Artist" FontSize="15" Margin="152,64,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" TextWrapping="Wrap" Width="128" />
+                                    <HyperlinkButton Content="Her Instagram" NavigateUri="https://www.instagram.com/kenna_jo_smith" TargetName="_blank" Margin="152,104,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Cursor="Hand" Foreground="#FF0051FF" />
+                                    <TextBlock Text="&quot;Hmu I draw furries&quot;" FontSize="19" Margin="340,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="96" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" FontStyle="Italic" Width="287" TextWrapping="Wrap" Foreground="#FF000001" />
+                                </Grid>
+
+                                <Grid Height="136" Background="#00F0F0F0">
+                                    <Image Source="/Database_Designer;component/Assets/Images/Team/Database_John_Default.png" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="149" Height="137" Stretch="Fill" />
+                                    <TextBlock Text="Jpena173" FontSize="26" Margin="152,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" />
+                                    <TextBlock Text="Backend Support / Development Help" FontSize="15" Margin="152,64,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" TextWrapping="Wrap" Width="144" />
+                                    <TextBlock Text="No Socials" FontSize="15" Margin="152,104,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF0051FF" />
+                                    <TextBlock Text="&quot;I cant think of a quote you can leave it alone for now&quot;" FontSize="19" Margin="340,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="96" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" FontStyle="Italic" Width="287" TextWrapping="Wrap" Foreground="#FF000001" />
+                                </Grid>
+
+                                <Grid Height="136" Background="#00F0F0F0">
+                                    <Image Source="/Database_Designer;component/Assets/Images/Team/Database_Erick_Evil.png" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="149" Height="137" Stretch="Fill" />
+                                    <TextBlock Text="IiErickiI" FontSize="26" Margin="152,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" />
+                                    <TextBlock Text="QA &amp; Creative Feedback" FontSize="15" Margin="152,64,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" TextWrapping="Wrap" Width="160" />
+                                    <TextBlock Text="No Socials" FontSize="15" Margin="152,104,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF0051FF" />
+                                    <TextBlock Text="&quot;The fake is of far greater value. In its deliberate attempt to be real, it’s more real than the real thing.&quot;" FontSize="19" Margin="340,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="96" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" FontStyle="Italic" Width="287" TextWrapping="Wrap" Foreground="#FF000001" />
+                                </Grid>
+
+                                <Grid Height="136" Background="#00F0F0F0">
+                                    <Image Source="/Database_Designer;component/Assets/Images/Team/Database_AM_Weakness.png" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="149" Height="137" Stretch="Fill" />
+                                    <TextBlock Text="AM" FontSize="26" Margin="152,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" />
+                                    <TextBlock Text="QA &amp; Creative Feedback" FontSize="15" Margin="152,64,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" TextWrapping="Wrap" Width="181" />
+                                    <TextBlock Text="No Socials" FontSize="15" Margin="152,104,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF0051FF" />
+                                    <TextBlock Text="&quot;Quis ut Deus?&quot;" FontSize="19" Margin="340,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="96" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" FontStyle="Italic" Width="287" TextWrapping="Wrap" Foreground="#FF000001" />
+                                </Grid>
+
+                                <Grid Height="136" Background="#00F0F0F0">
+                                    <Image Source="/Database_Designer;component/Assets/Images/Team/Database_Chubu_Paper.png" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="149" Height="137" Stretch="Fill" />
+                                    <TextBlock Text="Chubu" FontSize="26" Margin="152,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" />
+                                    <TextBlock Text="QA &amp; VN Artist" FontSize="15" Margin="152,64,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF000001" TextWrapping="Wrap" Width="128" />
+                                    <TextBlock Text="No Socials" FontSize="15" Margin="152,104,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" Foreground="#FF0051FF" />
+                                    <TextBlock Text="&quot;If you don't know how to do something, keep doing it! You'll figure it out eventually! :3&quot;" FontSize="19" Margin="340,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="96" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf#Inter" FontStyle="Italic" Width="287" TextWrapping="Wrap" Foreground="#FF000001" />
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </StackPanel>
+                    <Button Content="Back" Height="44" Width="580" Margin="0,12,0,0" FontFamily="Assets/Fonts/Inter_28pt-ExtraLight.ttf" Name="Back" >
+                        <Button.Background>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Background>
+                    </Button>
+
+                </StackPanel>
+
+
+            </Grid>
+        </StackPanel>
+    </Grid>
+
+</Page>

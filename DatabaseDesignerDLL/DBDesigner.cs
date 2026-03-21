@@ -42,7 +42,7 @@ namespace DatabaseDesigner
             // Range base typess
             Int4RangeBase, Int8RangeBase, NumRangeBase, TsRangeBase, TstzRangeBase, DateRangeBase,
             // Custom / advanced
-            CustomComposite, CustomEnum, CustomDomain,
+            CustomComposite, CustomEnum, CustomDomain, SecureMedia
         }
 
         public static readonly IReadOnlyDictionary<string, string> DefaultTypeMappings = new Dictionary<string, string>

@@ -1,0 +1,98 @@
+﻿<Page
+    x:Class="Database_Designer.Roadmap"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Database_Designer" Width="1310" Height="920">
+
+    <Grid x:Name="RoadmapUI" MaxWidth="1310" MaxHeight="920" MinHeight="920" Width="1310" MinWidth="1310" Visibility="Visible"
+Height="920">
+
+        <StackPanel VerticalAlignment="Center" MinHeight="920" MaxHeight="1310">
+            <!-- Header -->
+            <Grid MinHeight="40">
+                <Rectangle Fill="#454138" Stroke="Transparent" Height="40" VerticalAlignment="Top" Margin="0,0,12,0" />
+                <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                    <Image Margin="8,4,4,4"
+    Source="Assets/Images/WILogoNoText.png"
+    HorizontalAlignment="Left"
+    MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                    <TextBlock Foreground="#FFFFFF"
+        FontSize="18"
+        FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+        VerticalAlignment="Center"
+        Text="Roadmap" />
+                </StackPanel>
+                <StackPanel Width="71" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,-3" Height="39" >
+                    <Button Name = "ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Foreground>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+
+            <!-- Content Area -->
+            <Grid Height="880">
+                <Image Stretch="Fill" Height="880" Source="Assets/Images/BG.png"/>
+                <StackPanel Margin="0,0,16,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Visible" Width="1287" HorizontalScrollBarVisibility="Visible" HorizontalAlignment="Left" Height="867" Margin="10,0,0,0">
+                        <StackPanel Orientation="Horizontal" Name="MainPanel" Margin="0,0,10,0">
+                            <StackPanel Width="310" Orientation="Vertical" Background="Transparent" Name="Stack" Visibility="Collapsed" >
+
+
+                                <Grid Height="50" Background="#FF9D9785" Margin="0,5,0,0" Name="Phase" Visibility="Collapsed" >
+                                    <TextBlock Text="Phase 1" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="PhaseText" >
+                                        <TextBlock.Foreground>
+                                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
+                                </Grid>
+
+                                <Grid Height="30" Background="#FF9D9785" Margin="0,5,0,0" Name="SubPhase" Visibility="Collapsed" >
+                                    <TextBlock Text="[A]" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" >
+                                        <TextBlock.Foreground>
+                                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
+                                </Grid>
+
+                                <Grid Margin="0,5,0,0" Background="#FFA3B163" Visibility="Collapsed" Name="RoadmapItem" >
+                                    <TextBlock Text="Username/Password Based Login With 2FA" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Width="230" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,10" >
+                                        <TextBlock.Foreground>
+                                            <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
+                                </Grid>
+
+
+
+                            </StackPanel>
+                            <!-- Database Composition Title -->
+                            <!-- Composition Content -->
+
+
+
+
+
+
+
+
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </StackPanel>
+            </Grid>
+
+
+
+
+
+
+
+
+
+        </StackPanel>
+    </Grid>
+
+</Page>

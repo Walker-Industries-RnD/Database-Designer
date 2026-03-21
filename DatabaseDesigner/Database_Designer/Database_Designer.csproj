@@ -1,0 +1,357 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <DefineSilverlight>true</DefineSilverlight>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
+    <PackageReference Include="Ceras" Version="4.1.7" />
+    <PackageReference Include="Data.HashFunction.Blake3" Version="3.1.2" />
+    <PackageReference Include="EasyCompressor.LZ4" Version="2.1.0" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.3.8" />
+    <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="OpenSilver" Version="3.3.1" />
+    <PackageReference Include="OpenSilver.Themes.Modern" Version="3.3.*" />
+    <PackageReference Include="rm.Trie" Version="1.6.0" />
+    <PackageReference Include="System.Data.HashFunction.Interfaces" Version="2.0.0" />
+    <PackageReference Include="z440.atl.core" Version="7.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="BasicDatabaseDesigner.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Build.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfirmDeleteTable.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CreateNewTableTemplateSelection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CreateTable.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseComposition.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseDesigner.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseTemplates.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DatabaseViewer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DateTimeInfo.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DeleteProjectConfirm.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DLC.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EditProjectData.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FAQ.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FolderViewer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GeneralPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Login.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LogoutConfirm.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainDesigner.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MiraMiniPopup.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MusicPlayer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Projects.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ProjectsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Roadmap.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TablesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WarningTables.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="BasicDatabaseDesigner.xaml.cs" />
+    <Compile Include="Build.xaml.cs" />
+    <Compile Include="ConfirmDeleteTable.xaml.cs" />
+    <Compile Include="CreateNewTableTemplateSelection.xaml.cs" />
+    <Compile Include="CreateTable.xaml.cs" />
+    <Compile Include="DatabaseComposition.xaml.cs" />
+    <Compile Include="DatabaseDesigner.xaml.cs" />
+    <Compile Include="DatabaseTemplates.xaml.cs" />
+    <Compile Include="DatabaseViewer.xaml.cs" />
+    <Compile Include="DateTimeInfo.xaml.cs" />
+    <Compile Include="DeleteProjectConfirm.xaml.cs" />
+    <Compile Include="DLC.xaml.cs" />
+    <Compile Include="EditProjectData.xaml.cs" />
+    <Compile Include="FAQ.xaml.cs" />
+    <Compile Include="FolderViewer.xaml.cs" />
+    <Compile Include="GeneralPanel.xaml.cs" />
+    <Compile Include="ImageHelper.cs" />
+    <Compile Include="Login.xaml.cs" />
+    <Compile Include="LogoutConfirm.xaml.cs" />
+    <Compile Include="MainDesigner.xaml.cs" />
+    <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="MiraMiniPopup.xaml.cs" />
+    <Compile Include="MusicPlayer.xaml.cs" />
+    <Compile Include="Projects.xaml.cs" />
+    <Compile Include="ProjectsView.xaml.cs" />
+    <Compile Include="Roadmap.xaml.cs" />
+    <Compile Include="TablesView.xaml.cs" />
+    <Compile Include="WarningTables.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Black.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-BlackItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Bold.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-BoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraBold.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraLight.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ExtraLightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Italic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Light.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-LightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Medium.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-MediumItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Regular.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-SemiBold.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-SemiBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-Thin.ttf" />
+    <Content Include="Assets\Fonts\Inter\Inter_28pt-ThinItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Black.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-BlackItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Bold.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-BoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraBold.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraLight.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ExtraLightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Italic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Light.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-LightItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Medium.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-MediumItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Regular.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-SemiBold.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-SemiBoldItalic.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-Thin.ttf" />
+    <Content Include="Assets\Fonts\Inter_28pt-ThinItalic.ttf" />
+    <Content Include="Assets\Images\app.ico" />
+    <Content Include="Assets\Images\AresPFP.jpg" />
+    <Content Include="Assets\Images\BG.png" />
+    <Content Include="Assets\Images\BGAlt.png" />
+    <Content Include="Assets\Images\BGBlack.png" />
+    <Content Include="Assets\Images\BlackLogo.png" />
+    <Content Include="Assets\Images\BlankArtAboutUs.png" />
+    <Content Include="Assets\Images\Classroom1.png" />
+    <Content Include="Assets\Images\Classroom2.png" />
+    <Content Include="Assets\Images\Close.png" />
+    <Content Include="Assets\Images\DarkBG.png" />
+    <Content Include="Assets\Images\DatabaseDesigner.png" />
+    <Content Include="Assets\Images\DBDesignerBannerTemplate.png" />
+    <Content Include="Assets\Images\DBDesignerBG.png" />
+    <Content Include="Assets\Images\Default PFP.png" />
+    <Content Include="Assets\Images\DesignerTestGraphic.png" />
+    <Content Include="Assets\Images\DLC\DLCBG.png" />
+    <Content Include="Assets\Images\DLC\Header.png" />
+    <Content Include="Assets\Images\ErickPFP.png" />
+    <Content Include="Assets\Images\Grid.png" />
+    <Content Include="Assets\Images\JPenaPFP.png" />
+    <Content Include="Assets\Images\Kenna98.jpg" />
+    <Content Include="Assets\Images\Kennaness.png" />
+    <Content Include="Assets\Images\LightBG.png" />
+    <Content Include="Assets\Images\loadinganim.gif" />
+    <Content Include="Assets\Images\Lock.png" />
+    <Content Include="Assets\Images\Logos\BasicDatabaseDesigner.png" />
+    <Content Include="Assets\Images\Logos\ControlPanel.png" />
+    <Content Include="Assets\Images\Logos\CreateTableTemplate.png" />
+    <Content Include="Assets\Images\Logos\DatabaseComposition.png" />
+    <Content Include="Assets\Images\Logos\DatabaseDesigner.png" />
+    <Content Include="Assets\Images\Logos\DatabaseTemplates.png" />
+    <Content Include="Assets\Images\Logos\DatabaseViewer.png" />
+    <Content Include="Assets\Images\Logos\EditProject.png" />
+    <Content Include="Assets\Images\Logos\FAQ.png" />
+    <Content Include="Assets\Images\Logos\File.png" />
+    <Content Include="Assets\Images\Logos\Folder.png" />
+    <Content Include="Assets\Images\Logos\FolderViewer.png" />
+    <Content Include="Assets\Images\Logos\Login.png" />
+    <Content Include="Assets\Images\Logos\LogoutConfirm.png" />
+    <Content Include="Assets\Images\Logos\MainDesigner.png" />
+    <Content Include="Assets\Images\Logos\MiraMiniPopupLogo.png" />
+    <Content Include="Assets\Images\Logos\Projects.png" />
+    <Content Include="Assets\Images\Logos\Roadmap.png" />
+    <Content Include="Assets\Images\Logos\SupporterPack.png" />
+    <Content Include="Assets\Images\Logos\Templates%28MainDesigner%29.png" />
+    <Content Include="Assets\Images\LowerBGNew.png" />
+    <Content Include="Assets\Images\Masuki\Sleep.png" />
+    <Content Include="Assets\Images\Masuki\Studious.png" />
+    <Content Include="Assets\Images\Masuki\Happy.png" />
+    <Content Include="Assets\Images\Masuki\Nerd.png" />
+    <Content Include="Assets\Images\Masuki\Dizzy.png" />
+    <Content Include="Assets\Images\Minimize.png" />
+    <Content Include="Assets\Images\Mira1.png" />
+    <Content Include="Assets\Images\Mira2.png" />
+    <Content Include="Assets\Images\Mira3.png" />
+    <Content Include="Assets\Images\Mira4.png" />
+    <Content Include="Assets\Images\Mira5.png" />
+    <Content Include="Assets\Images\MiraArt.png" />
+    <Content Include="Assets\Images\MiraBaddie.png" />
+    <Content Include="Assets\Images\MiraGraphic1.png" />
+    <Content Include="Assets\Images\MiraGraphic2.png" />
+    <Content Include="Assets\Images\MiraLineart.png" />
+    <Content Include="Assets\Images\MiraLineartAboutUs.png" />
+    <Content Include="Assets\Images\MiraVN\MiraNeutral.png" />
+    <Content Include="Assets\Images\MiraNoGlasses.png" />
+    <Content Include="Assets\Images\miravertical.png" />
+    <Content Include="Assets\Images\Mira\Angry.png" />
+    <Content Include="Assets\Images\Mira\Happy.png" />
+    <Content Include="Assets\Images\Mira\MyBad.png" />
+    <Content Include="Assets\Images\Mira\Nervous.png" />
+    <Content Include="Assets\Images\Mira\Neutral.png" />
+    <Content Include="Assets\Images\Mira\THISDOESNTEXIST.png" />
+    <Content Include="Assets\Images\Mira\Ummm.png" />
+    <Content Include="Assets\Images\NewMira.png" />
+    <Content Include="Assets\Images\Non-Descript Row Banner.png" />
+    <Content Include="Assets\Images\Non-Descript Template Project Banner.png" />
+    <Content Include="Assets\Images\OlderWallpaper.png" />
+    <Content Include="Assets\Images\opening.gif" />
+    <Content Include="Assets\Images\PFPs\Ellipse 1.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 10.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 11.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 12.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 13.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 14.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 15.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 17.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 18.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 2.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 3.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 4.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 5.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 6.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 7.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 8.png" />
+    <Content Include="Assets\Images\PFPs\Ellipse 9.png" />
+    <Content Include="Assets\Images\PFPs\image.png" />
+    <Content Include="Assets\Images\ProjectExporterToolLogo.png" />
+    <Content Include="Assets\Images\Team\Database_AM_Weakness.png" />
+    <Content Include="Assets\Images\Team\Database_Chubu_Paper.png" />
+    <Content Include="Assets\Images\Team\Database_Erick_Evil.png" />
+    <Content Include="Assets\Images\Team\Database_John_Default.png" />
+    <Content Include="Assets\Images\Team\Database_Lisa_Nails.png" />
+    <Content Include="Assets\Images\Team\Database_Walker_Default.png" />
+    <Content Include="Assets\Images\TemplateImage.png" />
+    <Content Include="Assets\Images\UpperBGNew.png" />
+    <Content Include="Assets\Images\VolumeUI\BecomeAsDustCover.png" />
+    <Content Include="Assets\Images\VolumeUI\Before.png" />
+    <Content Include="Assets\Images\VolumeUI\Music.png" />
+    <Content Include="Assets\Images\VolumeUI\Next.png" />
+    <Content Include="Assets\Images\VolumeUI\NotFound.png" />
+    <Content Include="Assets\Images\VolumeUI\Pause.png" />
+    <Content Include="Assets\Images\VolumeUI\Play.png" />
+    <Content Include="Assets\Images\VolumeUI\Repeat.png" />
+    <Content Include="Assets\Images\VolumeUI\Shuffle.png" />
+    <Content Include="Assets\Images\VolumeUI\Stop.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol0.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol1.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol2.png" />
+    <Content Include="Assets\Images\VolumeUI\Vol3.png" />
+    <Content Include="Assets\Images\WalkerDev.png" />
+    <Content Include="Assets\Images\WhiteLogo.png" />
+    <Content Include="Assets\Images\WILogoNoText.png" />
+    <Content Include="Assets\Images\WILogoWText.png" />
+    <Content Include="Assets\Images\Window.png" />
+    <Content Include="Assets\Sounds\Album\A Fragile Longing - Piano Ver.mp3" />
+    <Content Include="Assets\Sounds\Album\A Fragile Longing.mp3" />
+    <Content Include="Assets\Sounds\Album\BloodStainedEthics.mp3" />
+    <Content Include="Assets\Sounds\Album\Confabulation.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Castle - Forgotten.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Castle - Memories.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Castle - Reminisce.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Pyre - Ascent.mp3" />
+    <Content Include="Assets\Sounds\Album\Dreglord%27s Pyre - Summit.mp3" />
+    <Content Include="Assets\Sounds\Album\E.R.I.C. PROTOCOL.mp3" />
+    <Content Include="Assets\Sounds\Album\Existence Unwilling.mp3" />
+    <Content Include="Assets\Sounds\Album\Memory Shaped Coffin - Possession.mp3" />
+    <Content Include="Assets\Sounds\Album\Memory Shaped Coffin - Sin Covered Longing.mp3" />
+    <Content Include="Assets\Sounds\Album\Pariah%27s Tomb.mp3" />
+    <Content Include="Assets\Sounds\Album\Raindrops From Data.mp3" />
+    <Content Include="Assets\Sounds\Album\Sanguine Cathedral.mp3" />
+    <Content Include="Assets\Sounds\Album\Silent Departure.mp3" />
+    <Content Include="Assets\Sounds\Album\Snow Covered Memories.mp3" />
+    <Content Include="Assets\Sounds\Album\The Loss of Personification.mp3" />
+    <Content Include="Assets\Sounds\Album\Trance.mp3" />
+    <Content Include="Assets\Sounds\SFX\Build.mp3" />
+    <Content Include="Assets\Sounds\SFX\ButtonClick.mp3" />
+    <Content Include="Assets\Sounds\SFX\Close.mp3" />
+    <Content Include="Assets\Sounds\SFX\SFX1.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX2.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX3.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX4.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX5.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX6.MP3" />
+    <Content Include="Assets\Sounds\SFX\SFX8.MP3" />
+    <Content Include="Assets\Templates\Projects\Template.DsgnRowTmplate" />
+    <Content Include="DBDesignerTemplateRows.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\Images\back.svg" />
+    <None Include="DatabaseDesigner.dll" />
+    <None Include="Database_Designer.csproj.user" />
+    <None Include="g0v0dzsd.wja~" />
+    <None Include="PariahCybersecurity.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="DatabaseDesigner">
+      <HintPath>DatabaseDesigner.dll</HintPath>
+    </Reference>
+    <Reference Include="PariahCybersecurity">
+      <HintPath>PariahCybersecurity.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

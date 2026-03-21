@@ -1,0 +1,242 @@
+﻿<Page
+    x:Class="Database_Designer.Login"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Database_Designer" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignWidth="1606.86669921875" d:DesignHeight="972" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" Width="1310" Height="920">
+
+    
+    
+    
+    
+    
+    
+    <Grid x:Name="LoginUI" MaxWidth="1310" MaxHeight="920" MinHeight="920" Width="1310" MinWidth="1310" Visibility="Visible" 
+ Height="920">
+        <Grid IsEnabled="True" Visibility="Visible" Background="#00F0F0F0" />
+        
+
+
+        <StackPanel VerticalAlignment="Center" MinHeight="920" MaxHeight="1310" Name="Window" Visibility="Visible" IsEnabled="True">
+            <!-- Header -->
+            <Grid MinHeight="40">
+                <Rectangle Fill="#454138" Stroke="Transparent" Height="40" VerticalAlignment="Top" Margin="0,0,12,0" />
+                <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                    <Image Margin="8,4,4,4"
+   Source="Assets/Images/WILogoNoText.png"
+   HorizontalAlignment="Left"
+   MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                    <TextBlock Foreground="#FFFFFF"
+       FontSize="18"
+       FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+       VerticalAlignment="Center"
+       Text="Account Manager" />
+                </StackPanel>
+                <StackPanel Width="71" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,-3" Height="39" >
+                    <Button Name = "ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Foreground>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Content Area -->
+            <Grid Height="880" Visibility="Visible" Name="LoginMain">
+                <Image Stretch="Fill" Height="880" Source="Assets/Images/BG.png" Name="BG" Visibility="Visible" Margin="0,0,0,0"/>
+                <Grid Name="Opening" Background="Transparent" Visibility="Collapsed" IsEnabled="True" >
+                    <Image Source="/Database_Designer;component/assets/images/opening.gif" HorizontalAlignment="Center" VerticalAlignment="Center" Width="1296" Height="728" Margin="-264,-152,-256,-16" IsEnabled="False" />
+<Button x:Name="OpeningButton">
+    <Button.Template>
+        <ControlTemplate TargetType="Button">
+            <Grid x:Name="RootGrid" Background="#0F474747">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal"/>
+
+                        <!-- Highlighted (hover) -->
+                        <VisualState x:Name="PointerOver">
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetName="RootGrid"
+                                                Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                To="#55474747" Duration="0:0:0.1"/>
+                            </Storyboard>
+                        </VisualState>
+
+                        <!-- Pressed (same as hover) -->
+                        <VisualState x:Name="Pressed">
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetName="RootGrid"
+                                                Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                To="#55474747" Duration="0:0:0.1"/>
+                            </Storyboard>
+                        </VisualState>
+
+                        <VisualState x:Name="Disabled">
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetName="RootGrid"
+                                                Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                To="#0F474747" Duration="0:0:0"/>
+                            </Storyboard>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+
+                <ContentPresenter HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+            </Grid>
+        </ControlTemplate>
+    </Button.Template>
+</Button>
+                    <TextBlock Text="Click This Window To Continue" FontSize="32" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,120" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" IsEnabled="False" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+
+                    <TextBlock Text="Coded By WalkerDev, Art By Kennaness" FontSize="14" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,70" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" IsEnabled="False" >
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+
+
+
+                </Grid>
+
+                <Grid Name="Accounts" Background="Transparent" Visibility="Collapsed" >
+                    <Image Source="/Database_Designer;component/assets/images/mira3.png" Stretch="UniformToFill" Margin="-96,-80,808,16" />
+                    <WrapPanel Margin="464,0,16,0" Background="Transparent" Orientation="Vertical" >
+                        <TextBlock Text="Who’s Using Database Designer?" FontSize="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,60,0,0" Width="835" >
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock Text="Click An Account To Log Into." FontSize="24" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" >
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <ScrollViewer Height="634" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Width="763" Margin="0,40,0,0" >
+                            <WrapPanel Orientation="Horizontal" Background="Transparent" Width="747" Name="UsersGrid" >
+                               
+                            </WrapPanel>
+                        </ScrollViewer>
+                    </WrapPanel>
+
+
+
+                </Grid>
+
+
+                <Grid Name="SignIn" Background="Transparent" Visibility="Collapsed">
+                    <WrapPanel Margin="64,0,568,0" Background="Transparent" Orientation="Vertical">
+                        <TextBlock Text="Please Enter Your Password!" FontSize="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,60,0,0" Width="835" Height="55">
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock Text="@username" FontSize="24" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" Name="LoginUsername">
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <Image Source="/Database_Designer;component/assets/images/blacklogo.png" Height="327" Width="320" Margin="0,60,0,40" Name="PFPLogin" />
+                        <TextBlock Text=" " FontSize="18" Height="24" Foreground="#FFD70000" TextAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="ErrorLogin" Visibility="Visible" Margin="0,0,0,30" />
+                        <PasswordBox Height="46" Password="" 
+             HorizontalContentAlignment="Center" 
+             VerticalContentAlignment="Center" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" VerticalAlignment="Center" Name="PasswordInputLogin">
+                            <PasswordBox.Background>
+                                <SolidColorBrush Color="{DynamicResource Theme_TextOnPrimaryColor}" />
+                            </PasswordBox.Background>
+                            <PasswordBox.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </PasswordBox.Foreground>
+                        </PasswordBox>
+                        <Button Content="Enter Password" Height="46" Margin="0,20,0,0" Background="#FF454138" Name="PasswordLogin" />
+                        <Button Content="Forgot Password? (Coming Soon)" Height="35" Margin="0,10,0,0" FontSize="12" Width="680" Background="#FF585653" />
+                        <Button Content="Cancel" Height="39" Margin="0,10,0,0" Background="#FF454138" FontSize="12" Name="CancelLogin" />
+
+
+                    </WrapPanel>
+
+                    <Image Source="/Database_Designer;component/assets/images/loadinganim.gif" Stretch="UniformToFill" RenderTransformOrigin="0,0" Margin="768,0,16,0">
+                    </Image>
+                </Grid>
+
+
+
+                <Grid Name="Welcome" Background="Transparent" Visibility="Collapsed" >
+                    <StackPanel Orientation="Vertical" Background="Transparent" >
+                        <TextBlock Text="Welcome, User!" FontSize="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,60,0,0" Width="835" Name="WelcomeText">
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock Text="Waking Up Mira..." FontSize="24" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" Name="FunText" Margin="0,0,0,20">
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <Image Source="/Database_Designer;component/assets/images/loadinganim.gif" Width="803" Height="644" />
+
+                        <TextBlock Text="(You can close this window!)" FontSize="24" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,20">
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        
+                    </StackPanel>
+
+
+
+                </Grid>
+
+
+                <Grid Name="SignUp" Background="Transparent" Visibility="Collapsed" >
+                    
+                    
+                    <TabControl Margin="480,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="816" Height="872" SelectedIndex="9" Name="CreateAccTabControl">
+                        
+                        
+
+
+                    </TabControl>
+
+
+
+                    <Image Source="/Database_Designer;component/assets/images/darkbg.png" HorizontalAlignment="Left" Width="456" Stretch="UniformToFill" Margin="0,0,0,16" />
+
+
+
+                </Grid>
+
+
+                <Grid Name="PasswordRestoreCode" Background="Transparent" Visibility="Collapsed" >
+
+
+
+                </Grid>
+
+
+                <Grid Name="ForgotPassword" Background="Transparent" Visibility="Collapsed" >
+
+
+
+                </Grid>
+
+
+
+            </Grid>
+
+
+
+
+
+
+
+
+
+        </StackPanel>
+    </Grid>
+
+</Page>

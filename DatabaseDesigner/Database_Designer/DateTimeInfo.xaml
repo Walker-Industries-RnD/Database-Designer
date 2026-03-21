@@ -1,0 +1,126 @@
+﻿<Page
+    x:Class="Database_Designer.DateTimeInfo"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Database_Designer" Width="470" Height="290">
+
+    <Grid x:Name="DateTimeInfoUI" MaxWidth="470" MaxHeight="290" MinHeight="290" Width="470" MinWidth="470" Visibility="Visible"  >
+
+
+        <StackPanel MinHeight="290" MaxHeight="290" Width="470" Height="290">
+            <Grid MinHeight="40">
+                <Rectangle Fill="#454138" Stroke="Transparent" Height="40" VerticalAlignment="Top" Margin="0,0,4,0" />
+                <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                    <Image Margin="8,4,4,4"
+   Source="Assets/Images/WILogoNoText.png"
+   HorizontalAlignment="Left"
+   MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                    <TextBlock Foreground="#FFFFFF"
+       FontSize="18"
+       FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+       VerticalAlignment="Center"
+       Text="Control Panel" />
+                </StackPanel>
+                <StackPanel Width="83" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,-3" Height="39" >
+                    <Button Name = "ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                        </Button.Foreground>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            <Grid VerticalAlignment="Top" MinHeight="250" MaxHeight="250">
+                <Image Stretch="Fill"
+                   VerticalAlignment="Top"
+                   MinHeight="240" MaxHeight="240"
+                   Source="Assets/Images/BG.png" Height="240" />
+                <StackPanel Margin="0,-60,0,0" MaxHeight="120" MinHeight="120" MinWidth="350" MaxWidth="350" Orientation="Horizontal">
+                    <Image Margin="0,0,20,0"
+                       Source="Assets/Images/BlackLogo.png" />
+                    <StackPanel Margin="0,5,0,20">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock MaxHeight="70" MinHeight="70"
+                                   VerticalAlignment="Bottom"
+                                   FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                                        Foreground="Black"
+                                   FontSize="64"
+                                   Text="00:00" Name="TIme" >
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock
+                                   FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                                   FontSize="24"
+                                   VerticalAlignment="Bottom"
+                                 Foreground="Black"
+                                   Text="xm" Name="TimeXM" >
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock
+        FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+        FontSize="16"
+        VerticalAlignment="Bottom"
+      Foreground="Black"
+        Text="00" Name="Seconds" Height="50" Margin="-30,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Margin="2,0,0,0"
+                               FontSize="22"
+                               FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                                    Foreground="Black"
+                               Text="February 27th, 2205" Name="Date" >
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+                <Grid Margin="0,0,0,44" MinHeight="40" MaxHeight="40" VerticalAlignment="Bottom" Height="40">
+                    <StackPanel HorizontalAlignment="Center"
+                            MaxHeight="60"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                        <Button Margin="5,0"
+                            MinHeight="35"
+                            FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                            Background="#9D9785"
+                            MinWidth="80"
+                            HorizontalAlignment="Center"
+                            Content="Build" Name="Build"  Foreground="Black"/>
+                        <Button Margin="5,0"
+                            MinHeight="35"
+                            FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                            Background="#9D9785"
+                            MinWidth="80"
+                            HorizontalAlignment="Center" Name="Exports" Foreground="Black" Content="Exports"
+ />
+                        <Button Margin="5,0"
+                            MinHeight="35"
+                            FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                            Background="#9D9785"
+                            MinWidth="80"
+                            HorizontalAlignment="Center"
+                            Content="Clean" Name="Clean"  Foreground="Black"/>
+                        
+                        <Button Margin="5,0"
+                            MinHeight="35"
+                            FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                            Background="#9D9785"
+                            MinWidth="80"
+                            HorizontalAlignment="Center"
+                            Content="Logout" Name="Logout"  Foreground="Black">
+                            <Button.Foreground>
+                                <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                            </Button.Foreground>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="TextBlock" FontSize="14" Margin="8,216,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" TextAlignment="Center" Width="448" Name="Setup" Visibility="Collapsed" />
+            </Grid>
+            
+        </StackPanel>
+    </Grid>
+
+</Page>

@@ -1,0 +1,273 @@
+﻿<Page
+    x:Class="Database_Designer.DatabaseViewer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="1224" Height="780"
+    Background="#F5F5F5" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignWidth="1265.60009765625" d:DesignHeight="780.7999267578125" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" MinWidth="1200" MinHeight="780">
+
+    <Page.Resources>
+        <!-- Fonts -->
+        <FontFamily x:Key="HeaderFont">Assets/Fonts/Inter_28pt-Bold.ttf#Inter</FontFamily>
+        <FontFamily x:Key="BodyFont">Assets/Fonts/Inter_28pt-Regular.ttf#Inter</FontFamily>
+
+        <!-- Colors -->
+        <SolidColorBrush x:Key="HeaderBackground" Color="#2E2E2E"/>
+        <SolidColorBrush x:Key="PanelBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="AccentBackground" Color="#3F3D56"/>
+        <SolidColorBrush x:Key="DividerBrush" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="TextLight" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextDark" Color="#333333"/>
+    </Page.Resources>
+
+    <Grid Margin="16" Background="#FFDCD8C0" Width="1200" Height="750">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
+            <!-- Header -->
+            <RowDefinition Height="*"/>
+            <!-- Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid MinHeight="40">
+            <Rectangle Fill="#454138" Stroke="Transparent" Height="56" VerticalAlignment="Top" Margin="0,0,8,0" />
+            <StackPanel Orientation="Horizontal" MinWidth="500" HorizontalAlignment="Left">
+                <Image Margin="8,4,4,4"
+   Source="Assets/Images/WILogoNoText.png"
+   HorizontalAlignment="Left"
+   MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
+                <TextBlock Foreground="#FFFFFF"
+       FontSize="18"
+       FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+       VerticalAlignment="Center"
+       Text="Database Viewer" />
+            </StackPanel>
+            <StackPanel Width="71" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,-3" Height="39" >
+                <Button Name ="ExitButton" Content="X" Width="36" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Background="#FFDCD8C0" HorizontalAlignment="Right" Height="37" >
+                    <Button.Foreground>
+                        <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
+                    </Button.Foreground>
+                </Button>
+            </StackPanel>
+            <Button Content="Delete Table" Margin="192,16,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="136" Height="32" FontFamily="{StaticResource BodyFont}" Background="#FFE90C0C" Name="DeleteTable" />
+        </Grid>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Table Overview -->
+            <Border Grid.Column="0" Background="{StaticResource PanelBackground}"
+                    CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1" Margin="8,0,16,16">
+                <StackPanel>
+                    <!-- Table Header -->
+                    <Border CornerRadius="6" Padding="8" Margin="0,0,0,12" Background="#FF454138">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <TextBlock Text="Table.TableName"
+                                       FontFamily="{StaticResource BodyFont}" FontSize="16"
+                                       Foreground="{StaticResource TextLight}" VerticalAlignment="Center" Name="TableNameUI"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Content -->
+                    <Button Height="39" Margin="0,6"
+                                BorderThickness="0" Padding="0" Background="#FF454138" Name="AddColumn">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Width="369">
+                            <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Add A New Column To The Table" 
+                                               FontFamily="{StaticResource BodyFont}" FontSize="13"
+                                               Foreground="{StaticResource TextLight}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Button>
+                    <Image Source="Assets/Images/BlackLogo.png" Width="160" Height="160"
+                           HorizontalAlignment="Center" Margin="0,12"/>
+                    <Rectangle Fill="{StaticResource DividerBrush}" Height="1" Margin="0,12"/>
+                    <TextBlock Text="No Description Provided."
+                               FontFamily="{StaticResource BodyFont}" FontSize="14"
+                               Foreground="{StaticResource TextDark}" 
+                               TextAlignment="Center" Margin="0,8" Name="TableDetails" Height="52"/>
+                    <Rectangle StrokeThickness="1" Height="130" Stroke="#00808080" Fill="#00D4D4D4" Name="ClearScreen" />
+                    <Button Height="50" Margin="0,6"
+         BorderThickness="0" Padding="8,0" Background="#FF454138" Width="384" Name="AddNewIndex" Visibility="Visible">
+                        <StackPanel Orientation="Horizontal" Width="432">
+                            <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <StackPanel Width="307">
+                                <TextBlock Text="Add A New Index To The Table" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="13"
+                        Foreground="{StaticResource TextLight}"/>
+                                <TextBlock Text="Create Reference Information For This Table" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="12"
+                        Foreground="#DDD"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Button>
+
+
+
+                    <Button Height="50" Margin="0,6"
+         BorderThickness="0" Padding="8,0" Background="#FF454138" Width="384" Name="AddNewRef" Visibility="Visible">
+                        <StackPanel Orientation="Horizontal" Width="432">
+                            <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <StackPanel Width="307">
+                                <TextBlock Text="Add A New Reference To The Table" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="13"
+                        Foreground="{StaticResource TextLight}"/>
+                                <TextBlock Text="Create Index Information For This Table" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="12"
+                        Foreground="#DDD"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Height="50" Margin="0,6"
+         BorderThickness="0" Padding="8,0" Background="#FF454138" Width="384" Name="EditData" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Width="432">
+                            <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <StackPanel Width="307">
+                                <TextBlock Text="Edit Data Info" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="13"
+                        Foreground="{StaticResource TextLight}"/>
+                                <TextBlock Text="Edit The  Information For This Data Value" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="12"
+                        Foreground="#DDD"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Button>
+                    <Button Height="50" Margin="0,6"
+         BorderThickness="0" Padding="8,0" Background="#FF454138" Width="384" Name="DeleteData" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Width="432">
+                            <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                            <StackPanel Width="307">
+                                <TextBlock 
+                        FontFamily="{StaticResource BodyFont}" FontSize="13"
+                        Foreground="{StaticResource TextLight}" Text="Delete Data"/>
+                                <TextBlock Text="Deletes The Value Within The Table" 
+                        FontFamily="{StaticResource BodyFont}" FontSize="12"
+                        Foreground="#DDD"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Button>
+                    <!-- Preview Button -->
+                </StackPanel>
+            </Border>
+
+            <!-- Item List -->
+            <Border Grid.Column="1" Background="{StaticResource PanelBackground}"
+                    CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1" Margin="0,0,12,16">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Name="RowButtons">
+                        <!-- Example Item -->
+                       
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Detail View -->
+            <Border Grid.Column="2" Background="{StaticResource PanelBackground}"
+                    CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1" Margin="0,0,16,16" Name="DetailsPanel" Visibility="Visible">
+                <StackPanel Visibility="Visible">
+                    <TextBlock Text="Details"
+                               FontFamily="{StaticResource HeaderFont}" FontSize="19"
+                               Foreground="{StaticResource TextDark}" Margin="0,0,0,12"/>
+
+                    <ScrollViewer Height="359" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <StackPanel Name="RowDetailsList">
+                            <!-- Repeat -->
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Rectangle Fill="{StaticResource DividerBrush}" Height="1" Margin="0,16"/>
+                    <Image Source="Assets/Images/BlackLogo.png" Width="120" Height="120" HorizontalAlignment="Center" Margin="0,12"/>
+                    <TextBlock Text="Item Name Goes Here..." 
+                               FontFamily="{StaticResource HeaderFont}" FontSize="16"
+                               Foreground="{StaticResource TextDark}" TextAlignment="Center" Margin="0,4" Name="RowName"/>
+                    <TextBlock Text="The Selected Valu"
+                               FontFamily="{StaticResource BodyFont}" FontSize="14"
+                               Foreground="#666" TextAlignment="Center" Height="28" Name="RowDetails"/>
+                    <TextBlock Text="SelectedValue"
+                            FontFamily="{StaticResource BodyFont}" FontSize="14"
+                            Foreground="#666" TextAlignment="Center" Height="28" Name="SelectedVal"/>
+
+
+
+                </StackPanel>
+            </Border>
+
+            <!-- Preview Panel (fixed child property issue) -->
+            <Border Grid.Column="2" Background="{StaticResource PanelBackground}"
+                    CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1" Margin="0,0,16,16" Name="PreviewPanel" Visibility="Collapsed">
+                <Grid>
+                    <StackPanel Visibility="Collapsed">
+                        <TextBlock Text="Details"
+                                   FontFamily="{StaticResource HeaderFont}" FontSize="18"
+                                   Foreground="{StaticResource TextDark}" Margin="0,0,0,12"/>
+
+                        <ScrollViewer Height="220" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,6">
+                                    <Image Source="Assets/Images/BlackLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                                    <TextBlock Text="id – Self Incriminating"
+                                               FontFamily="{StaticResource BodyFont}" FontSize="14"
+                                               Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <!-- Repeat -->
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <Rectangle Fill="{StaticResource DividerBrush}" Height="1" Margin="0,16"/>
+                        <Image Source="Assets/Images/BlackLogo.png" Width="120" Height="120" HorizontalAlignment="Center" Margin="0,12"/>
+                        <TextBlock Text="Item Name Goes Here..." 
+                                   FontFamily="{StaticResource HeaderFont}" FontSize="16"
+                                   Foreground="{StaticResource TextDark}" TextAlignment="Center" Margin="0,4"/>
+                        <TextBlock Text="Additional Info"
+                                   FontFamily="{StaticResource BodyFont}" FontSize="14"
+                                   Foreground="#666" TextAlignment="Center" Height="28"/>
+
+                        <Button Height="50" Margin="0,6"
+                               BorderThickness="0" Padding="8,0" Background="#FF454138" Width="456">
+                            <StackPanel Orientation="Horizontal" Width="432">
+                                <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                                <StackPanel Width="307">
+                                    <TextBlock Text="Edit Index Info" 
+                                              FontFamily="{StaticResource BodyFont}" FontSize="14"
+                                              Foreground="{StaticResource TextLight}"/>
+                                    <TextBlock Text="Create or Edit The Index Information For This Data Value" 
+                                              FontFamily="{StaticResource BodyFont}" FontSize="12"
+                                              Foreground="#DDD"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Height="50" Margin="0,6"
+                               BorderThickness="0" Padding="8,0" Background="#FF454138" Width="456">
+                            <StackPanel Orientation="Horizontal" Width="432">
+                                <Image Source="Assets/Images/WhiteLogo.png" Width="24" Height="24" Margin="0,0,8,0"/>
+                                <StackPanel Width="307">
+                                    <TextBlock 
+                                              FontFamily="{StaticResource BodyFont}" FontSize="14"
+                                              Foreground="{StaticResource TextLight}" Text="Delete Column"/>
+                                    <TextBlock Text="Deletes The Column Within The Table" 
+                                              FontFamily="{StaticResource BodyFont}" FontSize="12"
+                                              Foreground="#DDD"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <Grid Visibility="Visible" VerticalAlignment="Center" Height="32">
+                        <TextBlock Text="Click A Value To View It's Properties!"
+                                   FontFamily="{StaticResource BodyFont}" FontSize="18"
+                                   Foreground="{StaticResource TextDark}" Margin="0,0,0,6" TextAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+
+
+</Page>
