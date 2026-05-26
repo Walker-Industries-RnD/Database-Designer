@@ -1,0 +1,96 @@
+<Page x:Class="Database_Designer.APIPage3Functions"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:Database_Designer">
+
+    <Grid Background="#0E0E0E">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#1A1A1A" Padding="16,12">
+            <Grid>
+                <StackPanel HorizontalAlignment="Left">
+                    <TextBlock Text="API Editor" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                    <TextBlock Text="Step 3 of 3: Functions" Foreground="#888" FontSize="12" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button x:Name="CloseBtn" Content="X Close" Background="#262626" Foreground="#888"
+                            Height="32" Padding="12,0" Margin="0,0,8,0"
+                            BorderBrush="#444" BorderThickness="1" FontSize="12"/>
+                    <Button x:Name="SaveBtn" Content="Save" Background="#39A95F" Foreground="White"
+                            Height="32" Padding="12,0" Margin="0,0,12,0"
+                            BorderThickness="0" FontSize="12" FontWeight="Bold"/>
+                    <ComboBox x:Name="VerbComboBox" Width="100" Height="32"
+                              Background="#1A1A1A" Foreground="White"
+                              BorderBrush="#333" BorderThickness="1"
+                              FontSize="12">
+                        <ComboBoxItem Content="GET" IsSelected="True"/>
+                        <ComboBoxItem Content="POST"/>
+                        <ComboBoxItem Content="PUT"/>
+                        <ComboBoxItem Content="DELETE"/>
+                        <ComboBoxItem Content="PATCH"/>
+                    </ComboBox>
+                    <TextBox x:Name="NewFunctionNameBox" Width="180" Height="32"
+                             Background="#1A1A1A" Foreground="White"
+                             BorderBrush="#333" BorderThickness="1"
+                             Padding="8,4" FontSize="12" Margin="8,0,0,0"
+                             PlaceholderText="Function name..."/>
+                    <Button x:Name="CreateNewFunctionBtn" Content="Add Function"
+                            Background="#BB8FFF" Foreground="White"
+                            Height="32" Padding="16,0" Margin="8,0,0,0"
+                            BorderThickness="0" FontSize="12" FontWeight="Bold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#1A1A1A" CornerRadius="8"
+                    Padding="20" Margin="0,0,16,0">
+                <StackPanel>
+                    <TextBlock x:Name="EndpointNameText" Text="No endpoint selected"
+                               Foreground="White" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock x:Name="EndpointDescText"
+                               Text="Select an endpoint from page 2"
+                               Foreground="#888" FontSize="12" TextWrapping="Wrap"
+                               Margin="0,8,0,16"/>
+                    <TextBlock x:Name="EndpointStatsText" Text="0 functions"
+                               Foreground="#BB8FFF" FontSize="13" FontWeight="Bold"/>
+                    <TextBlock Text="HTTP Verbs" Foreground="#666" FontSize="11"
+                               Margin="0,16,0,8"/>
+                    <ItemsControl x:Name="VerbLegendHost"/>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="FunctionRowsHost"/>
+                </ScrollViewer>
+                <TextBlock x:Name="EmptyStateText" Text="No functions yet. Create one to get started."
+                           Foreground="#555" FontSize="14" HorizontalAlignment="Center"
+                           VerticalAlignment="Center" Visibility="Collapsed"/>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="2" Background="#1A1A1A" Padding="16,12">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="BackBtn" Content="← Back: Endpoints"
+                            Background="#262626" Foreground="#CCC"
+                            Height="36" Padding="16,0"
+                            BorderBrush="#444" BorderThickness="1" FontSize="13"/>
+                </StackPanel>
+                <TextBlock x:Name="StatusText" Text="Edit functions for your endpoint"
+                           Foreground="#888" FontSize="12" HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
+using System;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace Database_Designer
 {
@@ -17,6 +12,5 @@ namespace Database_Designer
             mainPage = new MainPage();
             Window.Current.Content = mainPage;
         }
-
     }
 }

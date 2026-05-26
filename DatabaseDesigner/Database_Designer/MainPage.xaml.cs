@@ -1,4 +1,4 @@
-﻿using DatabaseDesigner;
+using DatabaseDesigner;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Utilities;
 using Pariah_Cybersecurity;
@@ -158,6 +158,8 @@ namespace Database_Designer
 
         public static Dictionary<string, (UIElement, UIElement)> DesktopApps = new();
         public DBDesignerSession MainSessionInfo; //This is our Database Designer Session
+        public string RLSJson { get; set; } = "";
+        public string APIJson { get; set; } = "";
 
         //Function that turns DBDesignerSession into text and back, had this genned by GPT to save time, then checked manually
 
@@ -200,6 +202,12 @@ namespace Database_Designer
             }
             writer.WriteEndObject();
 
+            // RLS data
+            writer.WriteString("rlsJson", RLSJson);
+
+            // API data
+            writer.WriteString("apiJson", APIJson);
+
             writer.WriteEndObject();
             writer.Flush();
 
@@ -240,6 +248,9 @@ namespace Database_Designer
                     session.WindowStatuses[kv.Name] = ReadCoords(kv.Value);
             }
 
+            // RLS and API data
+            if (root.TryGetProperty("rlsJson", out var rlsElem)) RLSJson = rlsElem.GetString() ?? "";
+            if (root.TryGetProperty("apiJson", out var apiElem)) APIJson = apiElem.GetString() ?? "";
 
             return session;
         }
@@ -1337,7 +1348,9 @@ namespace Database_Designer
 
 
     
-    { "Build Project", "Assets/Images/Logos/Login.png" },
+    { "API Editor", "Assets/Images/Logos/API Editor.png" },
+    { "RLS Editor", "Assets/Images/Logos/RLS Editor.png" },
+    { "NODEWLKR", "Assets/NODEWLKR.png" },
 
 
 };
@@ -1438,8 +1451,26 @@ namespace Database_Designer
 
             if (LowBar.Visibility == Visibility.Visible || LowerAppBar.Visibility == Visibility.Visible)
             {
+                // Check if window already has a shortcut (prevent duplicates)
+                var existingType = control.GetType();
+                var existingProp = existingType.GetProperty("WindowInfo");
+                if (existingProp != null)
+                {
+                    var existing = existingProp.GetValue(control);
+                    if (existing is UIWindowEntry existingEntry && existingEntry.Shortcut != null)
+                    {
+                        // Window already has a shortcut, don't create a new one
+                        return control;
+                    }
+                }
+
                 // Pick image to use
                 string usedImg = (AppIcon != null && AppIcon.ContainsKey(tag)) ? AppIcon[tag] : "Assets/Images/MiraGraphic1.png";
+
+                if (tag != null && tag.Contains("NODEWLKR"))
+                {
+                    usedImg = "Assets/NODEWLKR.png";
+                }
 
                 shortcutBtn = CreateCustomButton(usedImg);
 
@@ -1496,6 +1527,75 @@ namespace Database_Designer
 
 
             return control;
+        }
+
+        private void CloseEditorWindow(RLSEditorWindow window)
+        {
+            RLSJson = window.SaveToJson();
+            window.Visibility = Visibility.Collapsed;
+            RemoveWindowShortcut(window);
+        }
+
+        private void CloseEditorWindow(APIEditorWindow window)
+        {
+            APIJson = window.SaveToJson();
+            window.Visibility = Visibility.Collapsed;
+            RemoveWindowShortcut(window);
+        }
+
+        private void RemoveWindowShortcut(UIElement window)
+        {
+            try
+            {
+                if (window is RLSEditorWindow rlsWindow)
+                {
+                    if (rlsWindow.WindowInfo.Shortcut != null && LowerAppBar.Children.Contains(rlsWindow.WindowInfo.Shortcut))
+                    {
+                        LowerAppBar.Children.Remove(rlsWindow.WindowInfo.Shortcut);
+                    }
+                    return;
+                }
+                if (window is APIEditorWindow apiWindow)
+                {
+                    if (apiWindow.WindowInfo.Shortcut != null && LowerAppBar.Children.Contains(apiWindow.WindowInfo.Shortcut))
+                    {
+                        LowerAppBar.Children.Remove(apiWindow.WindowInfo.Shortcut);
+                    }
+                    return;
+                }
+                var type = window.GetType();
+                var prop = type.GetProperty("WindowInfo");
+                if (prop != null)
+                {
+                    var info = (UIWindowEntry)prop.GetValue(window);
+                    if (info.Shortcut != null && LowerAppBar.Children.Contains(info.Shortcut))
+                    {
+                        LowerAppBar.Children.Remove(info.Shortcut);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to remove shortcut: {ex.Message}");
+            }
+        }
+
+        private async void SaveEditorWindow(RLSEditorWindow window)
+        {
+            RLSJson = window.SaveToJson();
+            if (ProjectName != null)
+            {
+                await OnTables_Changed(this);
+            }
+        }
+
+        private async void SaveEditorWindow(APIEditorWindow window)
+        {
+            APIJson = window.SaveToJson();
+            if (ProjectName != null)
+            {
+                await OnTables_Changed(this);
+            }
         }
 
 
@@ -2021,6 +2121,53 @@ private string _currentBackgroundPath = "Assets/Images/lightbg.png"; // Track cu
 
                 CreateDesktopAppButton("Projects", Apps, () => new Projects(this), "Projects", true);
                 CreateDesktopAppButton("Table Editor", Apps, () => new FolderViewer(this), "Table Editor", true);
+                // Two NodeWalker entry points — RLS policies + API functions.
+                // Each opens the matching creator page (3-zone layout) which
+                // handles drilling down into individual policies / functions
+                // and from there into the underlying node-graph editor.
+                CreateDesktopAppButton(
+                   "RLS Editor",
+                   Apps,
+                   () =>
+                   {
+                       double w = Math.Max(900, IntroPage.ActualWidth * 0.85);
+                       double h = Math.Max(600, IntroPage.ActualHeight * 0.85);
+return CreateWindow(
+                            () =>
+                            {
+                                var w = new RLSEditorWindow(this);
+                                if (!string.IsNullOrEmpty(RLSJson)) w.LoadFromJson(RLSJson);
+                                w.CloseRequested += CloseEditorWindow;
+                                w.SaveRequested += SaveEditorWindow;
+                                return w;
+                            },
+                            "RLS Editor",
+                            true, null, w, h);
+                   },
+                   "RLS Editor",
+                   true);
+
+                CreateDesktopAppButton(
+                   "API Editor",
+                   Apps,
+                   () =>
+                   {
+                       double w = Math.Max(900, IntroPage.ActualWidth * 0.85);
+                       double h = Math.Max(600, IntroPage.ActualHeight * 0.85);
+return CreateWindow(
+                            () =>
+                            {
+                                var w = new APIEditorWindow(this);
+                                if (!string.IsNullOrEmpty(APIJson)) w.LoadFromJson(APIJson);
+                                w.CloseRequested += CloseEditorWindow;
+                                w.SaveRequested += SaveEditorWindow;
+                                return w;
+                            },
+                            "API Editor",
+                            true, null, w, h);
+                   },
+                   "API Editor",
+                   true);
 
                 // Use a snapshot of trie words to avoid concurrent modification issues
                 var prefixWords = trie.GetWords("").ToList();
@@ -2174,6 +2321,108 @@ private string _currentBackgroundPath = "Assets/Images/lightbg.png"; // Track cu
         }
 
 
+
+        public static List<(string fullTableName, string description, List<RowOptions> rows, List<Reference.ReferenceOptions> references, List<IndexDefinition> indexes, string rlsJson, string apiJson)> ParseTemplatePackNew(string templateJsonContent)
+        {
+            var result = new List<(string, string, List<RowOptions>, List<Reference.ReferenceOptions>, List<IndexDefinition>, string, string)>();
+
+            try
+            {
+                using var doc = JsonDocument.Parse(templateJsonContent);
+                var root = doc.RootElement;
+
+                if (!root.TryGetProperty("Data", out var dataArray))
+                {
+                    Console.WriteLine("No Data property found in template JSON");
+                    return result;
+                }
+
+                // Extract RLS and API data from root level (outside Data.tables)
+                string rlsJson = root.TryGetProperty("rlsJson", out var rls) ? rls.GetString() ?? "" : "";
+                string apiJson = root.TryGetProperty("apiJson", out var api) ? api.GetString() ?? "" : "";
+
+                foreach (var tableItem in dataArray.EnumerateArray())
+                {
+                    string tableName = tableItem.TryGetProperty("TableName", out var tn) ? tn.GetString() ?? "UntitledTable" : "UntitledTable";
+                    string description = tableItem.TryGetProperty("Description", out var desc) ? desc.GetString() ?? "" : "";
+                    string schemaName = tableItem.TryGetProperty("SchemaName", out var sn) ? sn.GetString() ?? "public" : "public";
+                    string fullTableName = $"{schemaName}.{tableName}";
+
+                    var rows = new List<RowOptions>();
+                    if (tableItem.TryGetProperty("Rows", out var rowsElement))
+                    {
+                        foreach (var rowElem in rowsElement.EnumerateArray())
+                        {
+                            rows.Add(new RowOptions(
+                                fieldName: rowElem.TryGetProperty("Name", out var n) ? n.GetString() ?? "unnamed" : "unnamed",
+                                description: rowElem.TryGetProperty("Description", out var d) ? d.GetString() ?? "" : "",
+                                postgresType: rowElem.TryGetProperty("RowType", out var rt) && Enum.TryParse<PostgresType>(rt.GetString(), true, out var type) ? type : PostgresType.Text,
+                                customType: "",
+                                elementLimit: rowElem.TryGetProperty("Limit", out var l) && l.ValueKind == JsonValueKind.Number ? l.GetInt32() : (int?)null,
+                                isArray: rowElem.TryGetProperty("IsArray", out var a) && a.ValueKind == JsonValueKind.True,
+                                arrayLimit: rowElem.TryGetProperty("ArrayLimit", out var al) && al.ValueKind == JsonValueKind.Number ? al.GetInt32() : (int?)null,
+                                isEncrypted: rowElem.TryGetProperty("EncryptedAndNOTMedia", out var enc) && enc.ValueKind == JsonValueKind.True,
+                                isMedia: rowElem.TryGetProperty("Media", out var med) && med.ValueKind == JsonValueKind.True,
+                                isPrimary: rowElem.TryGetProperty("IsPrimary", out var p) && p.ValueKind == JsonValueKind.True,
+                                isUnique: rowElem.TryGetProperty("IsUnique", out var u) && u.ValueKind == JsonValueKind.True,
+                                isNotNull: rowElem.TryGetProperty("IsNotNull", out var nn) && nn.ValueKind == JsonValueKind.True,
+                                defaultValue: rowElem.TryGetProperty("DefaultValue", out var dv) ? dv.GetString() : null,
+                                check: rowElem.TryGetProperty("Check", out var chk) ? chk.GetString() : null,
+                                defaultIsKeyword: rowElem.TryGetProperty("DefaultIsPostgresFunction", out var kw) && kw.ValueKind == JsonValueKind.True
+                            ));
+                        }
+                    }
+
+                    var references = new List<Reference.ReferenceOptions>();
+                    if (tableItem.TryGetProperty("References", out var refsElement))
+                    {
+                        foreach (var refElem in refsElement.EnumerateArray())
+                        {
+                            references.Add(new Reference.ReferenceOptions(
+                                refElem.TryGetProperty("MainTable", out var mt) ? mt.GetString() : null,
+                                refElem.TryGetProperty("RefTable", out var rt) ? rt.GetString() : null,
+                                refElem.TryGetProperty("ForeignKey", out var fk) ? fk.GetString() : null,
+                                refElem.TryGetProperty("RefTableKey", out var rtk) ? rtk.GetString() : null,
+                                refElem.TryGetProperty("OnDeleteAction", out var oda) && Enum.TryParse<ReferentialAction>(oda.GetString(), true, out var deleteAction) ? deleteAction : ReferentialAction.NoAction,
+                                refElem.TryGetProperty("OnUpdateAction", out var oua) && Enum.TryParse<ReferentialAction>(oua.GetString(), true, out var updateAction) ? updateAction : ReferentialAction.NoAction
+                            ));
+                        }
+                    }
+
+                    var indexes = new List<IndexDefinition>();
+                    if (tableItem.TryGetProperty("Indexes", out var idxElement))
+                    {
+                        foreach (var idxElem in idxElement.EnumerateArray())
+                        {
+                            var columnNames = new List<string>();
+                            if (idxElem.TryGetProperty("ColumnNames", out var cols))
+                            {
+                                foreach (var col in cols.EnumerateArray())
+                                    columnNames.Add(col.GetString() ?? "");
+                            }
+                            indexes.Add(new IndexDefinition(
+                                tableName: fullTableName,
+                                indexName: idxElem.TryGetProperty("IndexName", out var iname) ? iname.GetString() ?? $"{tableName}_idx" : $"{tableName}_idx",
+                                columnNames: columnNames.ToArray(),
+                                indexType: idxElem.TryGetProperty("IndexType", out var it) && Enum.TryParse<IndexType>(it.GetString(), true, out var idxType) ? idxType : IndexType.Basic,
+                                condition: idxElem.TryGetProperty("Condition", out var cond) ? cond.GetString() ?? "" : "",
+                                expression: idxElem.TryGetProperty("Expression", out var expr) ? expr.GetString() ?? "" : "",
+                                indexTypeCustom: idxElem.TryGetProperty("IndexTypeCustom", out var itc) ? itc.GetString() ?? "" : "",
+                                useJsonbPathOps: idxElem.TryGetProperty("UseJsonbPathOps", out var jpo) && jpo.ValueKind == JsonValueKind.True
+                            ));
+                        }
+                    }
+
+                    result.Add((fullTableName, description, rows, references, indexes, rlsJson, apiJson));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to parse template pack: {ex.Message}");
+            }
+
+            return result;
+        }
 
         // Parse a full template pack JSON string and return list of ready-to-build items
         public static List<(string fullTableName, string description, List<RowOptions> rows, List<Reference.ReferenceOptions> references, List<IndexDefinition> indexes)> ParseTemplatePack(string templateJsonContent)

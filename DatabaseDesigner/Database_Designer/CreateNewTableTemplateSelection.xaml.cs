@@ -1,4 +1,4 @@
-﻿using DatabaseDesigner;
+using DatabaseDesigner;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -164,19 +164,41 @@ namespace Database_Designer
                 {
                     try
                     {
-                        var templateItems = MainPage.ParseTemplatePack(jsonContent);
-                        if (templateItems.Count == 0) return;
-
-                        foreach (var (fullTableName, description, rows, references, indexes) in templateItems)
+                        // Use the new unencrypted format
+                        var templateItems = MainPage.ParseTemplatePackNew(jsonContent);
+                        if (templateItems.Count == 0)
                         {
-                            DBDesigner.DatabaseDesigner(
-                                fullTableName,
-                                description,
-                                rows,
-                                null,
-                                references,
-                                indexes
-                            );
+                            // Fallback: try old parse method for encrypted templates
+                            try
+                            {
+                                var fallbackItems = MainPage.ParseTemplatePack(jsonContent);
+                                foreach (var (fullTableName, description, rows, references, indexes) in fallbackItems)
+                                {
+                                    DBDesigner.DatabaseDesigner(
+                                        fullTableName,
+                                        description,
+                                        rows,
+                                        null,
+                                        references,
+                                        indexes
+                                    );
+                                }
+                            }
+                            catch { }
+                        }
+                        else
+                        {
+                            foreach (var (fullTableName, description, rows, references, indexes, rlsJson, apiJson) in templateItems)
+                            {
+                                DBDesigner.DatabaseDesigner(
+                                    fullTableName,
+                                    description,
+                                    rows,
+                                    null,
+                                    references,
+                                    indexes
+                                );
+                            }
                         }
 
                         Console.WriteLine($"Successfully imported {templateItems.Count} table(s) from '{packName}'!");

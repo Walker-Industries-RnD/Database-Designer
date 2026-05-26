@@ -1,4 +1,4 @@
-﻿using DatabaseDesigner;
+using DatabaseDesigner;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +13,11 @@ using System.Windows.Media.Imaging;
 using Walker.Crypto;
 using WISecureData;
 using Path = System.IO.Path;
+using static DatabaseDesigner.DBDesigner;
+using static DatabaseDesigner.Index;
+using static DatabaseDesigner.Reference;
+using static DatabaseDesigner.Row;
+using static DatabaseDesigner.SessionStorage;
 
 namespace Database_Designer
 {
@@ -235,20 +240,161 @@ namespace Database_Designer
 
 
 
-                        var encryptedData = json["Data"]?.GetValue<string>();
-                        if (string.IsNullOrEmpty(encryptedData))
+                        var tablesArray = json["Data"]?.AsArray();
+                        if (tablesArray == null)
                         {
                             MessageBox.Show("Template data is missing or corrupted.");
                             return;
                         }
 
-                        var aesEncrypted = SimpleAESEncryption.AESEncryptedText.FromString(encryptedData);
+// Parse tables directly from JSON (no encryption)
+                        var tables = new List<(string fullTableName, string description, List<RowOptions> rows, List<Reference.ReferenceOptions> references, List<IndexDefinition> indexes)>();
 
-                        Console.WriteLine("Encrypted data length: " + encryptedData.Length);
+                        foreach (var tableItem in tablesArray)
+                        {
+                            var tableObj = tableItem.AsObject();
+                            string tableName = tableObj["TableName"]?.GetValue<string>() ?? "UntitledTable";
+                            string schemaName = tableObj["SchemaName"]?.GetValue<string>() ?? "public";
+                            string fullTableName = $"{schemaName}.{tableName}";
+                            string description = tableObj["Description"]?.GetValue<string>() ?? "";
 
-                        var decryptedSession = Task.Run(() =>
-                            mainPaged.FromSessionString(aesEncrypted, "GLORYTOMANKIND".ToSecureData())
-                        ).Result;
+                            var rows = new List<RowOptions>();
+                            var rowsArray = tableObj["Rows"]?.AsArray();
+                            if (rowsArray != null)
+                            {
+                                foreach (var rowItem in rowsArray)
+                                {
+                                    var rowObj = rowItem.AsObject();
+                                    var limitStr = rowObj["Limit"]?.GetValue<string>();
+                                    int? limit = null;
+                                    if (!string.IsNullOrEmpty(limitStr) && int.TryParse(limitStr, out var l)) limit = l;
+                                    rows.Add(new RowOptions(
+                                        fieldName: rowObj["Name"]?.GetValue<string>() ?? "field",
+                                        description: rowObj["Description"]?.GetValue<string>() ?? "",
+                                        postgresType: Enum.TryParse<PostgresType>(rowObj["RowType"]?.GetValue<string>(), out var pt) ? pt : PostgresType.VarChar,
+                                        customType: "",
+                                        elementLimit: limit,
+                                        isArray: rowObj["IsArray"]?.GetValue<bool>() ?? false,
+                                        arrayLimit: int.TryParse(rowObj["ArrayLimit"]?.GetValue<string>(), out var al) ? al : null,
+                                        isEncrypted: rowObj["EncryptedAndNOTMedia"]?.GetValue<bool>() ?? false,
+                                        isMedia: rowObj["Media"]?.GetValue<bool>() ?? false,
+                                        isPrimary: rowObj["IsPrimary"]?.GetValue<bool>() ?? false,
+                                        isUnique: rowObj["IsUnique"]?.GetValue<bool>() ?? false,
+                                        isNotNull: rowObj["IsNotNull"]?.GetValue<bool>() ?? false,
+                                        defaultValue: rowObj["DefaultValue"]?.GetValue<string>(),
+                                        check: rowObj["Check"]?.GetValue<string>(),
+                                        defaultIsKeyword: rowObj["DefaultIsPostgresFunction"]?.GetValue<bool>() ?? false
+                                    ));
+                                }
+                            }
+
+                            var references = new List<Reference.ReferenceOptions>();
+                            var refsArray = tableObj["References"]?.AsArray();
+                            if (refsArray != null)
+                            {
+                                foreach (var refItem in refsArray)
+                                {
+                                    var refObj = refItem.AsObject();
+                                    references.Add(new Reference.ReferenceOptions(
+                                        refObj["MainTable"]?.GetValue<string>(),
+                                        refObj["RefTable"]?.GetValue<string>(),
+                                        refObj["ForeignKey"]?.GetValue<string>(),
+                                        refObj["RefTableKey"]?.GetValue<string>(),
+                                        Enum.TryParse<ReferentialAction>(refObj["OnDeleteAction"]?.GetValue<string>(), true, out var oda) ? oda : ReferentialAction.NoAction,
+                                        Enum.TryParse<ReferentialAction>(refObj["OnUpdateAction"]?.GetValue<string>(), true, out var oua) ? oua : ReferentialAction.NoAction
+                                    ));
+                                }
+                            }
+
+                            var indexes = new List<IndexDefinition>();
+                            var idxArray = tableObj["Indexes"]?.AsArray();
+                            if (idxArray != null)
+                            {
+                                foreach (var idxItem in idxArray)
+                                {
+                                    var idxObj = idxItem.AsObject();
+                                    var colNames = new List<string>();
+                                    var cols = idxObj["ColumnNames"]?.AsArray();
+                                    if (cols != null)
+                                        foreach (var c in cols)
+                                            colNames.Add(c.GetValue<string>());
+                                    indexes.Add(new IndexDefinition(
+                                        idxObj["TableName"]?.GetValue<string>() ?? fullTableName,
+                                        idxObj["IndexName"]?.GetValue<string>() ?? $"{tableName}_idx",
+                                        colNames.ToArray(),
+                                        Enum.TryParse<IndexType>(idxObj["IndexType"]?.GetValue<string>(), true, out var it) ? it : IndexType.Basic,
+                                        idxObj["Condition"]?.GetValue<string>() ?? "",
+                                        idxObj["Expression"]?.GetValue<string>() ?? "",
+                                        idxObj["IndexTypeCustom"]?.GetValue<string>() ?? "",
+                                        idxObj["UseJsonbPathOps"]?.GetValue<bool>() ?? false
+                                    ));
+                                }
+                            }
+
+                            tables.Add((fullTableName, description, rows, references, indexes));
+                        }
+
+                        // Extract RLS, API JSON and session logo from root level
+                        string rlsJson = json["rlsJson"]?.GetValue<string>() ?? "";
+                        string apiJson = json["apiJson"]?.GetValue<string>() ?? "";
+                        string sessionLogo = json["sessionLogo"]?.GetValue<string>();
+
+                        var session = new SessionStorage.DBDesignerSession
+                        {
+                            SessionName = projectName,
+                            SessionDescription = overview ?? "",
+                            SessionLogo = sessionLogo,
+                            LastEdited = DateTime.Now,
+                            Tables = new System.Collections.ObjectModel.ObservableCollection<TableObject>()
+                        };
+
+                        foreach (var (ftn, desc, r, refs, idx) in tables)
+                        {
+                            var tableObj = new TableObject
+                            {
+                                SchemaName = ftn.Split('.')[0],
+                                TableName = ftn.Split('.').Length > 1 ? ftn.Split('.')[1] : ftn,
+                                Description = desc,
+                                Rows = r.Select(rowOpt => new RowCreation
+                                {
+                                    Name = rowOpt.FieldName,
+                                    Description = rowOpt.Description,
+                                    RowType = rowOpt.PostgresType,
+                                    Limit = rowOpt.Limit,
+                                    IsArray = rowOpt.IsArray,
+                                    ArrayLimit = rowOpt.ArrayLimit?.ToString(),
+                                    EncryptedAndNOTMedia = rowOpt.IsEncrypted,
+                                    Media = rowOpt.IsMedia,
+                                    IsPrimary = rowOpt.IsPrimary,
+                                    IsUnique = rowOpt.IsUnique,
+                                    IsNotNull = rowOpt.IsNotNull,
+                                    DefaultValue = rowOpt.DefaultValue,
+                                    Check = rowOpt.Check,
+                                    DefaultIsPostgresFunction = rowOpt.DefaultIsKeyword
+                                }).ToList(),
+                                References = refs?.Select(x => new SessionStorage.ReferenceOptions(
+                                    x.MainTable,
+                                    x.RefTable,
+                                    x.ForeignKey,
+                                    x.RefTableKey,
+                                    x.OnDeleteAction,
+                                    x.OnUpdateAction
+                                )).ToList(),
+                                Indexes = idx?.Select(x => new IndexCreation
+                                {
+                                    TableName = x.TableName ?? "",
+                                    IndexName = x.IndexName ?? "",
+                                    ColumnNames = x.ColumnNames?.ToList() ?? new List<string>(),
+                                    IndexType = x.IndexType.ToString(),
+                                    Condition = x.Condition ?? "",
+                                    Expression = x.Expression ?? "",
+                                    IndexTypeCustom = x.IndexTypeCustom ?? "",
+                                    UseJsonbPathOps = x.UseJsonbPathOps
+                                }).ToList()
+                            };
+
+                            session.Tables.Add(tableObj);
+                        }
 
                         if (Designer.TemplatedItem.Count >= 1)
                         {
@@ -257,8 +403,11 @@ namespace Database_Designer
 
                         Designer.TemplateName = projectName;
                         Designer.AuthorName = authorName;
+                        Designer.TemplatedItem.Add(session);
 
-                        Designer.TemplatedItem.Add(decryptedSession);
+                        // Set RLS and API JSON on mainPage
+                        mainPaged.RLSJson = rlsJson;
+                        mainPaged.APIJson = apiJson;
 
 
 

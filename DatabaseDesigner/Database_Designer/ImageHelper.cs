@@ -1,4 +1,4 @@
-﻿using OpenSilver;
+using OpenSilver;
 using System;
 using System.IO;
 using System.Windows.Controls;
@@ -8,10 +8,33 @@ namespace Database_Designer
 {
     public static class ImageHelper
     {
-        public static void SelectAndPreviewImage(Image targetImage, Action<byte[]> onBytesReady = null)
+        public static void SelectAndPreviewImage(System.Windows.Controls.Image targetImage, Action<byte[]> onBytesReady = null)
         {
             targetImage.Source = null;
+            SelectAndLoadBytes(new Action<object>(obj =>
+            {
+                var base64 = obj?.ToString();
+                if (string.IsNullOrEmpty(base64))
+                {
+                    Console.WriteLine("FileReader failed or was cancelled.");
+                    return;
+                }
+                try
+                {
+                    var bytes = Convert.FromBase64String(base64);
+                    var bitmap = BytesToBitmapImage(bytes);
+                    targetImage.Source = bitmap;
+                    onBytesReady?.Invoke(bytes);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to load image: " + ex.Message);
+                }
+            }));
+        }
 
+        public static void SelectAndLoadBytes(Action<object> onBytesReady)
+        {
             var fileInput = Interop.ExecuteJavaScript("document.createElement('input')");
             Interop.ExecuteJavaScript("$0.type = 'file'; $0.accept = 'image/*'; $0.style.display = 'none';", fileInput);
 
@@ -24,11 +47,8 @@ namespace Database_Designer
         reader.onload = function(evt) {
             var dataUrl = evt.target.result;
             if (!dataUrl || typeof dataUrl !== 'string') { callback(null); return; }
-
-            // Extract Base64 from data URL
             var comma = dataUrl.indexOf(',');
             if (comma < 0) { callback(null); return; }
-
             var base64 = dataUrl.substring(comma + 1);
             callback(base64);
             try { if (input.parentNode) input.parentNode.removeChild(input); } catch(e) {}
@@ -39,39 +59,33 @@ namespace Database_Designer
         };
         reader.readAsDataURL(file);
     };
-
     input.value = '';
     document.body.appendChild(input);
     setTimeout(function(){ input.click(); }, 50);
 })($0, $1);
-", fileInput, new Action<string>(base64 =>
+", fileInput, onBytesReady);
+        }
+
+        public static void SelectAndLoadBytes(Action<byte[]> onBytesReady)
+        {
+            SelectAndLoadBytes(new Action<object>(obj =>
             {
-                if (base64 == null)
+                var base64 = obj?.ToString();
+                if (string.IsNullOrEmpty(base64))
                 {
                     Console.WriteLine("FileReader failed or was cancelled.");
                     return;
                 }
-
-                targetImage.Dispatcher.BeginInvoke(() =>
+                try
                 {
-                    try
-                    {
-                        var dataUrl = "data:image/png;base64," + base64;
-                        var bitmap = new BitmapImage();
-                        bitmap.SetSource(dataUrl);
-                        targetImage.Source = bitmap;
-
-                        // Convert Base64 → bytes for caller
-                        onBytesReady?.Invoke(Convert.FromBase64String(base64));
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Failed to load image: " + ex.Message);
-                    }
-                });
+                    onBytesReady?.Invoke(Convert.FromBase64String(base64));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to load image: " + ex.Message);
+                }
             }));
         }
-
 
         public static BitmapImage BytesToBitmapImage(byte[] bytes)
         {
@@ -86,10 +100,5 @@ namespace Database_Designer
             }
             return bitmap;
         }
-
-
-
-
-
     }
 }

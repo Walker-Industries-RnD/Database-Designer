@@ -1,0 +1,53 @@
+<UserControl x:Class="Database_Designer.NodeWalker.NoteControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1360" d:DesignHeight="768" BorderBrush="Transparent">
+
+    <Border x:Name="NoteBorder"
+            Background="#E6E0C8"
+            CornerRadius="6"
+            BorderThickness="2"
+            BorderBrush="#AFA58C"
+            Padding="12"
+            Visibility="Visible">
+
+        <StackPanel>
+
+            <!-- NOTE header -->
+            <TextBlock Text="NOTE" 
+                       FontFamily="/Database_Designer;component/Assets/Fonts/Inter/Inter_28pt-ThinItalic.ttf#Inter 28pt Thin"
+                       FontSize="15" 
+                       FontWeight="Bold" 
+                       Foreground="#2B2B2B" 
+                       Margin="0,0,0,6" />
+
+            <!-- Auto-expanding TextBox -->
+            <TextBox x:Name="NoteTextBox"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Disabled"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     Foreground="#2B2B2B"
+                     FontSize="13"
+                     FontFamily="/Database_Designer;component/Assets/Fonts/Inter_28pt-BoldItalic.ttf#Inter 28pt"
+                     MinHeight="88"
+                     Padding="0"
+                     TextChanged="NoteTextBox_TextChanged" />
+
+            <!-- Footer -->
+            <TextBlock Text="Added By WalkerDev" 
+                       FontFamily="/Database_Designer;component/Assets/Fonts/Inter/Inter_28pt-ThinItalic.ttf#Inter 28pt Thin"
+                       FontSize="10" 
+                       Foreground="#4A463D"
+                       Opacity="0.8"
+                       Margin="0,8,0,0" 
+                       HorizontalAlignment="Right"
+                       Visibility="Collapsed" />
+
+        </StackPanel>
+    </Border>
+</UserControl>

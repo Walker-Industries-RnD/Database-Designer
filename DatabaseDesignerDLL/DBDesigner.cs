@@ -222,11 +222,22 @@ namespace DatabaseDesigner
             foreach (var row in rows)
                 docBuilder.Append(RowDocumentationGenerator(row)); // assumes existing API
 
+            // Composite primary key handling. EF Core throws if more than one
+            // property has [Key]; the supported pattern is a class-level
+            // [PrimaryKey(nameof(A), nameof(B), ...)] attribute and *no*
+            // per-property [Key]. Detect that case here and remember the
+            // property names so the class header can carry the attribute.
+            var pkRows = rows.Where(r => r.IsPrimary).ToList();
+            bool hasCompositeKey = pkRows.Count > 1;
+            var compositeKeyPropNames = pkRows
+                .Select(r => ToPascalCase(SafeName(r.FieldName)))
+                .ToList();
+
             // Build C# class
             StringBuilder tempRows = new StringBuilder();
             foreach (var row in rows)
             {
-                if (row.IsPrimary) tempRows.AppendLine("    [Key]");
+                if (row.IsPrimary && !hasCompositeKey) tempRows.AppendLine("    [Key]");
                 if (row.IsNotNull) tempRows.AppendLine("    [Required]");
                 tempRows.AppendLine($"    [Column(\"{row.FieldName}\")]");
 
@@ -236,7 +247,18 @@ namespace DatabaseDesigner
 
                 // ensure Pascal for property name
                 string propName = ToPascalCase(SafeName(row.FieldName));
-                tempRows.AppendLine($"    public {csType} {propName} {{ get; set; }}");
+
+                // Suffix non-nullable reference types with `= null!;` so the
+                // class doesn't emit a CS8618 warning under <Nullable>enable</Nullable>.
+                // Value types and explicitly-nullable references already opt out.
+                bool isReferenceType = !ValueTypeNames.Contains(csType)
+                                       && !csType.EndsWith("?", StringComparison.Ordinal)
+                                       && !csType.EndsWith("[]", StringComparison.Ordinal);
+                string initSuffix = (row.IsNotNull && isReferenceType) ? " = null!;" : " { get; set; }";
+                if (initSuffix == " = null!;")
+                    tempRows.AppendLine($"    public {csType} {propName} {{ get; set; }} = null!;");
+                else
+                    tempRows.AppendLine($"    public {csType} {propName} {{ get; set; }}");
                 tempRows.AppendLine();
             }
 
@@ -245,6 +267,8 @@ namespace DatabaseDesigner
             string clrClassName = $"{clrBase}Item";
 
             classBuilder.AppendLine($"[Table(\"{GetTableNameWithoutSchema(sqlTableName)}\"{(string.IsNullOrEmpty(schemaRaw) ? "" : $", Schema = \"{schemaRaw}\"")})]");
+            if (hasCompositeKey)
+                classBuilder.AppendLine($"[PrimaryKey({string.Join(", ", compositeKeyPropNames.Select(p => $"nameof({p})"))})]");
             classBuilder.AppendLine($"public class {clrClassName}");
             classBuilder.AppendLine("{");
             classBuilder.AppendLine(tempRows.ToString());
@@ -258,6 +282,68 @@ namespace DatabaseDesigner
             design.ClassName = clrClassName; // provide CLR class name for downstream uses
 
             return design;
+        }
+
+        /// <summary>
+        /// Sorts <paramref name="designs"/> so a table whose FOREIGN KEYs
+        /// reference another table comes *after* its referent in the output.
+        /// Without this, dropping the generated SQL into psql / a fresh DB
+        /// fails with `relation "x" does not exist`. Cycles are emitted in
+        /// their original relative order with a one-line SQL comment so the
+        /// user can break them by hand.
+        /// </summary>
+        public static List<DatabaseDesign> TopoSortDesignsByReferences(IEnumerable<DatabaseDesign> designs, IEnumerable<ReferenceOptions> references)
+        {
+            var list = designs.ToList();
+            if (list.Count <= 1) return list;
+
+            // Build name → index map. Match on table name without schema since
+            // ReferenceOptions stores plain table names.
+            string Norm(string s) => GetTableNameWithoutSchema(s ?? "").ToLowerInvariant();
+
+            var byName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < list.Count; i++)
+                byName[Norm(list[i].TableName)] = i;
+
+            var adjacency = new Dictionary<int, HashSet<int>>();
+            var inDegree = new int[list.Count];
+            for (int i = 0; i < list.Count; i++) adjacency[i] = new HashSet<int>();
+
+            // Edge from referent → dependent so referent gets emitted first.
+            foreach (var r in references ?? Array.Empty<ReferenceOptions>())
+            {
+                if (!byName.TryGetValue(Norm(r.MainTable), out var dep)) continue;
+                if (!byName.TryGetValue(Norm(r.RefTable), out var src)) continue;
+                if (src == dep) continue;
+                if (adjacency[src].Add(dep)) inDegree[dep]++;
+            }
+
+            var queue = new Queue<int>();
+            for (int i = 0; i < list.Count; i++) if (inDegree[i] == 0) queue.Enqueue(i);
+
+            var sorted = new List<DatabaseDesign>(list.Count);
+            while (queue.Count > 0)
+            {
+                var n = queue.Dequeue();
+                sorted.Add(list[n]);
+                foreach (var next in adjacency[n])
+                    if (--inDegree[next] == 0) queue.Enqueue(next);
+            }
+
+            // Cycle: append the rest in original order with a marker.
+            // DatabaseDesign is a struct, so mutate via index.
+            if (sorted.Count != list.Count)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (sorted.Contains(list[i])) continue;
+                    var d = list[i];
+                    d.SQL = "-- WARNING: this table is part of a foreign-key cycle; " +
+                            "psql may fail until the cycle is broken.\n" + d.SQL;
+                    sorted.Add(d);
+                }
+            }
+            return sorted;
         }
 
         // Main runner: collects multiple designs and writes files (keeps same signature)

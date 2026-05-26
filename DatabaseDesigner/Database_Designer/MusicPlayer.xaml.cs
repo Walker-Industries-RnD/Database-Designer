@@ -1,4 +1,4 @@
-﻿using ATL;
+using ATL;
 using ATL.Logging;
 using System;
 using System.Collections.Generic;
@@ -28,6 +28,7 @@ namespace Database_Designer
         private DispatcherTimer timer;
         private bool userDragging = false;
         private bool isPlaying = false;
+        private bool isCustomSongPlaying = false;
         private static List<string> defaultPaths = new List<string>
 {
     "Assets/Sounds/Album/Snow Covered Memories.mp3",
@@ -706,22 +707,39 @@ namespace Database_Designer
             {
                 try
                 {
-                    // Ensure MediaElement stops before changing source
-                    try { mainPage.BGM.Stop(); } catch { }
-
-                    Uri srcUri;
-                    if (Path.IsPathRooted(songPath))
+                    if (isAlbumSong)
                     {
-                        srcUri = new Uri(songPath, UriKind.Absolute);
+                        // Use default MediaElement for album songs
+                        try { JSAudioManager.StopCustomSong(); } catch { }
+                        try { mainPage.BGM.Stop(); } catch { }
+
+                        Uri srcUri;
+                        if (Path.IsPathRooted(songPath))
+                        {
+                            srcUri = new Uri(songPath, UriKind.Absolute);
+                        }
+                        else
+                        {
+                            srcUri = new Uri(songPath, UriKind.RelativeOrAbsolute);
+                        }
+
+                        mainPage.BGM.Source = srcUri;
+                        mainPage.BGM.Play();
+                        isPlaying = true;
+                        PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/pause.png", UriKind.Relative));
                     }
                     else
                     {
-                        srcUri = new Uri(songPath, UriKind.RelativeOrAbsolute);
-                    }
+                        // Use JS audio player for custom songs
+                        try { mainPage.BGM.Stop(); } catch { }
 
-                    Console.WriteLine($"Setting BGM.Source = {srcUri}");
-                    mainPage.BGM.Source = srcUri;
-                    Console.WriteLine($"BGM state before Play: {mainPage.BGM.CurrentState}");
+                        var fileUri = new Uri(songPath).OriginalString;
+                        JSAudioManager.PlayCustomSong(fileUri);
+
+                        isPlaying = true;
+                        isCustomSongPlaying = true;
+                        PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/pause.png", UriKind.Relative));
+                    }
 
                     SongTitle.Text = SongName;
                     ArtistName.Text = SongArtist;
@@ -730,11 +748,7 @@ namespace Database_Designer
                     ProgressSlider.Value = 0;
                     TimerTick.Text = "00:00";
 
-                    mainPage.BGM.Play();
-                    Console.WriteLine($"BGM state after Play: {mainPage.BGM.CurrentState}");
-
-                    isPlaying = true;
-                    PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/pause.png", UriKind.Relative));
+                    Console.WriteLine($"Playing: {SongName}");
                 }
                 catch (Exception ex)
                 {

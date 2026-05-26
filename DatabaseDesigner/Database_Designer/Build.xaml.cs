@@ -1,4 +1,4 @@
-﻿ 
+ 
 using DatabaseDesigner;
 using Newtonsoft.Json.Linq;
 using System;
@@ -313,6 +313,19 @@ public class SecureMediaSession
 }
 """);
 
+                    // Topologically sort the designs so a table that references
+                    // another comes *after* its referent in the SQL output.
+                    // Without this, `psql -f SQL.sql` fails on a fresh DB with
+                    // "relation does not exist" if the user authored their
+                    // tables in the wrong order.
+                    var allReferences = mainPaged.MainSessionInfo.Tables
+                        .Where(t => t.References != null)
+                        .SelectMany(t => t.References.Select(r => new Reference.ReferenceOptions(
+                            r.MainTable, r.RefTable, r.ForeignKey, r.RefTableKey,
+                            r.OnDeleteAction, r.OnUpdateAction)))
+                        .ToList();
+                    DatabaseDesignerList = TopoSortDesignsByReferences(DatabaseDesignerList, allReferences);
+
                     // Append each design's outputs
                     foreach (var item in DatabaseDesignerList)
                     {
@@ -383,6 +396,20 @@ public class SecureMediaSession
                     File.WriteAllText(Path.Combine(generatedDBPath, "Classes.cs"), classes.ToString());
                     File.WriteAllText(Path.Combine(generatedDBPath, "Models.cs"), dbContext.ToString());
 
+                    // --- Generate RLS SQL ---
+                    string rlsSql = GenerateRLSSQL(mainPaged.RLSJson, mainPaged.MainSessionInfo.Tables);
+                    File.WriteAllText(Path.Combine(generatedDBPath, "RLS.sql"), rlsSql);
+
+                    // --- Generate API (C# Controllers) ---
+                    string apiPath = Path.Combine(generatedDBPath, "API");
+                    Directory.CreateDirectory(apiPath);
+                    GenerateAPIFiles(apiPath, mainPaged.RLSJson, mainPaged.APIJson);
+
+                    // --- Generate SpacetimeDB module ---
+                    string spacetimePath = Path.Combine(generatedDBPath, "SpacetimeDB");
+                    Directory.CreateDirectory(spacetimePath);
+                    GenerateSpacetimeDBFiles(spacetimePath, mainPaged.RLSJson, mainPaged.APIJson);
+
 
 
                     // --- Success UI ---
@@ -392,7 +419,18 @@ public class SecureMediaSession
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Build failed: {ex}");
-  
+                    // Surface the error in the validation summary so the user
+                    // doesn't think the button is dead. Previously the catch
+                    // wrote to the console only and the success UI never
+                    // fired — looked indistinguishable from "nothing happened."
+                    try
+                    {
+                        ProjectErrorCheck.Errors.Add(new ValidationSummaryItem
+                        {
+                            Message = "Build failed: " + ex.Message
+                        });
+                    }
+                    catch { /* validation summary may not be in tree yet */ }
                 }
 
 
@@ -602,12 +640,12 @@ public class SecureMediaSession
                 // Create incremental folder
                 Directory.CreateDirectory(generatedDBPath);
 
-                // --- Create files ---
+// --- Create files ---
                 async Task CreateFile(string fileName, string extension, string contentData)
                 {
                     var secdbfile = Path.Combine(generatedDBPath, (fileName + $".{extension}"));
                     await File.WriteAllTextAsync(secdbfile, contentData);
-
+  
                 }
                 await CreateFile("Template", "DsgnRowTmplate", creationValues.ToString());
                 if (_bannerBytes != null)
@@ -618,7 +656,7 @@ public class SecureMediaSession
                 {
                     File.WriteAllBytes(Path.Combine(generatedDBPath, "PFP." + GetImageFormat(_pfpBytes)), _pfpBytes);
                 }
-                // --- Success UI ---
+                // --- Success UI --- the success of the UI system is based  ffrfr3fes
                 int countdown = 6;
                 BuildRowTemplate.Content = $"Built! Returning to homepage in {countdown} seconds!";
                 BuildRowTemplate.IsEnabled = false;
@@ -924,7 +962,6 @@ public class SecureMediaSession
                 }
                 if (PackName2 != null && Overview2 != null && AuthorName2 != null && ProjectsListUI.SelectedItem != null) { FinalizeBuildProjectBtn.IsEnabled = true; }
             }
-            string templateData = default;
             FinalizeBuildProjectBtn.Click += async (s, e) =>
             {
                 var CurrentDirectory = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Projects", mainPaged.ProjectName, "Project Templates");
@@ -949,33 +986,15 @@ public class SecureMediaSession
                 generatedDBPath = Path.Combine(generatedDBPath, incremental);
                 // Create incremental folder
                 Directory.CreateDirectory(generatedDBPath);
-                // --- Create files ---
+// --- Create files ---
                 async Task CreateFile(string fileName, string extension, string contentData)
                 {
                     var secdbfile = Path.Combine(generatedDBPath, (fileName + $".{extension}"));
                     await File.WriteAllTextAsync(secdbfile, contentData);
- 
+   
                 }
-                var ProjectPath = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Projects", mainPaged.ProjectName);
-                var ProjectFile = Directory.GetFiles(ProjectPath, "*.SECDBDESIGN").First();
-                var ProjectBytes = File.ReadAllText(ProjectFile);
-                var ProjectAESBytes = Convert.FromBase64String(ProjectBytes);
-                var ProjectUTF8 = Encoding.UTF8.GetString(ProjectAESBytes);
-                var ProjectAESToDecrypt = SimpleAESEncryption.AESEncryptedText.FromString(ProjectUTF8);
-
-                var ProjectTemplate = Task.Run(() =>
-                {
-                    return mainPage.FromSessionString(ProjectAESToDecrypt, mainPage.Password);
-                }).Result;
-
-                var dataToEncrypt = mainPage.ToSessionString(ProjectTemplate, "GLORYTOMANKIND".ToSecureData());
-                var encryptedSessionString = SimpleAESEncryption.Encrypt(dataToEncrypt, "GLORYTOMANKIND".ToSecureData()).ToString();
-                templateData = encryptedSessionString;
-
-                // Now: build the JSON (now templateData is not null!)
-                var creationValues = BuildJsonProject();
-                Console.WriteLine(templateData);
-                await CreateFile("Template", "DsgnRowTmplate", creationValues.ToString());
+                var projectTemplate = BuildJsonProject();
+                await CreateFile("Template", "DsgnRowTmplate", projectTemplate.ToString());
                 if (_bannerBytes2 != null)
                 {
                     File.WriteAllBytes(Path.Combine(generatedDBPath, "Banner." + GetImageFormat(_bannerBytes2)), _bannerBytes2);
@@ -1020,7 +1039,79 @@ public class SecureMediaSession
                 TemplateData["Website"] = Website2;
                 TemplateData["License"] = License2;
                 TemplateData["Note"] = Note2;
-                TemplateData["Data"] = templateData;
+
+                // Serialize project tables as plain JSON (no encryption)
+                var tablesArray = new JArray();
+                foreach (var table in mainPage.MainSessionInfo.Tables)
+                {
+                    var tableObj = new JObject();
+                    tableObj["TableName"] = table.TableName;
+                    tableObj["Description"] = table.Description;
+                    tableObj["SchemaName"] = table.SchemaName;
+
+                    var rowsArray = new JArray();
+                    foreach (var row in table.Rows)
+                    {
+                        var rowObj = new JObject();
+                        rowObj["Name"] = row.Name;
+                        rowObj["Description"] = row.Description;
+                        rowObj["RowType"] = row.RowType?.ToString();
+                        rowObj["Limit"] = row.Limit;
+                        rowObj["IsArray"] = row.IsArray;
+                        rowObj["ArrayLimit"] = row.ArrayLimit;
+                        rowObj["EncryptedAndNOTMedia"] = row.EncryptedAndNOTMedia;
+                        rowObj["Media"] = row.Media;
+                        rowObj["IsPrimary"] = row.IsPrimary;
+                        rowObj["IsUnique"] = row.IsUnique;
+                        rowObj["IsNotNull"] = row.IsNotNull;
+                        rowObj["DefaultValue"] = row.DefaultValue;
+                        rowObj["Check"] = row.Check;
+                        rowObj["DefaultIsPostgresFunction"] = row.DefaultIsPostgresFunction;
+                        rowsArray.Add(rowObj);
+                    }
+                    tableObj["Rows"] = rowsArray;
+
+                    // References
+                    if (table.References != null && table.References.Any())
+                    {
+                        var refsArray = new JArray();
+                        foreach (var reference in table.References)
+                        {
+                            var refObj = new JObject();
+                            refObj["MainTable"] = reference.MainTable;
+                            refObj["RefTable"] = reference.RefTable;
+                            refObj["ForeignKey"] = reference.ForeignKey;
+                            refObj["RefTableKey"] = reference.RefTableKey;
+                            refObj["OnDeleteAction"] = reference.OnDeleteAction.ToString();
+                            refObj["OnUpdateAction"] = reference.OnUpdateAction.ToString();
+                            refsArray.Add(refObj);
+                        }
+                        tableObj["References"] = refsArray;
+                    }
+
+                    // Indexes
+                    if (table.Indexes != null && table.Indexes.Any())
+                    {
+                        var indexesArray = new JArray();
+                        foreach (var index in table.Indexes)
+                        {
+                            var idxObj = new JObject();
+                            idxObj["IndexName"] = index.IndexName;
+                            idxObj["ColumnNames"] = new JArray(index.ColumnNames ?? new List<string>());
+                            idxObj["IndexType"] = index.IndexType;
+                            idxObj["Condition"] = index.Condition;
+                            idxObj["Expression"] = index.Expression;
+                            idxObj["IndexTypeCustom"] = index.IndexTypeCustom;
+                            idxObj["UseJsonbPathOps"] = index.UseJsonbPathOps;
+                            indexesArray.Add(idxObj);
+                        }
+                        tableObj["Indexes"] = indexesArray;
+                    }
+
+                    tablesArray.Add(tableObj);
+                }
+                TemplateData["Data"] = tablesArray;
+
                 return TemplateData;
             }
             this.Unloaded += (s, e) =>
@@ -1040,6 +1131,58 @@ public class SecureMediaSession
                 TableName = name;
                 Description = description;
             }
+        }
+
+        private static List<DatabaseDesign> TopoSortDesignsByReferences(
+    List<DatabaseDesign> designs,
+    List<Reference.ReferenceOptions> references)
+        {
+            // Build a lookup: tableName -> index in designs list
+            var indexMap = designs
+                .Select((d, i) => (d, i))
+                .ToDictionary(x => x.d.TableName, x => x.i);
+
+            // Build adjacency: RefTable must come BEFORE MainTable
+            // So edge direction: RefTable -> MainTable (RefTable is a prerequisite)
+            var inDegree = new int[designs.Count];
+            var adj = new List<List<int>>(designs.Count);
+            for (int i = 0; i < designs.Count; i++) adj.Add(new List<int>());
+
+            foreach (var r in references)
+            {
+                if (!indexMap.TryGetValue(r.RefTable, out int refIdx)) continue;
+                if (!indexMap.TryGetValue(r.MainTable, out int mainIdx)) continue;
+                if (refIdx == mainIdx) continue;
+
+                adj[refIdx].Add(mainIdx);
+                inDegree[mainIdx]++;
+            }
+
+            // Kahn's algorithm
+            var queue = new Queue<int>();
+            for (int i = 0; i < designs.Count; i++)
+                if (inDegree[i] == 0) queue.Enqueue(i);
+
+            var sorted = new List<DatabaseDesign>(designs.Count);
+            while (queue.Count > 0)
+            {
+                int node = queue.Dequeue();
+                sorted.Add(designs[node]);
+                foreach (int neighbor in adj[node])
+                {
+                    if (--inDegree[neighbor] == 0)
+                        queue.Enqueue(neighbor);
+                }
+            }
+
+            // If there's a cycle, append any remaining nodes as-is
+            if (sorted.Count < designs.Count)
+            {
+                var emitted = new HashSet<string>(sorted.Select(d => d.TableName));
+                sorted.AddRange(designs.Where(d => !emitted.Contains(d.TableName)));
+            }
+
+            return sorted;
         }
         public void RemoveWindow()
         {
@@ -1168,6 +1311,628 @@ public class SecureMediaSession
         // Executes when the user navigates to this page.
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+        }
+
+        private void GenerateAPIFiles(string apiPath, string rlsJson, string apiJson)
+        {
+            try
+            {
+                // Generate Program.cs with full configuration
+                var programCs = new System.Text.StringBuilder();
+                programCs.AppendLine("using Microsoft.EntityFrameworkCore;");
+                programCs.AppendLine("using Microsoft.OpenApi.Models;");
+                programCs.AppendLine("using System.Text.Json.Serialization;");
+                programCs.AppendLine();
+                programCs.AppendLine("var builder = WebApplication.CreateBuilder(args);");
+                programCs.AppendLine();
+                programCs.AppendLine("// Configure PostgreSQL connection");
+                programCs.AppendLine("var connectionString = builder.Configuration.GetConnectionString(\"Default\") ??");
+                programCs.AppendLine("    \"Host=localhost;Database=yourdatabase;Username=postgres;Password=yourpassword\";");
+                programCs.AppendLine("builder.Services.AddDbContext<AppDbContext>(options =>");
+                programCs.AppendLine("    options.UseNpgsql(connectionString));");
+                programCs.AppendLine();
+                programCs.AppendLine("builder.Services.AddControllers()");
+                programCs.AppendLine("    .AddJsonOptions(options =>");
+                programCs.AppendLine("    {");
+                programCs.AppendLine("        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;");
+                programCs.AppendLine("    });");
+                programCs.AppendLine("builder.Services.AddEndpointsApiExplorer();");
+                programCs.AppendLine("builder.Services.AddSwaggerGen(c =>");
+                programCs.AppendLine("{");
+                programCs.AppendLine("    c.SwaggerDoc(\"v1\", new OpenApiInfo");
+                programCs.AppendLine("    {");
+                programCs.AppendLine("        Title = \"Database Designer API\",");
+                programCs.AppendLine("        Version = \"v1\",");
+                programCs.AppendLine("        Description = \"Auto-generated API from Database Designer\"");
+                programCs.AppendLine("    });");
+                programCs.AppendLine("});");
+                programCs.AppendLine();
+                programCs.AppendLine("var app = builder.Build();");
+                programCs.AppendLine();
+                programCs.AppendLine("// Ensure database is created and migrated");
+                programCs.AppendLine("using (var scope = app.Services.CreateScope())");
+                programCs.AppendLine("{");
+                programCs.AppendLine("    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();");
+                programCs.AppendLine("    db.Database.EnsureCreated();");
+                programCs.AppendLine("}");
+                programCs.AppendLine();
+                programCs.AppendLine("app.UseSwagger();");
+                programCs.AppendLine("app.UseSwaggerUI();");
+                programCs.AppendLine("app.UseRouting();");
+                programCs.AppendLine("app.MapControllers();");
+                programCs.AppendLine("app.Run();");
+                File.WriteAllText(Path.Combine(apiPath, "Program.cs"), programCs.ToString());
+
+                // Generate appsettings.json
+                var appsettings = @"{
+  ""Logging"": {
+    ""LogLevel"": {
+      ""Default"": ""Information"",
+      ""Microsoft.AspNetCore"": ""Warning"",
+      ""Microsoft.EntityFrameworkCore"": ""Warning""
+    }
+  },
+  ""AllowedHosts"": ""*"",
+  ""ConnectionStrings"": {
+    ""Default"": ""Host=localhost;Database=yourdatabase;Username=postgres;Password=yourpassword""
+  }
+}";
+                File.WriteAllText(Path.Combine(apiPath, "appsettings.json"), appsettings);
+
+                // Generate complete AppDbContext from RLS data
+                var dbContextPath = Path.Combine(apiPath, "Models", "AppDbContext.cs");
+                Directory.CreateDirectory(Path.GetDirectoryName(dbContextPath));
+
+                var dbContext = new System.Text.StringBuilder();
+                dbContext.AppendLine("using Microsoft.EntityFrameworkCore;");
+                dbContext.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
+                dbContext.AppendLine();
+                dbContext.AppendLine("public class AppDbContext : DbContext");
+                dbContext.AppendLine("{");
+                dbContext.AppendLine("    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }");
+                dbContext.AppendLine();
+
+                // Parse RLS data for tables
+                if (!string.IsNullOrEmpty(rlsJson))
+                {
+                    try
+                    {
+                        var rlsData = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
+                        if (rlsData?.Roles != null)
+                        {
+                            foreach (var role in rlsData.Roles)
+                            {
+                                if (role.Tables != null)
+                                {
+                                    foreach (var table in role.Tables)
+                                    {
+                                        var className = SanitizeName(table.TableName);
+                                        var dbSetName = className + "s";
+
+                                        string? schemaName = null;
+                                        string tableName = table.TableName;
+                                        if (table.TableName.Contains('.'))
+                                        {
+                                            var parts = table.TableName.Split('.');
+                                            schemaName = parts[0];
+                                            tableName = parts[1];
+                                        }
+
+                                        if (!string.IsNullOrEmpty(schemaName))
+                                            dbContext.AppendLine($"    [Table(\"{tableName}\", Schema = \"{schemaName}\")]");
+                                        else
+                                            dbContext.AppendLine($"    [Table(\"{tableName}\")]");
+
+                                        dbContext.AppendLine($"    public DbSet<{className}> {dbSetName} {{ get; set; }}");
+                                        dbContext.AppendLine();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                dbContext.AppendLine("}");
+
+                // Generate model classes
+                var modelsPath = Path.Combine(apiPath, "Models", "Models.cs");
+                Directory.CreateDirectory(Path.GetDirectoryName(modelsPath));
+
+                var models = new System.Text.StringBuilder();
+                models.AppendLine("// Model classes auto-generated from database schema");
+                models.AppendLine("using System.ComponentModel.DataAnnotations;");
+                models.AppendLine();
+                if (!string.IsNullOrEmpty(rlsJson))
+                {
+                    try
+                    {
+                        var rlsData = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
+                        if (rlsData?.Roles != null)
+                        {
+                            foreach (var role in rlsData.Roles)
+                            {
+                                if (role.Tables != null)
+                                {
+                                    foreach (var table in role.Tables)
+                                    {
+                                        var className = SanitizeName(table.TableName);
+                                        models.AppendLine($"public class {className}");
+                                        models.AppendLine("{");
+                                        models.AppendLine("    [Key]");
+                                        models.AppendLine("    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]");
+                                        models.AppendLine("    public Guid Id { get; set; }");
+                                        models.AppendLine($"    // Table: {table.TableName}");
+                                        models.AppendLine($"    // Description: {table.Description}");
+                                        models.AppendLine($"    public string Name {{ get; set; }} = \"\";");
+                                        models.AppendLine("}");
+                                        models.AppendLine();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                File.WriteAllText(dbContextPath, dbContext.ToString());
+                File.WriteAllText(modelsPath, models.ToString());
+
+                // Generate Controllers folder
+                string controllersPath = Path.Combine(apiPath, "Controllers");
+                Directory.CreateDirectory(controllersPath);
+
+                if (!string.IsNullOrEmpty(apiJson))
+                {
+                    var apiData = System.Text.Json.JsonSerializer.Deserialize<APIData>(apiJson);
+                    if (apiData?.Modules != null)
+                    {
+                        foreach (var module in apiData.Modules)
+                        {
+                            if (string.IsNullOrEmpty(module.Name)) continue;
+                            var safeName = SanitizeName(module.Name);
+                            var controllerName = $"{safeName}Controller.cs";
+                            var controllerCode = new System.Text.StringBuilder();
+                            controllerCode.AppendLine("using Microsoft.AspNetCore.Mvc;");
+                            controllerCode.AppendLine("using Microsoft.EntityFrameworkCore;");
+                            controllerCode.AppendLine("using System.Threading.Tasks;");
+                            controllerCode.AppendLine();
+                            controllerCode.AppendLine($"[ApiController]");
+                            controllerCode.AppendLine($"[Route(\"api/{safeName.ToLower()}\")]");
+                            controllerCode.AppendLine($"public class {safeName}Controller : ControllerBase");
+                            controllerCode.AppendLine("{");
+                            controllerCode.AppendLine("    private readonly AppDbContext _db;");
+                            controllerCode.AppendLine($"    public {safeName}Controller(AppDbContext db) => _db = db;");
+                            controllerCode.AppendLine();
+
+                            foreach (var endpoint in module.Endpoints)
+                            {
+                                if (string.IsNullOrEmpty(endpoint.Name)) continue;
+                                controllerCode.AppendLine($"    // Endpoint: {endpoint.Name}");
+                                controllerCode.AppendLine($"    // Description: {endpoint.Description}");
+                                controllerCode.AppendLine();
+
+                                foreach (var function in endpoint.Functions)
+                                {
+                                    var verb = !string.IsNullOrEmpty(function.Verb) ? function.Verb.ToUpper() : "GET";
+                                    var route = !string.IsNullOrEmpty(function.Name) ? SanitizeName(function.Name) : "index";
+                                    controllerCode.AppendLine($"    [{verb}(\"{route}\")]");
+                                    controllerCode.AppendLine($"    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]");
+                                    controllerCode.AppendLine($"    public async Task<IActionResult> {SanitizeName(function.Name)}()");
+                                    controllerCode.AppendLine("    {");
+                                    controllerCode.AppendLine($"        // TODO: Implement {function.Name}");
+                                    controllerCode.AppendLine($"        // Tag: {(string.IsNullOrEmpty(function.Tag) ? "none" : function.Tag)}");
+                                    controllerCode.AppendLine($"        // Description: {function.Description}");
+                                    controllerCode.AppendLine("        return Ok(new { message = \"Implement endpoint logic here\" });");
+                                    controllerCode.AppendLine("    }");
+                                    controllerCode.AppendLine();
+                                }
+                            }
+                            controllerCode.AppendLine("}");
+                            File.WriteAllText(Path.Combine(controllersPath, controllerName), controllerCode.ToString());
+                        }
+                    }
+                }
+
+                // Generate .csproj file
+                var csproj = @"<Project Sdk=""Microsoft.NET.Sdk.Web"">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.0"" />
+    <PackageReference Include=""Npgsql.EntityFrameworkCore.PostgreSQL"" Version=""8.0.0"" />
+    <PackageReference Include=""Microsoft.AspNetCore.OpenApi"" Version=""8.0.0"" />
+    <PackageReference Include=""Swashbuckle.AspNetCore"" Version=""6.5.0"" />
+  </ItemGroup>
+</Project>";
+                File.WriteAllText(Path.Combine(apiPath, "API.csproj"), csproj);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to generate API files: {ex.Message}");
+            }
+        }
+
+        private void GenerateSpacetimeDBFiles(string spacetimePath, string rlsJson, string apiJson)
+        {
+            // ... existing code
+        }
+
+        private string GenerateRLSSQL(string rlsJson, IEnumerable<TableObject> tables)
+        {
+            var sql = new System.Text.StringBuilder();
+            sql.AppendLine("-- ============================================================");
+            sql.AppendLine("-- ROW LEVEL SECURITY (RLS) POLICIES");
+            sql.AppendLine("-- Auto-generated by Database Designer");
+            sql.AppendLine("-- ============================================================");
+            sql.AppendLine();
+
+            if (string.IsNullOrEmpty(rlsJson) || tables == null || !tables.Any())
+            {
+                sql.AppendLine("-- No RLS data or tables defined.");
+                return sql.ToString();
+            }
+
+            try
+            {
+                var rlsData = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
+                if (rlsData?.Roles == null || !rlsData.Roles.Any())
+                {
+                    sql.AppendLine("-- No roles defined in RLS data.");
+                    return sql.ToString();
+                }
+
+                // Build table name lookup for finding columns
+                var tableLookup = tables.ToDictionary(t => $"{t.SchemaName}.{t.TableName}".ToLower(), t => t);
+
+                foreach (var role in rlsData.Roles)
+                {
+                    if (role.Tables == null || !role.Tables.Any()) continue;
+
+                    var roleName = SanitizeRoleName(role.Name);
+                    sql.AppendLine($"-- ============================================================");
+                    sql.AppendLine($"-- Role: {roleName}");
+                    sql.AppendLine($"-- Description: {role.Description}");
+                    sql.AppendLine($"-- ============================================================");
+
+                    // Create role if not exists
+                    sql.AppendLine($"DO $$");
+                    sql.AppendLine($"BEGIN");
+                    sql.AppendLine($"    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{roleName}') THEN");
+                    sql.AppendLine($"        CREATE ROLE {roleName};");
+                    sql.AppendLine($"    END IF;");
+                    sql.AppendLine($"END $$;");
+                    sql.AppendLine();
+
+                    // Process each table for this role
+                    foreach (var tablePolicy in role.Tables)
+                    {
+                        var tableKey = tablePolicy.TableName.ToLower();
+                        var parts = tablePolicy.TableName.Split('.');
+                        string schemaName = parts.Length > 1 ? parts[0] : "public";
+                        string tableName = parts.Length > 1 ? parts[1] : parts[0];
+
+                        // Try to find matching table in tables list
+                        TableObject? matchedTable = null;
+                        foreach (var t in tables)
+                        {
+                            if ($"{t.SchemaName}.{t.TableName}".ToLower() == tableKey ||
+                                t.TableName.ToLower() == tableKey)
+                            {
+                                matchedTable = t;
+                                break;
+                            }
+                        }
+
+                        sql.AppendLine($"-- Table: {schemaName}.{tableName}");
+                        sql.AppendLine($"-- Policy: {tablePolicy.Description}");
+
+                        // Enable RLS on table
+                        sql.AppendLine($"ALTER TABLE {schemaName}.{tableName} ENABLE ROW LEVEL SECURITY;");
+
+                        // Force RLS for table owner too (recommended for security)
+                        sql.AppendLine($"ALTER TABLE {schemaName}.{tableName} FORCE ROW LEVEL SECURITY;");
+
+                        // Create policies based on categories and policies defined
+                        foreach (var policy in tablePolicy.Policies)
+                        {
+                            var policyName = SanitizeIdentifier(policy.Name);
+                            var category = policy.Category ?? "Base Server";
+                            var tag = policy.Tag ?? "";
+
+                            // Generate policy based on category
+                            var policyType = GetPolicyType(category);
+                            var usingExpr = GenerateUsingExpression(category, matchedTable, policy);
+                            var checkExpr = GenerateCheckExpression(category, matchedTable, policy);
+
+                            sql.AppendLine();
+                            sql.AppendLine($"-- Policy: {policy.Name}");
+                            sql.AppendLine($"-- Category: {category}");
+                            if (!string.IsNullOrEmpty(tag))
+                                sql.AppendLine($"-- Tag: {tag}");
+                            sql.AppendLine($"DROP POLICY IF EXISTS \"{policyName}\" ON {schemaName}.{tableName};");
+                            sql.AppendLine($"CREATE POLICY \"{policyName}\" ON {schemaName}.{tableName}");
+                            sql.AppendLine($"    FOR {policyType}");
+
+                            if (!string.IsNullOrEmpty(usingExpr))
+                                sql.AppendLine($"    USING ({usingExpr})");
+
+                            if (!string.IsNullOrEmpty(checkExpr))
+                                sql.AppendLine($"    WITH CHECK ({checkExpr})");
+
+                            sql.AppendLine(";");
+                        }
+
+                        // Grant permissions to role
+                        sql.AppendLine();
+                        sql.AppendLine($"-- Grant permissions for {roleName} on {schemaName}.{tableName}");
+                        sql.AppendLine($"GRANT SELECT, INSERT, UPDATE, DELETE ON {schemaName}.{tableName} TO {roleName};");
+                        sql.AppendLine();
+                    }
+
+                    // Create role hierarchy (admin > moderator > standard)
+                    if (roleName.Contains("admin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sql.AppendLine($"-- Admin role inherits standard permissions");
+                        sql.AppendLine($"GRANT standard_users TO {roleName};");
+                        sql.AppendLine($"GRANT moderator_users TO {roleName};");
+                        sql.AppendLine();
+                    }
+                    else if (roleName.Contains("moderator", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sql.AppendLine($"-- Moderator inherits standard permissions");
+                        sql.AppendLine($"GRANT standard_users TO {roleName};");
+                        sql.AppendLine();
+                    }
+                }
+
+                // Add helper functions for common RLS patterns
+                sql.AppendLine();
+                sql.AppendLine("-- ============================================================");
+                sql.AppendLine("-- HELPER FUNCTIONS FOR RLS");
+                sql.AppendLine("-- ============================================================");
+                sql.AppendLine();
+                sql.AppendLine(@"
+CREATE OR REPLACE FUNCTION current_user_id()
+RETURNS BIGINT AS $$
+BEGIN
+    RETURN COALESCE(NULLIF(current_setting('app.current_user_id', true), '')::BIGINT, 0);
+EXCEPTION WHEN OTHERS THEN
+    RETURN 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION current_user_role()
+RETURNS TEXT AS $$
+BEGIN
+    RETURN COALESCE(NULLIF(current_setting('app.current_user_role', true), ''), 'anonymous');
+EXCEPTION WHEN OTHERS THEN
+    RETURN 'anonymous';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN current_user_role() IN ('admin_users', 'Admin Users', 'admin');
+EXCEPTION WHEN OTHERS THEN
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_moderator()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN current_user_role() IN ('moderator_users', 'Moderator Users', 'admin', 'moderator');
+EXCEPTION WHEN OTHERS THEN
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+");
+            }
+            catch (Exception ex)
+            {
+                sql.AppendLine($"-- Error generating RLS: {ex.Message}");
+            }
+
+            return sql.ToString();
+        }
+
+        private string GetPolicyType(string category)
+        {
+            return category?.ToLower() switch
+            {
+                "communication" => "SELECT",
+                "profiles" => "ALL",
+                "economy" => "ALL",
+                "base server" => "SELECT",
+                _ => "SELECT"
+            };
+        }
+
+        private string GenerateUsingExpression(string category, TableObject? matchedTable, RLSData.Policy policy)
+        {
+            // Find user_id or similar column
+            string? userIdCol = FindUserIdColumn(matchedTable);
+            string? ownerCol = FindOwnerColumn(matchedTable);
+
+            var conditions = new List<string>();
+
+            // Admin/moderator bypass
+            conditions.Add("(current_user_role() IN ('admin_users', 'Moderator Users') OR is_admin() OR is_moderator())");
+
+            switch (category?.ToLower())
+            {
+                case "communication":
+                    conditions.Add($"(sender_id = current_user_id() OR recipient_id = current_user_id() OR visibility = 'public')");
+                    break;
+
+                case "profiles":
+                    if (!string.IsNullOrEmpty(userIdCol))
+                        conditions.Add($"({userIdCol} = current_user_id())");
+                    if (!string.IsNullOrEmpty(ownerCol))
+                        conditions.Add($"({ownerCol} = current_user_id())");
+                    conditions.Add("(is_public = true OR visibility = 'public')");
+                    break;
+
+                case "economy":
+                    conditions.Add("(is_public = true OR owner_id = current_user_id())");
+                    break;
+
+                default:
+                    if (!string.IsNullOrEmpty(userIdCol))
+                        conditions.Add($"({userIdCol} = current_user_id())");
+                    break;
+            }
+
+            return string.Join("\n        AND ", conditions);
+        }
+
+        private string GenerateCheckExpression(string category, TableObject? matchedTable, RLSData.Policy policy)
+        {
+            string? userIdCol = FindUserIdColumn(matchedTable);
+            string? ownerCol = FindOwnerColumn(matchedTable);
+
+            var conditions = new List<string>();
+
+            // Admin bypass
+            conditions.Add("(is_admin() OR is_moderator())");
+
+            switch (category?.ToLower())
+            {
+                case "communication":
+                    if (!string.IsNullOrEmpty(userIdCol))
+                        conditions.Add($"(sender_id = current_user_id())");
+                    else
+                        conditions.Add("(created_by = current_user_id())");
+                    break;
+
+                case "profiles":
+                    if (!string.IsNullOrEmpty(userIdCol))
+                        conditions.Add($"({userIdCol} = current_user_id())");
+                    break;
+
+                case "economy":
+                    if (!string.IsNullOrEmpty(ownerCol))
+                        conditions.Add($"({ownerCol} = current_user_id())");
+                    break;
+
+                default:
+                    if (!string.IsNullOrEmpty(userIdCol))
+                        conditions.Add($"({userIdCol} = current_user_id())");
+                    break;
+            }
+
+            return string.Join("\n        AND ", conditions);
+        }
+
+        private string? FindUserIdColumn(TableObject? table)
+        {
+            if (table == null) return null;
+            var t = table.Value;
+            if (t.Rows == null) return null;
+            RowCreation found = default;
+            bool foundMatch = false;
+            foreach (var r in t.Rows)
+            {
+                string n = r.Name ?? "";
+                if (n.Equals("user_id", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("owner_id", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("created_by", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("author_id", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("sender_id", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("recipient_id", StringComparison.OrdinalIgnoreCase))
+                {
+                    found = r;
+                    foundMatch = true;
+                    break;
+                }
+            }
+            return foundMatch ? found.Name : null;
+        }
+
+        private string? FindOwnerColumn(TableObject? table)
+        {
+            if (table == null) return null;
+            var t = table.Value;
+            if (t.Rows == null) return null;
+            RowCreation found = default;
+            bool foundMatch = false;
+            foreach (var r in t.Rows)
+            {
+                string n = r.Name ?? "";
+                if (n.Equals("owner_id", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("owner", StringComparison.OrdinalIgnoreCase) ||
+                    n.Equals("user_id", StringComparison.OrdinalIgnoreCase))
+                {
+                    found = r;
+                    foundMatch = true;
+                    break;
+                }
+            }
+            return foundMatch ? found.Name : null;
+        }
+
+        private string SanitizeRoleName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "standard_users";
+            var sanitized = new System.Text.StringBuilder();
+            foreach (char c in name.ToLower())
+            {
+                if (char.IsLetterOrDigit(c) || c == '_' || c == ' ')
+                    sanitized.Append(c == ' ' ? '_' : c);
+            }
+            var result = sanitized.ToString().Replace("__", "_").Trim('_');
+            if (result.Length > 0 && char.IsDigit(result[0]))
+                result = "_" + result;
+            return string.IsNullOrEmpty(result) ? "standard_users" : result;
+        }
+
+        private string SanitizeIdentifier(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "unnamed_policy";
+            var sanitized = new System.Text.StringBuilder();
+            foreach (char c in name)
+            {
+                if (char.IsLetterOrDigit(c) || c == '_' || c == ' ' || c == '-' || c == '(' || c == ')')
+                    sanitized.Append(c);
+            }
+            var result = sanitized.ToString().Replace(" ", "_").Trim();
+            return string.IsNullOrEmpty(result) ? "unnamed_policy" : result;
+        }
+
+        private string SanitizeName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "Unknown";
+            var result = new System.Text.StringBuilder();
+            foreach (char c in name)
+            {
+                if (char.IsLetterOrDigit(c) || c == '_')
+                    result.Append(char.IsLower(c) ? c : char.ToLower(c));
+                else if (c == ' ')
+                    result.Append('_');
+            }
+            var str = result.ToString().Trim('_');
+            if (str.Length > 0 && char.IsDigit(str[0]))
+                str = "_" + str;
+            return string.IsNullOrEmpty(str) ? "Unknown" : str;
+        }
+                                private string GetCSharpType(string dataType)
+        {
+            if (string.IsNullOrEmpty(dataType)) return "string";
+            var dt = dataType.ToUpper();
+            if (dt.Contains("INT") || dt == "SERIAL" || dt == "BIGSERIAL") return "int";
+            if (dt.Contains("BIGINT")) return "long";
+            if (dt.Contains("FLOAT") || dt.Contains("DOUBLE") || dt.Contains("REAL")) return "double";
+            if (dt.Contains("DECIMAL") || dt.Contains("NUMERIC")) return "decimal";
+            if (dt.Contains("BOOL")) return "bool";
+            if (dt.Contains("DATE") || dt.Contains("TIME")) return "DateTime";
+            if (dt.Contains("UUID")) return "Guid";
+            if (dt.Contains("JSON")) return "string";
+            return "string";
         }
     }
 }

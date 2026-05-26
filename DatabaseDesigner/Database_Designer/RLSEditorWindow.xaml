@@ -1,0 +1,9 @@
+<Page x:Class="Database_Designer.RLSEditorWindow"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:Database_Designer">
+
+    <Grid Background="#0E0E0E">
+        <Frame x:Name="RLSFrame"/>
+    </Grid>
+</Page>

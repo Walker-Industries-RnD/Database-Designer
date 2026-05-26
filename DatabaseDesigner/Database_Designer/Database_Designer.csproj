@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -26,6 +26,18 @@
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
+    <Page Include="APIEditorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="APIPage1Modules.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="APIPage2Endpoints.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="APIPage3Functions.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="BasicDatabaseDesigner.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -98,6 +110,18 @@
     <Page Include="ProjectsView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="RLSEditorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RLSPage1Roles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RLSPage2Tables.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RLSPage3Policies.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Roadmap.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -107,9 +131,24 @@
     <Page Include="WarningTables.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="RLSPolicyCreator.xaml"><Generator>MSBuild:Compile</Generator></Page>
+    <Page Include="FunctionCreator.xaml"><Generator>MSBuild:Compile</Generator></Page>
+
+    <!-- NodeWalker — embedded node-graph editor -->
+    <Page Include="NodeWalker\NodeWalkerWindow.xaml"><Generator>MSBuild:Compile</Generator></Page>
+    <Page Include="NodeWalker\ChunkControl.xaml"><Generator>MSBuild:Compile</Generator></Page>
+    <Page Include="NodeWalker\NodeControl.xaml"><Generator>MSBuild:Compile</Generator></Page>
+    <Page Include="NodeWalker\NoteControl.xaml"><Generator>MSBuild:Compile</Generator></Page>
+    <Page Include="NodeWalker\NodeLibraryWindow.xaml"><Generator>MSBuild:Compile</Generator></Page>
+    <Page Include="NodeWalker\ScriptToNodeWindow.xaml"><Generator>MSBuild:Compile</Generator></Page>
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="APIData.cs" />
+    <Compile Include="APIEditorWindow.xaml.cs" />
+    <Compile Include="APIPage1Modules.xaml.cs" />
+    <Compile Include="APIPage2Endpoints.xaml.cs" />
+    <Compile Include="APIPage3Functions.xaml.cs" />
     <Compile Include="App.xaml.cs" />
     <Compile Include="BasicDatabaseDesigner.xaml.cs" />
     <Compile Include="Build.xaml.cs" />
@@ -128,6 +167,7 @@
     <Compile Include="FolderViewer.xaml.cs" />
     <Compile Include="GeneralPanel.xaml.cs" />
     <Compile Include="ImageHelper.cs" />
+    <Compile Include="JSAudioManager.cs" />
     <Compile Include="Login.xaml.cs" />
     <Compile Include="LogoutConfirm.xaml.cs" />
     <Compile Include="MainDesigner.xaml.cs" />
@@ -136,9 +176,26 @@
     <Compile Include="MusicPlayer.xaml.cs" />
     <Compile Include="Projects.xaml.cs" />
     <Compile Include="ProjectsView.xaml.cs" />
+    <Compile Include="RLSData.cs" />
+    <Compile Include="RLSEditorWindow.xaml.cs" />
+    <Compile Include="RLSPage1Roles.xaml.cs" />
+    <Compile Include="RLSPage2Tables.xaml.cs" />
+    <Compile Include="RLSPage3Policies.xaml.cs" />
     <Compile Include="Roadmap.xaml.cs" />
     <Compile Include="TablesView.xaml.cs" />
     <Compile Include="WarningTables.xaml.cs" />
+    <Compile Include="RLSPolicyCreator.xaml.cs" />
+    <Compile Include="FunctionCreator.xaml.cs" />
+    <Compile Include="EditableTextHelpers.cs" />
+
+    <!-- NodeWalker code-behind -->
+    <Compile Include="NodeWalker\NodeWalker.cs" />
+    <Compile Include="NodeWalker\NodeWalkerWindow.xaml.cs" />
+    <Compile Include="NodeWalker\ChunkControl.xaml.cs" />
+    <Compile Include="NodeWalker\NodeControl.xaml.cs" />
+    <Compile Include="NodeWalker\NoteControl.xaml.cs" />
+    <Compile Include="NodeWalker\NodeLibraryWindow.xaml.cs" />
+    <Compile Include="NodeWalker\ScriptToNodeWindow.xaml.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -178,6 +235,7 @@
     <Content Include="Assets\Fonts\Inter_28pt-SemiBoldItalic.ttf" />
     <Content Include="Assets\Fonts\Inter_28pt-Thin.ttf" />
     <Content Include="Assets\Fonts\Inter_28pt-ThinItalic.ttf" />
+    <Content Include="Assets\GridBG.png" />
     <Content Include="Assets\Images\app.ico" />
     <Content Include="Assets\Images\AresPFP.jpg" />
     <Content Include="Assets\Images\BG.png" />
@@ -204,6 +262,7 @@
     <Content Include="Assets\Images\LightBG.png" />
     <Content Include="Assets\Images\loadinganim.gif" />
     <Content Include="Assets\Images\Lock.png" />
+    <Content Include="Assets\Images\Logos\API Editor.png" />
     <Content Include="Assets\Images\Logos\BasicDatabaseDesigner.png" />
     <Content Include="Assets\Images\Logos\ControlPanel.png" />
     <Content Include="Assets\Images\Logos\CreateTableTemplate.png" />
@@ -221,6 +280,7 @@
     <Content Include="Assets\Images\Logos\MainDesigner.png" />
     <Content Include="Assets\Images\Logos\MiraMiniPopupLogo.png" />
     <Content Include="Assets\Images\Logos\Projects.png" />
+    <Content Include="Assets\Images\Logos\RLS Editor.png" />
     <Content Include="Assets\Images\Logos\Roadmap.png" />
     <Content Include="Assets\Images\Logos\SupporterPack.png" />
     <Content Include="Assets\Images\Logos\Templates%28MainDesigner%29.png" />
@@ -303,6 +363,9 @@
     <Content Include="Assets\Images\WILogoNoText.png" />
     <Content Include="Assets\Images\WILogoWText.png" />
     <Content Include="Assets\Images\Window.png" />
+    <Content Include="Assets\NodeWalker\NODEWLKR.png" />
+    <Content Include="Assets\NodeWalker\twoweekendgo-regular.ttf"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="Assets\NODEWLKR.png" />
     <Content Include="Assets\Sounds\Album\A Fragile Longing - Piano Ver.mp3" />
     <Content Include="Assets\Sounds\Album\A Fragile Longing.mp3" />
     <Content Include="Assets\Sounds\Album\BloodStainedEthics.mp3" />
@@ -334,6 +397,7 @@
     <Content Include="Assets\Sounds\SFX\SFX6.MP3" />
     <Content Include="Assets\Sounds\SFX\SFX8.MP3" />
     <Content Include="Assets\Templates\Projects\Template.DsgnRowTmplate" />
+    <Content Include="Assets\twoweekendgo-regular.ttf" />
     <Content Include="DBDesignerTemplateRows.json" />
   </ItemGroup>
 
@@ -346,8 +410,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- DatabaseDesigner is now a project reference so changes to the DLL
+         source propagate without manually rebuilding + copying the binary. -->
+    <ProjectReference Include="..\..\DatabaseDesignerDLL\DatabaseDesigner.csproj" />
     <Reference Include="DatabaseDesigner">
-      <HintPath>DatabaseDesigner.dll</HintPath>
+      <HintPath>..\..\DatabaseDesignerDLL\bin\Debug\net8.0\DatabaseDesigner.dll</HintPath>
     </Reference>
     <Reference Include="PariahCybersecurity">
       <HintPath>PariahCybersecurity.dll</HintPath>
