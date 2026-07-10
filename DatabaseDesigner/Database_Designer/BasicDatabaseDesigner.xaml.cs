@@ -2442,9 +2442,10 @@ RemoveWindow();
         public List<TableObject>? DefaultProjectData = null;
         //Where we dump the new project
 
-        public ObservableCollection<DBDesignerSession> TemplatedItem = new ObservableCollection<DBDesignerSession>(); 
+        public ObservableCollection<DBDesignerSession> TemplatedItem = new ObservableCollection<DBDesignerSession>();
         public string TemplateName;
         public string AuthorName;
+        public string TemplateScriptsSource;
 
         public List<TableObject>? CustomTables = null;
         //Custom Tables from Template
@@ -2850,6 +2851,11 @@ RemoveWindow();
 
                     Directory.CreateDirectory(SaveDirectory);
 
+                    if (!string.IsNullOrEmpty(TemplateScriptsSource) && Directory.Exists(TemplateScriptsSource))
+                    {
+                        try { CopyDirectory(TemplateScriptsSource, Path.Combine(SaveDirectory, "Scripts")); }
+                        catch (Exception ex) { Console.WriteLine($"[Template Scripts restore] {ex.Message}"); }
+                    }
 
                     var overviewFilePath = Path.Combine(SaveDirectory, (ProjectTitle + ".secdbdesign"));
                     await File.WriteAllTextAsync(overviewFilePath, contentBase64);
@@ -2889,6 +2895,15 @@ RemoveWindow();
 
         }
 
+
+        private static void CopyDirectory(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+            foreach (var file in Directory.GetFiles(sourceDir))
+                File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+            foreach (var dir in Directory.GetDirectories(sourceDir))
+                CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
+        }
 
         public void CreateIndex(SessionStorage.TableObject refTable, SessionStorage.IndexCreation? indexInfo)
         {

@@ -110,19 +110,19 @@ namespace Database_Designer
 
             List<string> Phase1A = new()
             {
-               "Database Designer Release!",
-               "Username/Password Based Sessions",
-               "Postgres Based SQL File Generation",
-               "Markdown Based Documentation Generation",
-               "API C# Based File Documentation"
+               "Database Designer Release! (Done!) ",
+               "Username/Password Based Sessions (Done!) ",
+               "Postgres Based SQL File Generation (Done!) ",
+               "Markdown Based Documentation Generation (Done!) ",
+               "API C# Based File Documentation (Done!) "
             };
 
             List<string> Phase1B = new()
                {
-                   "DMs, Chatrooms, Servers, Castles and Parties",
-                   "Multiple Message Formats Supported",
-                   "Centralized And Decentralized Formats",
-                   "Username/Password Based Login With 2FA"
+                   "DMs, Chatrooms, Servers, Castles and Parties (Done, Workshop!) ",
+                   "Multiple Message Formats Supported (Done, Workshop!)",
+                   "Centralized And Decentralized Formats (Done, Workshop!)",
+                   "Username/Password Based Login With 2FA (Done, Workshop!)"
                };
 
             List<string> Phase2A = new()
@@ -130,7 +130,7 @@ namespace Database_Designer
                    "SSO Login Added + Custom Data Types",
                    "Single and Multivendor Markwtplaces w Payments",
                    "Online Library For Remembering Digital Purchases (Centralized)",
-                   "Mod System For Custom Templates"
+                   "Mod System For Custom Templates (Done!)"
                };
 
             List<string> Phase2B = new()
@@ -266,7 +266,7 @@ namespace Database_Designer
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf"),
-                    Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                    Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
                 };
 
                 subPhaseGrid.Children.Add(subPhaseText);

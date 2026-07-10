@@ -1,0 +1,28 @@
+{
+  "Name": "User Accounts",
+  "Overview": "A ready-to-use users table for secure sign-in: unique username and email, hashed password, and an automatic created_at timestamp.",
+  "AuthorName": "Walker Industries",
+  "Company": "Walker Industries",
+  "Website": "",
+  "License": "MIT",
+  "Note": "Example row template. Safe to import into any project.",
+  "Data": [
+    {
+      "TableName": "users",
+      "Description": "Application user accounts.",
+      "SchemaName": "public",
+      "Rows": [
+        { "Name": "id", "Description": "Primary key", "RowType": "BigSerial", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": true, "IsUnique": false, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "username", "Description": "Unique login name", "RowType": "VarChar", "Limit": 32, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": true, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "email", "Description": "Unique email address", "RowType": "VarChar", "Limit": 255, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": true, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "password_hash", "Description": "Hashed password (never store plaintext)", "RowType": "Text", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "created_at", "Description": "Row creation timestamp", "RowType": "TimestampTz", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": "now()", "Check": null, "DefaultIsPostgresFunction": true }
+      ],
+      "References": [],
+      "Indexes": [
+        { "IndexName": "users_email_idx", "ColumnNames": ["email"], "IndexType": "Basic", "Condition": "", "Expression": "", "IndexTypeCustom": "", "UseJsonbPathOps": false }
+      ],
+      "CustomRows": []
+    }
+  ]
+}

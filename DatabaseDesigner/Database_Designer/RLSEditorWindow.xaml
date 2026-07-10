@@ -5,5 +5,10 @@
 
     <Grid Background="#0E0E0E">
         <Frame x:Name="RLSFrame"/>
+        <Button x:Name="CloseButton" Content="X" Width="36" Height="32"
+                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0"
+                Background="#FFDCD8C0" Foreground="Black" FontSize="14"
+                FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"
+                Click="CloseButton_Click"/>
     </Grid>
 </Page>

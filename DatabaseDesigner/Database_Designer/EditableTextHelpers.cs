@@ -6,11 +6,7 @@ using System.Windows.Media;
 
 namespace Database_Designer
 {
-    /// <summary>
-    /// Click-to-edit helpers shared by RLSPolicyCreator + FunctionCreator.
-    /// A small TextBlock is rendered initially; clicking it swaps to a
-    /// TextBox in place. Enter or losing focus commits, Escape reverts.
-    /// </summary>
+
     internal static class EditableTextHelpers
     {
         public static UIElement EditableText(
@@ -95,8 +91,7 @@ namespace Database_Designer
             return grid;
         }
 
-        // Compact pill-style "Open" button used at the right edge of policy /
-        // function rows. Click to launch the NodeWalker graph for that entry.
+        // Click to launch the NodeWalker graph for that entry. 
         public static Button OpenInNodeWalkerButton(Action onClick)
         {
             var btn = new Button

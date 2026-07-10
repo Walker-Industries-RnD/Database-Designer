@@ -538,6 +538,25 @@ namespace Database_Designer.NodeWalker
             ///         public static T DoACoolThing(...) { ... }
             ///     }
             /// </summary>
+            // Describes the compiled entry point so external generators (e.g.
+            // the API build) can call it: the wrapper class name, the method
+            // name, whether it's async, whether it returns a value, and whether
+            // it needs caller-supplied parameters.
+            public static (string ClassName, string Method, bool IsAsync, bool ReturnsValue, bool HasParams)
+                DescribeEntry(SessionData.Session session)
+            {
+                var className = SafeId(string.IsNullOrWhiteSpace(session.Name) ? "Generated" : session.Name);
+                if (!className.EndsWith("Script", StringComparison.Ordinal)) className += "Script";
+
+                var method   = SafeId(session.FunctionName ?? "DoACoolThing");
+                bool isAsync = session.IsAsync || (session.Nodes?.Any(n => n.IsAsync) ?? false);
+                bool returns = GetReturnType(session) != "void";
+                bool hasParams =
+                    (session.Nodes?.Any(n => n.Title == "Event Input" || n.Title == "Custom Input") ?? false);
+
+                return (className, method, isAsync, returns, hasParams);
+            }
+
             public static string CompileToScript(SessionData.Session session)
             {
                 var sb = new StringBuilder();
@@ -597,7 +616,7 @@ namespace Database_Designer.NodeWalker
                 "db: remove and save", "db: exists",
                 "db: begin tx", "db: commit tx", "db: rollback tx",
                 "where: equals", "where: not equals", "where: greater", "where: less",
-                "where: contains", "where: and", "where: or",
+                "where: contains", "where: and", "where: or", "where: not", "select: field",
                 "db: order by", "db: order by desc", "db: page", "db: include",
                 "db: rls enable", "db: rls disable", "db: rls force",
                 "db: rls create policy", "db: rls drop policy",
@@ -671,7 +690,7 @@ namespace Database_Designer.NodeWalker
                 "db: remove and save", "db: exists",
                 "db: begin tx", "db: commit tx", "db: rollback tx",
                 "where: equals", "where: not equals", "where: greater", "where: less",
-                "where: contains", "where: and", "where: or",
+                "where: contains", "where: and", "where: or", "where: not", "select: field",
                 "db: order by", "db: order by desc", "db: page", "db: include",
                 "db: rls enable", "db: rls disable", "db: rls force",
                 "db: rls create policy", "db: rls drop policy",
@@ -911,6 +930,7 @@ namespace Database_Designer.NodeWalker
                 // Predicate map gets reset per compile so re-entry doesn't
                 // leak lambda text from the previous run.
                 _predicateExpressions = new Dictionary<string, string>();
+                _predicateIR          = new Dictionary<string, PredExpr>();
 
                 List<string> order;
                 try { order = TopologicalSort(session); }
@@ -941,6 +961,7 @@ namespace Database_Designer.NodeWalker
                     var inputTypes    = new Dictionary<string, string>();
                     var inputLiterals = new Dictionary<string, string>();
                     var inputUpstream = new Dictionary<string, string>();
+                    var incomingIR    = new Dictionary<string, PredExpr>();
                     foreach (var c in incoming)
                     {
                         if (!nodes.TryGetValue(c.Node1UUID, out var fn)) continue;
@@ -951,16 +972,21 @@ namespace Database_Designer.NodeWalker
                         if (!string.IsNullOrEmpty(lit)) inputLiterals[c.Node2Port] = lit;
                         if (!string.IsNullOrEmpty(fn.Title))
                             inputUpstream[c.Node2Port] = fn.Title.Trim().ToLowerInvariant();
+                        if (_predicateIR != null &&
+                            _predicateIR.TryGetValue($"{c.Node1UUID}:{c.Node1Port}", out var upIr))
+                            incomingIR[c.Node2Port] = upIr;
                     }
                     _inputTypeContext    = inputTypes;
                     _inputLiteralContext = inputLiterals;
                     _inputUpstreamTitle  = inputUpstream;
+                    _incomingPredicateIR = incomingIR;
                     _currentNodeUuid     = node.UUID;
 
                     string code = GenerateNodeCode(node, inputValues, declaredVars, isAsync);
                     _inputTypeContext    = null;
                     _inputLiteralContext = null;
                     _inputUpstreamTitle  = null;
+                    _incomingPredicateIR = null;
                     _currentNodeUuid     = null;
                     if (!string.IsNullOrWhiteSpace(code))
                     {
@@ -1732,6 +1758,8 @@ namespace Database_Designer.NodeWalker
                         // Emit the lambda verbatim so users can write "x => x.IsActive".
                         var lit = ExtractLiteralValue(node.Logic) ?? "x => true";
                         DeclareExpr(sb, declared, node, "Value", lit);
+                        if (_predicateIR != null && !string.IsNullOrEmpty(_currentNodeUuid))
+                            _predicateIR[$"{_currentNodeUuid}:Value"] = new PredRaw { Text = lit };
                         break;
                     }
                     case "custom literal":
@@ -1914,6 +1942,13 @@ namespace Database_Designer.NodeWalker
                     // Each emits NO local variable — they produce a lambda
                     // expression text that's stored in _predicateExpressions
                     // and inlined at the consumer's call site.
+                    case "select: field":
+                    {
+                        var prop = SanitiseTypeName(LiteralFromConnectedPort("Property")
+                                                    ?? StripQuotesExpr(Inp(inputValues, "Property", "Property")));
+                        StorePredicate("Selector", $"x => x.{prop}");
+                        break;
+                    }
                     case "where: equals":
                     case "where: not equals":
                     case "where: greater":
@@ -1924,28 +1959,31 @@ namespace Database_Designer.NodeWalker
                         var prop = SanitiseTypeName(LiteralFromConnectedPort("Property")
                                                     ?? StripQuotesExpr(Inp(inputValues, "Property", "Property")));
                         var val = Inp(inputValues, "Value", "default");
-                        string body = title switch
+                        var cmp = new PredCompare { Property = prop, Value = val };
+                        switch (title)
                         {
-                            "where: equals"     => $"x.{prop} == {val}",
-                            "where: not equals" => $"x.{prop} != {val}",
-                            "where: greater"    => $"x.{prop} > {val}",
-                            "where: less"       => $"x.{prop} < {val}",
-                            "where: contains"   => $"x.{prop}.Contains({val})",
-                            _                   => "true"
-                        };
-                        StorePredicate("Predicate", $"x => {body}");
+                            case "where: equals":     cmp.Op = "=="; break;
+                            case "where: not equals": cmp.Op = "!="; break;
+                            case "where: greater":    cmp.Op = ">";  break;
+                            case "where: less":       cmp.Op = "<";  break;
+                            case "where: contains":   cmp.Contains = true; break;
+                        }
+                        StorePredicateIR("Predicate", cmp);
                         break;
                     }
                     case "where: and":
                     case "where: or":
                     {
-                        // The upstream predicates already arrived here as lambda
-                        // text via the inputValues splat — pull the body off
-                        // each so we can wrap them under a single `x =>`.
-                        var a = Inp(inputValues, "A", "x => true");
-                        var b = Inp(inputValues, "B", "x => true");
+                        var a  = IncomingPred(inputValues, "A");
+                        var b  = IncomingPred(inputValues, "B");
                         var op = title == "where: and" ? "&&" : "||";
-                        StorePredicate("Predicate", $"x => ({LambdaBody(a)}) {op} ({LambdaBody(b)})");
+                        StorePredicateIR("Predicate", new PredBool { Op = op, Left = a, Right = b });
+                        break;
+                    }
+                    case "where: not":
+                    {
+                        var inner = IncomingPred(inputValues, "Predicate");
+                        StorePredicateIR("Predicate", new PredNot { Inner = inner });
                         break;
                     }
 
@@ -2778,6 +2816,8 @@ namespace Database_Designer.NodeWalker
             [ThreadStatic] private static Dictionary<string, string> _inputLiteralContext;
             [ThreadStatic] private static Dictionary<string, string> _inputUpstreamTitle;
             [ThreadStatic] private static Dictionary<string, string> _predicateExpressions;
+            [ThreadStatic] private static Dictionary<string, PredExpr> _predicateIR;
+            [ThreadStatic] private static Dictionary<string, PredExpr> _incomingPredicateIR;
             [ThreadStatic] private static string _currentNodeUuid;
 
             private static string LiteralFromConnectedPort(string portName) =>
@@ -2798,6 +2838,72 @@ namespace Database_Designer.NodeWalker
                 if (string.IsNullOrEmpty(lambda)) return "true";
                 var i = lambda.IndexOf("=>", StringComparison.Ordinal);
                 return i < 0 ? lambda : lambda.Substring(i + 2).Trim();
+            }
+
+            private abstract class PredExpr
+            {
+                public abstract string RenderBody(string param);
+                public string RenderLambda(string param = "x") => $"{param} => {RenderBody(param)}";
+            }
+
+            private sealed class PredCompare : PredExpr
+            {
+                public string Property;
+                public string Op;
+                public string Value;
+                public bool   Contains;
+                public override string RenderBody(string p) =>
+                    Contains ? $"{p}.{Property}.Contains({Value})"
+                             : $"{p}.{Property} {Op} {Value}";
+            }
+
+            private sealed class PredBool : PredExpr
+            {
+                public string   Op;
+                public PredExpr Left, Right;
+                public override string RenderBody(string p) =>
+                    $"({Left.RenderBody(p)}) {Op} ({Right.RenderBody(p)})";
+            }
+
+            private sealed class PredNot : PredExpr
+            {
+                public PredExpr Inner;
+                public override string RenderBody(string p) => $"!({Inner.RenderBody(p)})";
+            }
+
+            private sealed class PredRaw : PredExpr
+            {
+                public string Text;
+                public override string RenderBody(string p)
+                {
+                    if (string.IsNullOrEmpty(Text)) return "true";
+                    var i = Text.IndexOf("=>", StringComparison.Ordinal);
+                    if (i < 0) return Text.Trim();
+                    var origParam = Text.Substring(0, i).Trim().Trim('(', ')', ' ');
+                    var body      = Text.Substring(i + 2).Trim();
+                    if (!string.IsNullOrEmpty(origParam) && origParam != p &&
+                        System.Text.RegularExpressions.Regex.IsMatch(origParam, "^[A-Za-z_][A-Za-z0-9_]*$"))
+                        body = System.Text.RegularExpressions.Regex.Replace(
+                            body,
+                            $@"(?<![A-Za-z0-9_.]){System.Text.RegularExpressions.Regex.Escape(origParam)}\b",
+                            p);
+                    return body;
+                }
+            }
+
+            private static void StorePredicateIR(string port, PredExpr ir)
+            {
+                if (ir == null) return;
+                if (_predicateIR != null && !string.IsNullOrEmpty(_currentNodeUuid))
+                    _predicateIR[$"{_currentNodeUuid}:{port}"] = ir;
+                StorePredicate(port, ir.RenderLambda("x"));
+            }
+
+            private static PredExpr IncomingPred(Dictionary<string, string> inputValues, string port, string fallback = "x => true")
+            {
+                if (_incomingPredicateIR != null && _incomingPredicateIR.TryGetValue(port, out var ir) && ir != null)
+                    return ir;
+                return new PredRaw { Text = Inp(inputValues, port, fallback) };
             }
 
             private static string TypeFromConnectedPort(string portName) =>

@@ -18,6 +18,8 @@ namespace Database_Designer.Photino
             Console.OutputEncoding = Encoding.UTF8;
             Console.BackgroundColor = ConsoleColor.Black;
 
+            NAudioPlayer.Register();
+
             #region Coolart
 
 

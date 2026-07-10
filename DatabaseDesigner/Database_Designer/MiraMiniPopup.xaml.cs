@@ -53,7 +53,6 @@ namespace Database_Designer
 
             MiraMiniText.Text = dialogs[currentDialogIndex].Text;
 
-            // ← This is the important part: change image for current line
             SetMiraImage(dialogs[currentDialogIndex].Expression);
 
             MiraMiniButton.Content = (currentDialogIndex == dialogs.Count - 1)

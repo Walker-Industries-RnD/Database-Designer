@@ -85,7 +85,10 @@ namespace Database_Designer
 
         private async Task LoadRealTemplates(string mainPath)
         {
-            var templatesRoot = Path.Combine(mainPath, "Templates");
+            // Row template packs live under "Row Templates" (where the default
+            // templates are installed and where Build now exports them). The old
+            // "Templates" path was never populated, so this list came up empty.
+            var templatesRoot = Path.Combine(mainPath, "Row Templates");
 
             if (!Directory.Exists(templatesRoot))
             {

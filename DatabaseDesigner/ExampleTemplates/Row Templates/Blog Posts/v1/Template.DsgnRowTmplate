@@ -1,0 +1,28 @@
+{
+  "Name": "Blog Posts",
+  "Overview": "A simple posts table with a title, body, published flag, and timestamps. Pairs well with the User Accounts template.",
+  "AuthorName": "Walker Industries",
+  "Company": "Walker Industries",
+  "Website": "",
+  "License": "MIT",
+  "Note": "Example row template. Safe to import into any project.",
+  "Data": [
+    {
+      "TableName": "posts",
+      "Description": "Blog or article posts.",
+      "SchemaName": "public",
+      "Rows": [
+        { "Name": "id", "Description": "Primary key", "RowType": "BigSerial", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": true, "IsUnique": false, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "title", "Description": "Post title", "RowType": "VarChar", "Limit": 200, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "body", "Description": "Post content", "RowType": "Text", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": false, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "published", "Description": "Whether the post is visible", "RowType": "Boolean", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": "false", "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "created_at", "Description": "Row creation timestamp", "RowType": "TimestampTz", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": "now()", "Check": null, "DefaultIsPostgresFunction": true }
+      ],
+      "References": [],
+      "Indexes": [
+        { "IndexName": "posts_published_idx", "ColumnNames": ["published"], "IndexType": "Basic", "Condition": "", "Expression": "", "IndexTypeCustom": "", "UseJsonbPathOps": false }
+      ],
+      "CustomRows": []
+    }
+  ]
+}

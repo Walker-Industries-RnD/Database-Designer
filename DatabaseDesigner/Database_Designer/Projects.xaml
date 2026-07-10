@@ -121,7 +121,7 @@ BorderThickness="0" Name="Forward" />
                             </Button.Foreground>
                         </Button>
                         <Button Name ="GLORYTOMANKIND" HorizontalAlignment="Left" VerticalAlignment="Top" Width="434" Height="44" Background="#FF9D9785" FontSize="15" Margin="0,6,0,0" Content="Create Example" Foreground="Black" />
-                        <Button Content="View Custom Templates" HorizontalAlignment="Left" VerticalAlignment="Top" Width="434" Height="44" Background="#FF9D9785" FontSize="15" Margin="0,6,0,0" Visibility="Collapsed" >
+                        <Button Name="ImportProjectBtn" Content="Import Project" HorizontalAlignment="Left" VerticalAlignment="Top" Width="434" Height="44" Background="#FF9D9785" FontSize="15" Margin="0,6,0,0" >
                             <Button.Foreground>
                                 <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
                             </Button.Foreground>

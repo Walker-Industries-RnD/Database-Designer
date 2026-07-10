@@ -20,6 +20,8 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using Walker.Crypto;
+using NodeCompiler   = Database_Designer.NodeWalker.NodeWalker.Compiler;
+using NodeOperations = Database_Designer.NodeWalker.NodeWalker.Operations;
 using WISecureData;
 using static Database_Designer.MainPage;
 using static DatabaseDesigner.DBDesigner;
@@ -615,7 +617,10 @@ public class SecureMediaSession
             BuildRowTemplate.Click += async (s, e) =>
             {
                 var creationValues = BuildJson();
-                var CurrentDirectory = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Projects", mainPaged.ProjectName, "Row Templates");
+                // Row templates are user-global: write them where the template
+                // browsers actually read from (<user>/Row Templates), not inside
+                // the current project folder (which no loader scans).
+                var CurrentDirectory = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Row Templates");
                 // --- Prepare paths ---
                 string basePath = string.IsNullOrEmpty(CurrentDirectory)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
@@ -648,6 +653,7 @@ public class SecureMediaSession
   
                 }
                 await CreateFile("Template", "DsgnRowTmplate", creationValues.ToString());
+                BundleProjectScripts(generatedDBPath);
                 if (_bannerBytes != null)
                 {
                     File.WriteAllBytes(Path.Combine(generatedDBPath, "Banner." + GetImageFormat(_bannerBytes)), _bannerBytes);
@@ -705,7 +711,10 @@ public class SecureMediaSession
                     var tableObject = (TableObject)tempTableObject;
 
                     var tableJson = new JObject();
-                    tableJson["TableName"] = $"{tableObject.SchemaName}.{tableObject.TableName}";
+                    // Bare table name only. SchemaName is written separately and
+                    // the loaders re-combine them; prefixing the schema here made
+                    // imports resolve to "schema.schema.table".
+                    tableJson["TableName"] = tableObject.TableName;
                     tableJson["Description"] = item.Description;
                     tableJson["SchemaName"] = tableObject.SchemaName;
 
@@ -964,7 +973,10 @@ public class SecureMediaSession
             }
             FinalizeBuildProjectBtn.Click += async (s, e) =>
             {
-                var CurrentDirectory = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Projects", mainPaged.ProjectName, "Project Templates");
+                // Project templates are user-global too: DatabaseTemplates reads
+                // from <user>/Project Templates, so write there instead of inside
+                // the current project folder.
+                var CurrentDirectory = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Project Templates");
                 // --- Prepare paths ---
                 string basePath = string.IsNullOrEmpty(CurrentDirectory)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
@@ -995,6 +1007,7 @@ public class SecureMediaSession
                 }
                 var projectTemplate = BuildJsonProject();
                 await CreateFile("Template", "DsgnRowTmplate", projectTemplate.ToString());
+                BundleProjectScripts(generatedDBPath);
                 if (_bannerBytes2 != null)
                 {
                     File.WriteAllBytes(Path.Combine(generatedDBPath, "Banner." + GetImageFormat(_bannerBytes2)), _bannerBytes2);
@@ -1232,6 +1245,100 @@ public class SecureMediaSession
             catch { }
 
         }
+        private void BundleProjectScripts(string destFolder)
+        {
+            try
+            {
+                var scriptsSource = Path.Combine(
+                    mainPage.SeshDirectory.ConvertToString(),
+                    mainPage.SeshUsername.ConvertToString(),
+                    "Projects", mainPage.ProjectName, "Scripts");
+
+                if (!Directory.Exists(scriptsSource)) return;
+
+                var scriptsDest = Path.Combine(destFolder, "Scripts");
+                CopyDirectory(scriptsSource, scriptsDest);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[BundleProjectScripts] Failed: {ex.Message}");
+            }
+        }
+
+        private static void CopyDirectory(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+            foreach (var file in Directory.GetFiles(sourceDir))
+                File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+            foreach (var dir in Directory.GetDirectories(sourceDir))
+                CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
+        }
+
+        // Same slug the API editor uses to name a function's NodeWalker session.
+        private static string SlugPart(string s) =>
+            string.IsNullOrWhiteSpace(s) ? "untitled" :
+            new string(s.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+
+        // Loads the NodeWalker graph for an API function, compiles it to a
+        // sibling Logic/<slug>.g.cs file, and returns the controller-action
+        // statements that call it. Falls back to a stub if no graph exists.
+        private List<string> BuildFunctionBody(string moduleName, string endpointName, string functionName, string scriptsDir, string logicDir)
+        {
+            var stub = new List<string>
+            {
+                "// No NodeWalker graph found for this endpoint yet.",
+                "return Ok(new { message = \"Implement endpoint logic in NodeWalker (NODEWLKR).\" });"
+            };
+
+            try
+            {
+                var slug = $"API_{SlugPart(moduleName)}_{SlugPart(endpointName)}_{SlugPart(functionName)}";
+                var sessionPath = Path.Combine(scriptsDir, slug + ".json");
+                if (!File.Exists(sessionPath)) return stub;
+
+                var session = NodeOperations.LoadSession(slug, scriptsDir).GetAwaiter().GetResult();
+                if (session?.Nodes == null || session.Nodes.Count == 0) return stub;
+
+                Directory.CreateDirectory(logicDir);
+                File.WriteAllText(Path.Combine(logicDir, slug + ".g.cs"), NodeCompiler.CompileToScript(session));
+
+                var e = NodeCompiler.DescribeEntry(session);
+                var pointer = $"// Logic generated from NodeWalker graph -> Controllers/Logic/{slug}.g.cs";
+
+                if (e.HasParams)
+                {
+                    return new List<string>
+                    {
+                        pointer,
+                        $"// This graph takes inputs — call {e.ClassName}.{e.Method}(...) with values from the request.",
+                        "return Ok(new { message = \"Supply inputs and call the generated logic.\" });"
+                    };
+                }
+
+                var call = (e.IsAsync ? "await " : "") + $"{e.ClassName}.{e.Method}()";
+                var lines = new List<string> { pointer };
+                if (e.ReturnsValue)
+                {
+                    lines.Add($"var result = {call};");
+                    lines.Add("return Ok(result);");
+                }
+                else
+                {
+                    lines.Add($"{call};");
+                    lines.Add("return Ok();");
+                }
+                return lines;
+            }
+            catch (Exception ex)
+            {
+                return new List<string>
+                {
+                    $"// Failed to load NodeWalker logic: {ex.Message}",
+                    "return Ok(new { message = \"Logic generation failed; see build log.\" });"
+                };
+            }
+        }
+
         string GetImageFormat(byte[] bytes)
         {
             if (bytes.Length < 8)
@@ -1482,6 +1589,14 @@ public class SecureMediaSession
                 string controllersPath = Path.Combine(apiPath, "Controllers");
                 Directory.CreateDirectory(controllersPath);
 
+                // NodeWalker function graphs live under the project's Scripts folder,
+                // keyed by the same slug the API editor uses to open them.
+                string scriptsDir = Path.Combine(
+                    mainPage.SeshDirectory.ConvertToString(),
+                    mainPage.SeshUsername.ConvertToString(),
+                    "Projects", mainPage.ProjectName, "Scripts");
+                string logicDir = Path.Combine(controllersPath, "Logic");
+
                 if (!string.IsNullOrEmpty(apiJson))
                 {
                     var apiData = System.Text.Json.JsonSerializer.Deserialize<APIData>(apiJson);
@@ -1520,10 +1635,12 @@ public class SecureMediaSession
                                     controllerCode.AppendLine($"    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]");
                                     controllerCode.AppendLine($"    public async Task<IActionResult> {SanitizeName(function.Name)}()");
                                     controllerCode.AppendLine("    {");
-                                    controllerCode.AppendLine($"        // TODO: Implement {function.Name}");
-                                    controllerCode.AppendLine($"        // Tag: {(string.IsNullOrEmpty(function.Tag) ? "none" : function.Tag)}");
-                                    controllerCode.AppendLine($"        // Description: {function.Description}");
-                                    controllerCode.AppendLine("        return Ok(new { message = \"Implement endpoint logic here\" });");
+                                    controllerCode.AppendLine($"        // Endpoint: {function.Name}  ({function.Description})");
+
+                                    var body = BuildFunctionBody(module.Name, endpoint.Name, function.Name, scriptsDir, logicDir);
+                                    foreach (var line in body)
+                                        controllerCode.AppendLine("        " + line);
+
                                     controllerCode.AppendLine("    }");
                                     controllerCode.AppendLine();
                                 }

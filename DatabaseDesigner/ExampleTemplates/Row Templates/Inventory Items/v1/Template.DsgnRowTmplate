@@ -1,0 +1,29 @@
+{
+  "Name": "Inventory Items",
+  "Overview": "A products/items table for a store or marketplace: unique SKU, name, quantity, price, and a JSONB metadata column for flexible attributes.",
+  "AuthorName": "Walker Industries",
+  "Company": "Walker Industries",
+  "Website": "",
+  "License": "MIT",
+  "Note": "Example row template. Safe to import into any project.",
+  "Data": [
+    {
+      "TableName": "items",
+      "Description": "Products or inventory items.",
+      "SchemaName": "public",
+      "Rows": [
+        { "Name": "id", "Description": "Primary key", "RowType": "BigSerial", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": true, "IsUnique": false, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "sku", "Description": "Unique stock-keeping unit", "RowType": "VarChar", "Limit": 64, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": true, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "name", "Description": "Display name", "RowType": "VarChar", "Limit": 200, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "quantity", "Description": "Units in stock", "RowType": "Integer", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": "0", "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "price", "Description": "Unit price", "RowType": "Numeric", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": true, "DefaultValue": "0", "Check": null, "DefaultIsPostgresFunction": false },
+        { "Name": "metadata", "Description": "Flexible attributes (color, size, etc.)", "RowType": "Jsonb", "Limit": null, "IsArray": false, "ArrayLimit": null, "EncryptedAndNOTMedia": false, "Media": false, "IsPrimary": false, "IsUnique": false, "IsNotNull": false, "DefaultValue": null, "Check": null, "DefaultIsPostgresFunction": false }
+      ],
+      "References": [],
+      "Indexes": [
+        { "IndexName": "items_sku_idx", "ColumnNames": ["sku"], "IndexType": "Basic", "Condition": "", "Expression": "", "IndexTypeCustom": "", "UseJsonbPathOps": false }
+      ],
+      "CustomRows": []
+    }
+  ]
+}

@@ -125,11 +125,10 @@ namespace Database_Designer
                     continue;
                 }
 
-                // --- Rest of your code: read file, parse JSON, create button ---
                 string content = File.ReadAllText(templateFile);
                 Console.WriteLine("Content:\n" + content);
 
-                var json = JsonObject.Parse(content).AsObject();  // ← Parse the decrypted one!
+                var json = JsonObject.Parse(content).AsObject();  
                 string projectName = json["Name"]?.GetValue<string>() ?? packName;
 
                 
@@ -404,6 +403,9 @@ namespace Database_Designer
                         Designer.TemplateName = projectName;
                         Designer.AuthorName = authorName;
                         Designer.TemplatedItem.Add(session);
+
+                        var scriptsSource = Path.Combine(latestVersionPath, "Scripts");
+                        Designer.TemplateScriptsSource = Directory.Exists(scriptsSource) ? scriptsSource : null;
 
                         // Set RLS and API JSON on mainPage
                         mainPaged.RLSJson = rlsJson;

@@ -29,6 +29,51 @@ namespace Database_Designer
         private bool userDragging = false;
         private bool isPlaying = false;
         private bool isCustomSongPlaying = false;
+
+        private Dictionary<string, int> playCounts;
+        private string PlayCountsFile => Path.Combine(
+            mainPage.SeshDirectory.ConvertToString(),
+            mainPage.SeshUsername.ConvertToString(),
+            "playcounts.json");
+
+        private Dictionary<string, int> PlayCounts
+        {
+            get
+            {
+                if (playCounts != null) return playCounts;
+                try
+                {
+                    if (File.Exists(PlayCountsFile))
+                        playCounts = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(
+                            File.ReadAllText(PlayCountsFile)) ?? new Dictionary<string, int>();
+                    else
+                        playCounts = new Dictionary<string, int>();
+                }
+                catch { playCounts = new Dictionary<string, int>(); }
+                return playCounts;
+            }
+        }
+
+        private int IncrementPlayCount(string songKey)
+        {
+            var map = PlayCounts;
+            map.TryGetValue(songKey, out var c);
+            map[songKey] = ++c;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(PlayCountsFile));
+                File.WriteAllText(PlayCountsFile, System.Text.Json.JsonSerializer.Serialize(map));
+            }
+            catch { }
+            return c;
+        }
+
+        private string _rootMusicPath = "";
+        private string _currentFolderPath = "";
+        private Stack<string> _folderNavStack = new Stack<string>();
+        private DispatcherTimer _pollTimer;
+        private List<string> _lastSnapshot = new List<string>();
+        private readonly HashSet<string> _allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mp3", ".wav", ".flac", ".aac", ".m4a" };
         private static List<string> defaultPaths = new List<string>
 {
     "Assets/Sounds/Album/Snow Covered Memories.mp3",
@@ -198,6 +243,7 @@ namespace Database_Designer
             timer.Interval = TimeSpan.FromSeconds(0.2);
             timer.Tick += Timer_Tick;
             timer.Start();
+            this.Unloaded += (s, e) => { try { timer?.Stop(); } catch { } try { _pollTimer?.Stop(); } catch { } };
             if (!mainPage.BGMLogicAdded)
             {
                 mainPage.BGM.MediaEnded += BGM_MediaEnded;
@@ -205,8 +251,21 @@ namespace Database_Designer
             }
 
             LoadAlbumSongs();
-            LoadCustomSongs();
+
             Loop.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(mainPage.BGM.IsLooping ? "#FF837349" : "#FF9D9785"));
+
+            try
+            {
+                _rootMusicPath = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+                if (!string.IsNullOrEmpty(_rootMusicPath) && Directory.Exists(_rootMusicPath))
+                {
+                    LoadFolderView(_rootMusicPath);
+                    StartPolling();
+                }
+            }
+            catch { }
+
+            UpBtn.Click += (s, e) => NavigateUp();
             Shuffle.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(mainPage.isShuffle ? "#FF837349" : "#FF9D9785"));
             Loop.Click += (s, e) => ToggleLoop();
             Shuffle.Click += (s, e) => ToggleShuffle();
@@ -231,7 +290,6 @@ namespace Database_Designer
             {
                 RemoveWindow();
             };
-
 
         }
 
@@ -333,6 +391,22 @@ namespace Database_Designer
 
         private void Timer_Tick(object sender, EventArgs e)
         {
+            if (isCustomSongPlaying)
+            {
+                if (userDraggingSlider) return;
+
+                double dur = JSAudioManager.GetCustomSongDuration();
+                if (dur > 0) ProgressSlider.Maximum = dur;
+                double posSeconds = JSAudioManager.GetCustomSongPosition();
+                if (ProgressSlider.Maximum > 0) ProgressSlider.Value = posSeconds;
+
+                TimeSpan cpos = TimeSpan.FromSeconds(posSeconds);
+                TimerTick.Text =
+                    ((int)cpos.TotalMinutes < 10 ? "0" : "") + (int)cpos.TotalMinutes + ":" +
+                    (cpos.Seconds < 10 ? "0" : "") + cpos.Seconds;
+                return;
+            }
+
             if (mainPage.BGM.Source == null)
             {
                 TimerTick.Text = "00:00";
@@ -362,6 +436,7 @@ namespace Database_Designer
 
         private void ProgressSlider_DragStarted()
         {
+            if (isCustomSongPlaying) { userDraggingSlider = true; return; }
             if (mainPage.BGM.Source == null) return;
             userDraggingSlider = true;
             if (mainPage.BGM.CurrentState == MediaElementState.Playing)
@@ -373,6 +448,7 @@ namespace Database_Designer
 
         private void ProgressSlider_DragCompleted()
         {
+            if (isCustomSongPlaying) { JSAudioManager.SeekCustomSong(ProgressSlider.Value); userDraggingSlider = false; return; }
             if (mainPage.BGM.Source == null) return;
 
             var audio = GetNativeAudioElement();
@@ -392,6 +468,7 @@ namespace Database_Designer
 
         private void ProgressSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (isCustomSongPlaying) { userDraggingSlider = true; return; }
             if (mainPage.BGM.Source == null) return;
 
             userDraggingSlider = true;
@@ -404,6 +481,7 @@ namespace Database_Designer
 
         private void ProgressSlider_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
+            if (isCustomSongPlaying) { JSAudioManager.SeekCustomSong(ProgressSlider.Value); userDraggingSlider = false; return; }
             if (mainPage.BGM.Source == null) return;
 
             var audio = GetNativeAudioElement();
@@ -538,46 +616,48 @@ namespace Database_Designer
             }
         }
 
-        private void LoadCustomSongs()
+        private void LoadFolderView(string folderPath)
         {
-            var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mp3", ".wav", ".flac", ".aac", ".m4a" };
-            var added = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _currentFolderPath = folderPath;
+            CustomSongsList.Children.Clear();
+            mainPage.customSongs.Clear();
 
-            string userMusic = string.Empty;
+            CurrentPathText.Text = folderPath == _rootMusicPath
+                ? "My Music"
+                : folderPath.Substring(_rootMusicPath.Length).TrimStart(Path.DirectorySeparatorChar);
+
             try
             {
-                userMusic = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-            }
-            catch { userMusic = string.Empty; }
-
-            if (string.IsNullOrWhiteSpace(userMusic) || !Directory.Exists(userMusic)) return;
-
-            IEnumerable<string> files;
-            try { files = Directory.EnumerateFiles(userMusic, "*.*", SearchOption.TopDirectoryOnly); }
-            catch { return; }
-
-            foreach (var file in files)
-            {
-                try
+                foreach (var dir in Directory.EnumerateDirectories(folderPath))
                 {
-                    if (!allowedExtensions.Contains(Path.GetExtension(file))) continue;
+                    CustomSongsList.Children.Add(CreateFolderButton(dir));
+                }
+            }
+            catch { }
+
+            try
+            {
+                foreach (var file in Directory.EnumerateFiles(folderPath))
+                {
+                    if (!_allowedExtensions.Contains(Path.GetExtension(file))) continue;
                     var fullPath = Path.GetFullPath(file);
-                    if (added.Contains(fullPath)) continue;
-
-                    var songInfo = new Track(fullPath);
-                    var songName = songInfo.Title ?? Path.GetFileNameWithoutExtension(fullPath);
-                    var songArtist = songInfo.Artist ?? "";
-                    var duration = songInfo.Duration;
-
-                        // Store a file:// URI string in the playlist so MediaElement.Source.OriginalString matches
+                    try
+                    {
+                        var songInfo = new Track(fullPath);
+                        var songName = songInfo.Title ?? Path.GetFileNameWithoutExtension(fullPath);
+                        var songArtist = songInfo.Artist ?? "";
+                        var duration = songInfo.Duration;
                         var fileUri = new Uri(fullPath).OriginalString;
                         mainPage.customSongs.Add(fileUri);
                         var btn = CreateSongButton(songName, songArtist, duration, false, fullPath);
-                    CustomSongsList.Children.Add(btn);
-                    added.Add(fullPath);
+                        CustomSongsList.Children.Add(btn);
+                    }
+                    catch { }
                 }
-                catch { /* ignore individual file issues */ }
             }
+            catch { }
+
+            _lastSnapshot = GetFolderSnapshot(folderPath);
         }
 
 
@@ -684,6 +764,17 @@ namespace Database_Designer
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf#Inter")
             });
+
+            PlayCounts.TryGetValue(SongName, out var currentPlays);
+            var playCountText = new TextBlock
+            {
+                Text = $"▶ {currentPlays} plays",
+                FontSize = 11,
+                Opacity = 0.6,
+                Width = 206,
+                FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf#Inter")
+            };
+            textPanel.Children.Add(playCountText);
             grid.Children.Add(textPanel);
             var minutes = Math.Floor(Duration / 60);
             var seconds = Math.Floor(Duration % 60);
@@ -702,16 +793,19 @@ namespace Database_Designer
             };
             Grid.SetColumn(durationText, 2);
             grid.Children.Add(durationText);
+
             button.Content = grid;
             button.Click += (s, e) =>
             {
                 try
                 {
+                    playCountText.Text = $"▶ {IncrementPlayCount(SongName)} plays";
+
                     if (isAlbumSong)
                     {
-                        // Use default MediaElement for album songs
                         try { JSAudioManager.StopCustomSong(); } catch { }
                         try { mainPage.BGM.Stop(); } catch { }
+                        isCustomSongPlaying = false;
 
                         Uri srcUri;
                         if (Path.IsPathRooted(songPath))
@@ -730,11 +824,21 @@ namespace Database_Designer
                     }
                     else
                     {
-                        // Use JS audio player for custom songs
                         try { mainPage.BGM.Stop(); } catch { }
+                        mainPage.BGM.Source = null;
 
-                        var fileUri = new Uri(songPath).OriginalString;
-                        JSAudioManager.PlayCustomSong(fileUri);
+                        AudioBridge.Ended = () => Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            try { if (isCustomSongPlaying) PlayNextSong(); } catch { }
+                        }));
+
+                        JSAudioManager.PlayCustomSong(songPath);
+                        JSAudioManager.SetVolume(mainPage.BGM.Volume);
+
+                        double dur = JSAudioManager.GetCustomSongDuration();
+                        ProgressSlider.Minimum = 0;
+                        ProgressSlider.Maximum = dur > 0 ? dur : 1;
+                        ProgressSlider.Value = 0;
 
                         isPlaying = true;
                         isCustomSongPlaying = true;
@@ -782,6 +886,22 @@ namespace Database_Designer
 
         private void TogglePlayPause()
         {
+            if (isCustomSongPlaying)
+            {
+                if (isPlaying)
+                {
+                    JSAudioManager.PauseCustomSong();
+                    PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/play.png", UriKind.Relative));
+                }
+                else
+                {
+                    JSAudioManager.ResumeCustomSong();
+                    PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/pause.png", UriKind.Relative));
+                }
+                isPlaying = !isPlaying;
+                return;
+            }
+
             if (mainPage.BGM.Source == null) return;
             if (isPlaying)
             {
@@ -839,9 +959,7 @@ namespace Database_Designer
         private void ClosePlayer()
         {
             mainPage.mpSpawned = false;
-
-            try { if (mainPage.IntroPage.Children.Contains(this)) mainPage.IntroPage.Children.Remove(this); }
-            catch (ArgumentOutOfRangeException) { }
+            this.Visibility = Visibility.Collapsed;
         }
 
 
@@ -898,7 +1016,129 @@ namespace Database_Designer
             return 1.0;
         }
 
+        private void NavigateUp()
+        {
+            if (_folderNavStack.Count > 0)
+            {
+                var prev = _folderNavStack.Pop();
+                LoadFolderView(prev);
+            }
+        }
 
+        private Button CreateUpButton()
+        {
+            var btn = new Button
+            {
+                Height = 40,
+                Padding = new Thickness(6),
+                Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40))
+            };
+            var stack = new StackPanel { Orientation = Orientation.Horizontal };
+            stack.Children.Add(new TextBlock
+            {
+                Text = "↑  ..",
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Colors.White),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            btn.Content = stack;
+            btn.Click += (s, e) => NavigateUp();
+            return btn;
+        }
+
+        private Button CreateFolderButton(string folderPath)
+        {
+            var folderName = Path.GetFileName(folderPath);
+            var btn = new Button
+            {
+                Height = 55,
+                Padding = new Thickness(6),
+                Background = new SolidColorBrush(Color.FromArgb(255, 40, 38, 35))
+            };
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var accent = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x83, 0x73, 0x49)),
+                Width = 3,
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            Grid.SetColumn(accent, 0);
+            grid.Children.Add(accent);
+
+            var icon = new TextBlock
+            {
+                Text = ">",
+                FontSize = 20,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(0x9D, 0x97, 0x85)),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(icon, 1);
+            grid.Children.Add(icon);
+
+            var nameText = new TextBlock
+            {
+                Text = folderName,
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Colors.White),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0)
+            };
+            Grid.SetColumn(nameText, 2);
+            grid.Children.Add(nameText);
+            btn.Content = grid;
+            btn.Click += (s, e) =>
+            {
+                _folderNavStack.Push(_currentFolderPath);
+                LoadFolderView(folderPath);
+            };
+            return btn;
+        }
+
+        private void StartPolling()
+        {
+            _pollTimer = new DispatcherTimer();
+            _pollTimer.Interval = TimeSpan.FromSeconds(3);
+            _pollTimer.Tick += PollTimer_Tick;
+            _pollTimer.Start();
+        }
+
+        private void PollTimer_Tick(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentFolderPath) || !Directory.Exists(_currentFolderPath)) return;
+            var currentSnapshot = GetFolderSnapshot(_currentFolderPath);
+            if (!currentSnapshot.SequenceEqual(_lastSnapshot))
+            {
+                _lastSnapshot = currentSnapshot;
+                LoadFolderView(_currentFolderPath);
+            }
+        }
+
+        private List<string> GetFolderSnapshot(string folderPath)
+        {
+            var snapshot = new List<string>();
+            try
+            {
+                foreach (var dir in Directory.EnumerateDirectories(folderPath))
+                    snapshot.Add("D:" + dir);
+            }
+            catch { }
+            try
+            {
+                foreach (var file in Directory.EnumerateFiles(folderPath))
+                    if (_allowedExtensions.Contains(Path.GetExtension(file)))
+                        snapshot.Add("F:" + file);
+            }
+            catch { }
+            return snapshot;
+        }
 
     }
 }

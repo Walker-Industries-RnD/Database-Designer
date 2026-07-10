@@ -1290,11 +1290,35 @@ private void ShowGeneratedCode()
                 CreateNode("Greater Or Equal", "A >= B",
                     new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
                     new[]{ new Output("Result", typeof(bool), "bool") }),
-                // Lambda wrap — Body input is treated as the lambda body string;
-                // inspector field is the parameter name (default "x").
-                CreateNode("Lambda", "Wrap a body expression as (param => body). Inspector field = param name.",
-                    new[]{ new Input("Body", typeof(object), "object", true) },
-                    new[]{ new Output("Lambda", typeof(object), "object") }),
+            }},
+            new Category { Name = "Lambda Logic", Nodes = new() {
+                CreateNode("Select: Field", "Explicit key selector: x => x.<Property>. Wire into DB: Order By / Order By Desc instead of typing a lambda.",
+                    new[]{ new Input("Property", typeof(string), "string", true) },
+                    new[]{ new Output("Selector", typeof(object), "selector") }),
+                CreateNode("Where: Equals", "Predicate: x.<Property> == <Value>",
+                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: Not Equals", "Predicate: x.<Property> != <Value>",
+                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: Greater", "Predicate: x.<Property> > <Value>",
+                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: Less", "Predicate: x.<Property> < <Value>",
+                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: Contains", "Predicate: x.<Property>.Contains(<Value>)",
+                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: And", "Combine two predicates with &&",
+                    new[]{ new Input("A", typeof(object), "predicate", true), new Input("B", typeof(object), "predicate", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: Or", "Combine two predicates with ||",
+                    new[]{ new Input("A", typeof(object), "predicate", true), new Input("B", typeof(object), "predicate", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                CreateNode("Where: Not", "Negate a predicate with !",
+                    new[]{ new Input("Predicate", typeof(object), "predicate", true) },
+                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
             }},
             new Category { Name = "String", Nodes = new() {
                 CreateNode("Concat", "Joins two strings",
@@ -1456,52 +1480,7 @@ private void ShowGeneratedCode()
                         new Input("Predicate",  typeof(object), "object", false)
                     },
                     new[]{ new Output("Count", typeof(int), "int") }),
-                // Compound predicate nodes — build a real LINQ lambda from a
-                // property name + value, no Lambda Wrap or And-as-truthy needed.
-                // The output is shaped as semantic="predicate" so DB: Get First
-                // / DB: Get Where / DB: Count splat it in directly.
-                CreateNode("Where: Equals", "Predicate: x.<Property> == <Value>",
-                    new[]{
-                        new Input("Property", typeof(string), "string", true),
-                        new Input("Value",    typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Not Equals", "Predicate: x.<Property> != <Value>",
-                    new[]{
-                        new Input("Property", typeof(string), "string", true),
-                        new Input("Value",    typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Greater", "Predicate: x.<Property> > <Value>",
-                    new[]{
-                        new Input("Property", typeof(string), "string", true),
-                        new Input("Value",    typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Less", "Predicate: x.<Property> < <Value>",
-                    new[]{
-                        new Input("Property", typeof(string), "string", true),
-                        new Input("Value",    typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Contains", "Predicate: x.<Property>.Contains(<Value>)",
-                    new[]{
-                        new Input("Property", typeof(string), "string", true),
-                        new Input("Value",    typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: And", "Combine two predicates with &&",
-                    new[]{
-                        new Input("A", typeof(object), "predicate", true),
-                        new Input("B", typeof(object), "predicate", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Or", "Combine two predicates with ||",
-                    new[]{
-                        new Input("A", typeof(object), "predicate", true),
-                        new Input("B", typeof(object), "predicate", true)
-                    },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
+                // Predicate builder nodes live in the "Lambda Logic" category.
 
                 CreateNode("DB: Add", "Stage an entity for insert (call DB: Save afterward)",
                     new[]{

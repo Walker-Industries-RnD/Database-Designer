@@ -126,6 +126,44 @@ namespace Database_Designer
             HandlePage();
 
 
+            ImportProjectBtn.Click += async (s, e) =>
+            {
+                try
+                {
+                    var importsRoot = mainPage.ImportsFolder;
+                    Directory.CreateDirectory(importsRoot);
+
+                    var bundles = Directory.GetDirectories(importsRoot)
+                        .Where(d => File.Exists(Path.Combine(d, "session.json")))
+                        .ToList();
+
+                    if (bundles.Count == 0)
+                    {
+                        MessageBox.Show(
+                            $"No project bundles found.\n\nCopy an exported project folder (one containing session.json) into:\n{importsRoot}\n\nthen press Import again.");
+                        return;
+                    }
+
+                    int imported = 0;
+                    var names = new List<string>();
+                    foreach (var bundle in bundles)
+                    {
+                        try { names.Add(await mainPage.ImportPortableProject(bundle)); imported++; }
+                        catch (Exception ex) { Console.WriteLine($"[Import] {bundle}: {ex.Message}"); }
+                    }
+
+                    this.RefreshProjects();
+                    MessageBox.Show(imported == 0
+                        ? "Found bundles but none could be imported. See logs."
+                        : $"Imported {imported} project(s): {string.Join(", ", names)}");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Import failed: {ex.Message}");
+                }
+            };
+
+
             Back.Click += (s, e) =>
             {
                 page -= 1;
@@ -1240,7 +1278,7 @@ namespace Database_Designer
                 Height = 32,
                 Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x9D, 0x97, 0x85)),
                 FontSize = 13,
-                Foreground = (SolidColorBrush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             };
             grid.Children.Add(openButton);
 
@@ -1255,7 +1293,7 @@ namespace Database_Designer
                 Height = 32,
                 Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x9D, 0x97, 0x85)),
                 FontSize = 13,
-                Foreground = (SolidColorBrush)Application.Current.Resources["Theme_BackgroundColor"],
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black),
                 Visibility = Visibility.Collapsed
             };
             grid.Children.Add(editButton);
@@ -1265,6 +1303,34 @@ namespace Database_Designer
             {
                 mainPage.CreateWindow((() => new EditProjectData(mainPage)), "Edit Project", true);
                 ProjectUI.RefreshProjects();
+            };
+
+            var exportButton = new Button
+            {
+                Content = "Export (Portable)",
+                Margin = new Thickness(24, 40, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                Width = 160,
+                Height = 28,
+                Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x9D, 0x97, 0x85)),
+                FontSize = 12,
+                Foreground = new SolidColorBrush(Colors.White)
+            };
+            headerPanel.Children.Add(exportButton);
+            exportButton.Click += async (s, e) =>
+            {
+                try
+                {
+                    exportButton.IsEnabled = false;
+                    var bundle = await mainPage.ExportPortableProject(ProjectPath);
+                    MessageBox.Show($"Exported to:\n{bundle}\n\nCopy this folder to another machine's Imports/ folder to import it.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Export failed: {ex.Message}");
+                }
+                finally { exportButton.IsEnabled = true; }
             };
 
 

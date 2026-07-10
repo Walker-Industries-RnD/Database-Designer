@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="Database_Designer.MusicPlayer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -184,9 +184,17 @@ MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
                     
                     </Grid>
                 </TabItem>
-                <TabItem Header="Custom Songs" Foreground="#FF060606" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf">
+                <TabItem Header="My Music" Foreground="#FF060606" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf">
                     <Grid>
-                        <ScrollViewer Margin="8,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="336" Height="568" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,0,4">
+                            <Button Name="UpBtn" Content="↑ Up" Width="60" Height="30" Background="#FF9D9785" Foreground="White" FontSize="13" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"/>
+                            <TextBlock Name="CurrentPathText" Text="" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="White" FontSize="12" Opacity="0.7" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf"/>
+                        </StackPanel>
+                        <ScrollViewer Grid.Row="1" Margin="8,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="336" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" >
                             <StackPanel Orientation="Vertical" Background="#00D4D4D4" Name="CustomSongsList" >
                                 <Button Height="55" Padding="6" Background="#FF232323" Visibility="Collapsed">
                                     <Grid>
@@ -201,11 +209,11 @@ MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
 
                                         <!-- Song Image -->
                                         <Image Grid.Column="0"
-               Width="45"
-               Height="45"
-               Stretch="UniformToFill"
-               Source="/Database_Designer;component/assets/images/volumeui/becomeasdustcover.png"
-               VerticalAlignment="Center"/>
+                Width="45"
+                Height="45"
+                Stretch="UniformToFill"
+                Source="/Database_Designer;component/assets/images/volumeui/becomeasdustcover.png"
+                VerticalAlignment="Center"/>
 
                                         <!-- Song Name + Artist -->
                                         <StackPanel Grid.Column="1" 
@@ -230,7 +238,7 @@ MaxHeight="30" MinWidth="30" MinHeight="30" MaxWidth="30" />
                                 </Button>
                             </StackPanel>
                         </ScrollViewer>
-                                        </Grid>
+                    </Grid>
                 </TabItem>
             </TabControl>
         </Grid>

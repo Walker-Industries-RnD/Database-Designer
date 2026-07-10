@@ -528,7 +528,7 @@ namespace Database_Designer
                 VerticalAlignment = VerticalAlignment.Bottom,
                 Margin = new Thickness(0, 0, 0, 4),
                 IsEnabled = false,
-                Foreground = (SolidColorBrush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             };
             grid.Children.Add(textBlock);
 
@@ -568,7 +568,7 @@ namespace Database_Designer
 
             var tab = new TabItem { Header = " Basics", Name = "CreateAccBasicsTab" };
             tab.FontFamily = new System.Windows.Media.FontFamily("Assets/Fonts/Inter_28pt-Light.ttf");
-            tab.Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"];
+            tab.Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black);
 
             var stack = new StackPanel();
 
@@ -581,7 +581,7 @@ namespace Database_Designer
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 20, 0, 0),
                 Width = 835,
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
 
             stack.Children.Add(new TextBlock
@@ -603,7 +603,7 @@ namespace Database_Designer
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 50, 0, 0),
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
 
 
@@ -619,8 +619,8 @@ namespace Database_Designer
                 Margin = new Thickness(0, 20, 0, 0),
                 TextAlignment = TextAlignment.Center,
                 Name = "CreateUsernameInput",
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"],
-                Background = (Brush)Application.Current.Resources["Theme_TextOnPrimaryColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black),
+                Background = ThemeManager.ResolveBrush("Theme_TextOnPrimaryColor", Colors.White)
             };
 
             stack.Children.Add(CreateUsernameInput);
@@ -649,7 +649,7 @@ namespace Database_Designer
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 70, 0, 0),
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
 
 
@@ -664,8 +664,8 @@ namespace Database_Designer
                 Margin = new Thickness(0, 20, 0, 0),
                 Name = "CreatePasswordInput",
                 HorizontalContentAlignment = HorizontalAlignment.Center,
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"],
-                Background = (Brush)Application.Current.Resources["Theme_TextOnPrimaryColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black),
+                Background = ThemeManager.ResolveBrush("Theme_TextOnPrimaryColor", Colors.White)
             };
             stack.Children.Add(CreatePasswordInput);
 
@@ -678,7 +678,7 @@ namespace Database_Designer
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 70, 0, 0),
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
 
 
@@ -693,8 +693,8 @@ namespace Database_Designer
                 Margin = new Thickness(0, 20, 0, 0),
                 Name = "CreateRepeatPasswordInput",
                 HorizontalContentAlignment = HorizontalAlignment.Center,
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"],
-                Background = (Brush)Application.Current.Resources["Theme_TextOnPrimaryColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black),
+                Background = ThemeManager.ResolveBrush("Theme_TextOnPrimaryColor", Colors.White)
             };
             stack.Children.Add(CreateRepeatPasswordInput);
 
@@ -923,7 +923,7 @@ namespace Database_Designer
         {
             var tab = new TabItem { Header = "Profile Image", Name = "CreateAccPFPTab", FontSize = 14 };
             tab.FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf");
-            tab.Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"];
+            tab.Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black);
 
             var stack = new StackPanel();
             stack.Children.Add(new TextBlock
@@ -1116,7 +1116,7 @@ namespace Database_Designer
         {
             var tab = new TabItem { Header = "Account Overview", Name = "CreateAccOverview" };
             tab.FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf");
-            tab.Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"];
+            tab.Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black);
 
             var stack = new StackPanel();
             stack.Children.Add(new TextBlock
@@ -1128,7 +1128,7 @@ namespace Database_Designer
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 20, 0, 0),
                 Width = 835,
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
             stack.Children.Add(new TextBlock
             {
@@ -1173,7 +1173,7 @@ namespace Database_Designer
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 50, 0, 0),
                 Name = "CreateAccUsername",
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             };
 
             stack.Children.Add(UsernameBlock);
@@ -1187,7 +1187,7 @@ namespace Database_Designer
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 20, 0, 0),
                 Name = "CreateAccPasswordConfirm",
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             };
 
             stack.Children.Add(PasswordBlock);
@@ -1393,6 +1393,7 @@ namespace Database_Designer
                 System.IO.Directory.CreateDirectory(projectTemplatesFolder);
 
                 //Put templates here;
+                DefaultTemplates.Install(userFolder);
 
 
 
@@ -1414,7 +1415,7 @@ namespace Database_Designer
         {
             var tab = new TabItem { Header = "Recovery Key", Name = "CreateAccRecoveryKey" };
             tab.FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf");
-            tab.Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"];
+            tab.Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black);
 
             var stack = new StackPanel();
             stack.Children.Add(new TextBlock
@@ -1426,7 +1427,7 @@ namespace Database_Designer
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 20, 0, 0),
                 Width = 835,
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
             stack.Children.Add(new TextBlock
             {
@@ -1440,7 +1441,7 @@ namespace Database_Designer
                 Width = 835,
                 Name = "RecoveryKeyText",
                 IsEnabled = false,
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
 
 
@@ -1454,7 +1455,7 @@ namespace Database_Designer
                 Margin = new Thickness(0, 20, 0, 0),
                 Width = 760,
                 Name = "RecoveryKeyDisplay",
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"],
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black),
                 Visibility = Visibility.Visible,
                 TextWrapping = TextWrapping.Wrap
             };

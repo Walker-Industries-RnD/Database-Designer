@@ -284,7 +284,7 @@ namespace Database_Designer
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 TextWrapping = TextWrapping.Wrap,
                 FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-SemiBoldItalic.ttf"),
-                Foreground = (Brush)Application.Current.Resources["Theme_BackgroundColor"]
+                Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             };
 
             stackPanel.Children.Add(image);

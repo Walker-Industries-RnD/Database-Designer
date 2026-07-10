@@ -218,15 +218,19 @@ namespace Database_Designer
 
         public DBDesignerSession FromSessionString(SimpleAESEncryption.AESEncryptedText json, SecureData password)
         {
+            var encryptedData = Walker.Crypto.AsyncAESEncryption.DecryptAsync(json, password).GetAwaiter().GetResult();
+            return FromSessionJson(encryptedData);
+        }
+
+        public DBDesignerSession FromSessionJson(string plainJson)
+        {
             var session = new DBDesignerSession
             {
                 Tables = new ObservableCollection<TableObject>(),
                 WindowStatuses = new Dictionary<string, Coords>()
             };
 
-            var encryptedData = Walker.Crypto.AsyncAESEncryption.DecryptAsync(json, password).GetAwaiter().GetResult();
-
-            using var doc = JsonDocument.Parse(encryptedData);
+            using var doc = JsonDocument.Parse(plainJson);
             var root = doc.RootElement;
 
             if (root.TryGetProperty("sessionName", out var sn)) session.SessionName = sn.GetString();
@@ -649,6 +653,117 @@ namespace Database_Designer
 
         }
 
+        public string UserFolder =>
+            Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString());
+
+        public void ApplyTheme(string themeName)
+        {
+            ThemeManager.Apply(UserFolder, themeName);
+            try
+            {
+                if (!string.IsNullOrEmpty(ThemeManager.CurrentBackgroundImage) &&
+                    File.Exists(ThemeManager.CurrentBackgroundImage))
+                {
+                    var bmp = new BitmapImage();
+                    using var stream = File.OpenRead(ThemeManager.CurrentBackgroundImage);
+                    bmp.SetSource(stream);
+                    MainBG.Source = bmp;
+                }
+            }
+            catch { }
+        }
+
+        public string ExportsFolder =>
+            Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString(), "Exports");
+        public string ImportsFolder =>
+            Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString(), "Imports");
+
+        public static void CopyDirectory(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+            foreach (var file in Directory.GetFiles(sourceDir))
+                File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+            foreach (var dir in Directory.GetDirectories(sourceDir))
+                CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
+        }
+
+        public async Task<string> ExportPortableProject(string projectFolder)
+        {
+            var projectName = Path.GetFileName(projectFolder.TrimEnd(Path.DirectorySeparatorChar));
+
+            var secFile = Directory.GetFiles(projectFolder, "*.secdbdesign", SearchOption.TopDirectoryOnly)
+                                   .FirstOrDefault();
+            if (secFile == null)
+                throw new FileNotFoundException($"No .secdbdesign found in {projectFolder}");
+
+            var base64 = await File.ReadAllTextAsync(secFile);
+            var aesString = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+            var aesObj = SimpleAESEncryption.AESEncryptedText.FromString(aesString);
+            var plainJson = await AsyncAESEncryption.DecryptAsync(aesObj, Password);
+
+            var bundle = Path.Combine(ExportsFolder, projectName);
+            Directory.CreateDirectory(bundle);
+            await File.WriteAllTextAsync(Path.Combine(bundle, "session.json"), plainJson);
+
+            var scriptsSrc = Path.Combine(projectFolder, "Scripts");
+            if (Directory.Exists(scriptsSrc))
+                CopyDirectory(scriptsSrc, Path.Combine(bundle, "Scripts"));
+
+            foreach (var icon in Directory.GetFiles(projectFolder, "ProjectIcon.*"))
+                File.Copy(icon, Path.Combine(bundle, Path.GetFileName(icon)), overwrite: true);
+
+            // Carry the project's custom wallpaper along with the bundle.
+            foreach (var wallpaper in Directory.GetFiles(projectFolder, "Wallpaper.*"))
+                File.Copy(wallpaper, Path.Combine(bundle, Path.GetFileName(wallpaper)), overwrite: true);
+
+            return bundle;
+        }
+
+        public async Task<string> ImportPortableProject(string bundleFolder)
+        {
+            var sessionFile = Path.Combine(bundleFolder, "session.json");
+            if (!File.Exists(sessionFile))
+                throw new FileNotFoundException($"No session.json in {bundleFolder}");
+
+            var plainJson = await File.ReadAllTextAsync(sessionFile);
+            var session = FromSessionJson(plainJson);
+
+            var projectsRoot = Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString(), "Projects");
+            Directory.CreateDirectory(projectsRoot);
+
+            var baseName = string.IsNullOrWhiteSpace(session.SessionName)
+                ? Path.GetFileName(bundleFolder.TrimEnd(Path.DirectorySeparatorChar))
+                : session.SessionName;
+            var name = baseName;
+            int n = 1;
+            while (Directory.Exists(Path.Combine(projectsRoot, name)))
+                name = $"{baseName} ({++n})";
+
+            var projectFolder = Path.Combine(projectsRoot, name);
+            Directory.CreateDirectory(projectFolder);
+
+            var reserialized = ToSessionString(session, Password);
+            var aesEncrypted = await AsyncAESEncryption.EncryptAsync(reserialized, Password);
+            var securedJson = Convert.ToBase64String(Encoding.UTF8.GetBytes(aesEncrypted.ToString()));
+            await File.WriteAllTextAsync(Path.Combine(projectFolder, name + ".secdbdesign"), securedJson);
+
+            var preview = new ProjectsPreviews(name, session.SessionDescription, DateTime.UtcNow.ToString(), null);
+            await File.WriteAllTextAsync(Path.Combine(projectFolder, name + ".preview"), preview.ToString());
+
+            var scriptsSrc = Path.Combine(bundleFolder, "Scripts");
+            if (Directory.Exists(scriptsSrc))
+                CopyDirectory(scriptsSrc, Path.Combine(projectFolder, "Scripts"));
+
+            foreach (var icon in Directory.GetFiles(bundleFolder, "ProjectIcon.*"))
+                File.Copy(icon, Path.Combine(projectFolder, Path.GetFileName(icon)), overwrite: true);
+
+            // Restore the bundled wallpaper so the imported project looks the same.
+            foreach (var wallpaper in Directory.GetFiles(bundleFolder, "Wallpaper.*"))
+                File.Copy(wallpaper, Path.Combine(projectFolder, Path.GetFileName(wallpaper)), overwrite: true);
+
+            return name;
+        }
+
 
 
 
@@ -828,16 +943,17 @@ namespace Database_Designer
 
             MusicPlayer.Click += (s, e) =>
             {
-                if (mpSpawned)
+                var existing = IntroPage.Children.OfType<MusicPlayer>().FirstOrDefault();
+                if (existing != null)
                 {
-
-                }
-                else
-                {
-                    CreateWindow(() => new MusicPlayer(this), "Music Player", true);
+                    existing.Visibility = Visibility.Visible;
+                    BringToFront(existing);
                     mpSpawned = true;
+                    return;
                 }
 
+                CreateWindow(() => new MusicPlayer(this), "Music Player", true);
+                mpSpawned = true;
             };
 
             SetImgVolume();
@@ -911,8 +1027,7 @@ namespace Database_Designer
                 SetImgVolume();
                 UpdateVolText();
                 BGM.Volume = (double)VolSlider.Value / 100.0;
-
-
+                JSAudioManager.SetVolume(BGM.Volume);
             };
 
             VolOption.Visibility = Visibility.Collapsed;
@@ -1342,6 +1457,7 @@ namespace Database_Designer
     { "Create New Table", "Assets/Images/Logos/MainDesigner.png" },
     { "General Project", "Assets/Images/Logos/ControlPanel.png" },
         { "Edit Project", "Assets/Images/Logos/EditProject.png" },
+            {"Themes", "Assets/Images/Logos/Theme.png" },
     { "Music Player", "Assets/Images/VolumeUI/Music.png" },
             {"DLC Options", "Assets/Images/Logos/SupporterPack.png"},
 
@@ -1532,15 +1648,15 @@ namespace Database_Designer
         private void CloseEditorWindow(RLSEditorWindow window)
         {
             RLSJson = window.SaveToJson();
-            window.Visibility = Visibility.Collapsed;
             RemoveWindowShortcut(window);
+            if (IntroPage.Children.Contains(window)) IntroPage.Children.Remove(window);
         }
 
         private void CloseEditorWindow(APIEditorWindow window)
         {
             APIJson = window.SaveToJson();
-            window.Visibility = Visibility.Collapsed;
             RemoveWindowShortcut(window);
+            if (IntroPage.Children.Contains(window)) IntroPage.Children.Remove(window);
         }
 
         private void RemoveWindowShortcut(UIElement window)
@@ -1973,12 +2089,6 @@ namespace Database_Designer
 
             Apps.Children.Clear();
 
-            var filePath = "Assets/Images/lightbg.png";
-            UriKind uriKind = UriKind.Relative;
-
-            FadeChangeBackground(filePath, uriKind);
-
-
             LowBar.Visibility = Visibility.Visible;
 
             DesktopApps.TryGetValue("Login", out var loginApp);
@@ -1988,6 +2098,25 @@ namespace Database_Designer
             SeshDirectory = DirectoryPath;
             SessionReturn = Sesh;
             Password = Pass;
+
+            // Install defaults and apply the user's default/saved theme. ApplyTheme
+            // sets the palette and, when the theme has one, the MainBG wallpaper.
+            bool themedBackground = false;
+            try
+            {
+                var uf = Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString());
+                DefaultTemplates.Install(uf);
+                ThemeManager.InstallStarterThemes(uf);
+                ApplyTheme(ThemeManager.GetDefault(uf));
+                themedBackground = !string.IsNullOrEmpty(ThemeManager.CurrentBackgroundImage)
+                                   && File.Exists(ThemeManager.CurrentBackgroundImage);
+            }
+            catch { }
+
+            // Only fall back to the stock light background when the theme has none —
+            // otherwise this async fade would overwrite the theme wallpaper.
+            if (!themedBackground)
+                FadeChangeBackground("Assets/Images/lightbg.png", UriKind.Relative);
 
             if (resetScreen)
             {
@@ -2169,6 +2298,13 @@ return CreateWindow(
                    "API Editor",
                    true);
 
+                CreateDesktopAppButton(
+                   "Themes",
+                   Apps,
+                   () => CreateWindow(() => new ThemeSelectorWindow(this), "Themes", true),
+                   "Themes",
+                   true);
+
                 // Use a snapshot of trie words to avoid concurrent modification issues
                 var prefixWords = trie.GetWords("").ToList();
                 var file = new HashSet<string>();
@@ -2346,6 +2482,16 @@ return CreateWindow(
                     string tableName = tableItem.TryGetProperty("TableName", out var tn) ? tn.GetString() ?? "UntitledTable" : "UntitledTable";
                     string description = tableItem.TryGetProperty("Description", out var desc) ? desc.GetString() ?? "" : "";
                     string schemaName = tableItem.TryGetProperty("SchemaName", out var sn) ? sn.GetString() ?? "public" : "public";
+
+                    // TableName may already be schema-qualified (older/exported
+                    // templates wrote "schema.table"). Strip the schema off so we
+                    // don't end up with "schema.schema.table".
+                    if (tableName.Contains('.'))
+                    {
+                        int dot = tableName.IndexOf('.');
+                        schemaName = tableName.Substring(0, dot);
+                        tableName = tableName.Substring(dot + 1);
+                    }
                     string fullTableName = $"{schemaName}.{tableName}";
 
                     var rows = new List<RowOptions>();

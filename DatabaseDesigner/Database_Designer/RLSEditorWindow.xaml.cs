@@ -44,6 +44,11 @@ namespace Database_Designer
             return JsonSerializer.Serialize(_data, new JsonSerializerOptions { WriteIndented = true });
         }
 
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseRequested?.Invoke(this);
+        }
+
         public static RLSData CreateAndLoad(string json)
         {
             var data = new RLSData();

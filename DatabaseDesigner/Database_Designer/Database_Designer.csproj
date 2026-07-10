@@ -145,6 +145,11 @@
 
   <ItemGroup>
     <Compile Include="APIData.cs" />
+    <Compile Include="AudioBridge.cs" />
+    <Compile Include="DefaultTemplates.cs" />
+    <Compile Include="ThemeManager.cs" />
+    <Compile Include="ThemeAssets.cs" />
+    <Compile Include="ThemeSelectorWindow.cs" />
     <Compile Include="APIEditorWindow.xaml.cs" />
     <Compile Include="APIPage1Modules.xaml.cs" />
     <Compile Include="APIPage2Endpoints.xaml.cs" />
@@ -236,6 +241,13 @@
     <Content Include="Assets\Fonts\Inter_28pt-Thin.ttf" />
     <Content Include="Assets\Fonts\Inter_28pt-ThinItalic.ttf" />
     <Content Include="Assets\GridBG.png" />
+    <Content Include="Assets\Images\Logos\Theme.png" />
+    <Content Include="Assets\Images\Y2K\sparkles.png" />
+    <Content Include="Assets\Images\Y2K\star.png" />
+    <Content Include="Assets\Images\Y2K\cd.png" />
+    <Content Include="Assets\Images\Y2K\floppy.png" />
+    <Content Include="Assets\Images\Y2K\computer.png" />
+    <Content Include="Assets\Images\Y2K\globe.png" />
     <Content Include="Assets\Images\app.ico" />
     <Content Include="Assets\Images\AresPFP.jpg" />
     <Content Include="Assets\Images\BG.png" />
