@@ -99,6 +99,7 @@ namespace Database_Designer
                 if (value is SolidColorBrush brush) return brush;
                 if (value is Color color) return new SolidColorBrush(color);
             }
+
             catch { }
             return new SolidColorBrush(fallback);
         }
@@ -143,15 +144,17 @@ namespace Database_Designer
         {
             try
             {
-
-                Write(userFolder, "Default", new ThemeConfig
+                // "Default" is the App.xaml baseline (clean white) and has no
+                // theme.json — Apply() resolves it to the baseline when no file is
+                // present. Older builds force-wrote a dark "Default" theme.json that
+                // was byte-identical to "Sandstone"; remove any such stale file so
+                // Default reverts to the white baseline.
+                try
                 {
-                    Colors = new()
-                    {
-                        ["Theme_BackgroundColor"] = "#1D1D1D",
-                        ["Theme_TextOnPrimaryColor"] = "#EBE8E1"
-                    }
-                });
+                    var stale = Path.Combine(ThemesRoot(userFolder), "Default", "theme.json");
+                    if (File.Exists(stale)) File.Delete(stale);
+                }
+                catch { }
 
                 Write(userFolder, "Y2K Chrome", new ThemeConfig
                 {
@@ -242,10 +245,10 @@ namespace Database_Designer
         }
 
 
-        private static void Write(string userFolder, string name, ThemeConfig config, string backgroundJpgBase64 = null)
+        private static void Write(string userFolder, string name, ThemeConfig config, string backgroundJpgBase64 = null, bool force = false)
         {
             var folder = Path.Combine(ThemesRoot(userFolder), name);
-            if (Directory.Exists(folder)) return;
+            if (Directory.Exists(folder) && !force) return;
             Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, "theme.json"),
                 JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));

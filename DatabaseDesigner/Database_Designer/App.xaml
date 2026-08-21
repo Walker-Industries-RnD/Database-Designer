@@ -5,14 +5,14 @@
     xmlns:local="clr-namespace:Database_Designer">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Y2K "Chrome" palette = the app's baseline theme. These three keys
-                 drive every themed surface in the app (SolidColorBrush Color=
-                 "{DynamicResource ...}" in XAML, ThemeManager.ResolveBrush in C#).
-                 ThemeManager overrides them at runtime when a theme is applied.
+            <!-- Clean white palette = the app's baseline ("Default") theme. These
+                 three keys drive every themed surface in the app (SolidColorBrush
+                 Color="{DynamicResource ...}" in XAML, ThemeManager.ResolveBrush in
+                 C#). ThemeManager overrides them at runtime when a theme is applied.
                  *Color keys are Colors; *Brush keys are Brushes. -->
-            <Color x:Key="Theme_BackgroundColor">#FF1D1A6B</Color>
-            <Color x:Key="Theme_TextOnPrimaryColor">#FFE6F4FF</Color>
-            <SolidColorBrush x:Key="Theme_TextBrush" Color="#FF161257" />
+            <Color x:Key="Theme_BackgroundColor">#FFFFFFFF</Color>
+            <Color x:Key="Theme_TextOnPrimaryColor">#FF1D1D1D</Color>
+            <SolidColorBrush x:Key="Theme_TextBrush" Color="#FF1D1D1D" />
         </ResourceDictionary>
     </Application.Resources>
     <Application.Theme>

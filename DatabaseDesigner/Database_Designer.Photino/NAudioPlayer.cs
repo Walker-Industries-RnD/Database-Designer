@@ -11,6 +11,32 @@ namespace Database_Designer.Photino
         private static AudioFileReader _reader;
         private static float _volume = 0.7f;
         private static bool _stopRequested;
+        private static bool _loop;
+
+        private sealed class LoopStream : WaveStream
+        {
+            private readonly WaveStream _source;
+            private readonly Func<bool> _shouldLoop;
+            public LoopStream(WaveStream source, Func<bool> shouldLoop) { _source = source; _shouldLoop = shouldLoop; }
+            public override WaveFormat WaveFormat => _source.WaveFormat;
+            public override long Length => _source.Length;
+            public override long Position { get => _source.Position; set => _source.Position = value; }
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int total = 0;
+                while (total < count)
+                {
+                    int read = _source.Read(buffer, offset + total, count - total);
+                    if (read == 0)
+                    {
+                        if (_source.Position == 0 || !_shouldLoop()) break;
+                        _source.Position = 0;
+                    }
+                    total += read;
+                }
+                return total;
+            }
+        }
 
         public static void Register()
         {
@@ -23,6 +49,12 @@ namespace Database_Designer.Photino
             AudioBridge.Position = Position;
             AudioBridge.Duration = Duration;
             AudioBridge.Playing = Playing;
+            AudioBridge.SetLoop = SetLoop;
+        }
+
+        private static void SetLoop(bool loop)
+        {
+            lock (_lock) { _loop = loop; }
         }
 
         private static bool Play(string path)
@@ -37,8 +69,8 @@ namespace Database_Designer.Photino
                         path = new Uri(path).LocalPath;
 
                     _reader = new AudioFileReader(path) { Volume = _volume };
-                    _output = new WaveOutEvent();
-                    _output.Init(_reader);
+                    _output = new WaveOutEvent { DesiredLatency = 200, NumberOfBuffers = 3 };
+                    _output.Init(new LoopStream(_reader, () => _loop));
                     _output.PlaybackStopped += OnPlaybackStopped;
                     _stopRequested = false;
                     _output.Play();
@@ -57,7 +89,7 @@ namespace Database_Designer.Photino
             bool reachedEnd;
             lock (_lock)
             {
-                reachedEnd = !_stopRequested && _reader != null && _reader.Position >= _reader.Length;
+                reachedEnd = !_stopRequested && !_loop && _reader != null && _reader.Position >= _reader.Length;
             }
             if (reachedEnd) AudioBridge.RaiseEnded();
         }

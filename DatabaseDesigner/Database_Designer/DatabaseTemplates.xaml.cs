@@ -128,8 +128,8 @@ namespace Database_Designer
                 string content = File.ReadAllText(templateFile);
                 Console.WriteLine("Content:\n" + content);
 
-                var json = JsonObject.Parse(content).AsObject();  
-                string projectName = json["Name"]?.GetValue<string>() ?? packName;
+                var json = JsonObject.Parse(content).AsObject();
+                string projectName = TemplateStr(json["Name"]) ?? packName;
 
                 
 
@@ -153,13 +153,13 @@ namespace Database_Designer
                     {
 
                         var json = JsonObject.Parse(content).AsObject();
-                        string projectName = json["Name"]?.GetValue<string>() ?? packName;
-                        string overview = json["Overview"]?.GetValue<string>() ?? "No overview provided";
-                        string authorName = json["AuthorName"]?.GetValue<string>() ?? "???";
-                        string company = json["Company"]?.GetValue<string>();
-                        string website = json["Website"]?.GetValue<string>();
-                        string license = json["License"]?.GetValue<string>();
-                        string note = json["Note"]?.GetValue<string>();
+                        string projectName = TemplateStr(json["Name"]) ?? packName;
+                        string overview = TemplateStr(json["Overview"]) ?? "No overview provided";
+                        string authorName = TemplateStr(json["AuthorName"]) ?? "???";
+                        string company = TemplateStr(json["Company"]);
+                        string website = TemplateStr(json["Website"]);
+                        string license = TemplateStr(json["License"]);
+                        string note = TemplateStr(json["Note"]);
 
                         MainInfo.Text = projectName;
 
@@ -252,10 +252,10 @@ namespace Database_Designer
                         foreach (var tableItem in tablesArray)
                         {
                             var tableObj = tableItem.AsObject();
-                            string tableName = tableObj["TableName"]?.GetValue<string>() ?? "UntitledTable";
-                            string schemaName = tableObj["SchemaName"]?.GetValue<string>() ?? "public";
+                            string tableName = TemplateStr(tableObj["TableName"]) ?? "UntitledTable";
+                            string schemaName = TemplateStr(tableObj["SchemaName"]) ?? "public";
                             string fullTableName = $"{schemaName}.{tableName}";
-                            string description = tableObj["Description"]?.GetValue<string>() ?? "";
+                            string description = TemplateStr(tableObj["Description"]) ?? "";
 
                             var rows = new List<RowOptions>();
                             var rowsArray = tableObj["Rows"]?.AsArray();
@@ -264,25 +264,23 @@ namespace Database_Designer
                                 foreach (var rowItem in rowsArray)
                                 {
                                     var rowObj = rowItem.AsObject();
-                                    var limitStr = rowObj["Limit"]?.GetValue<string>();
-                                    int? limit = null;
-                                    if (!string.IsNullOrEmpty(limitStr) && int.TryParse(limitStr, out var l)) limit = l;
+                                    int? limit = TemplateInt(rowObj["Limit"]);
                                     rows.Add(new RowOptions(
-                                        fieldName: rowObj["Name"]?.GetValue<string>() ?? "field",
-                                        description: rowObj["Description"]?.GetValue<string>() ?? "",
-                                        postgresType: Enum.TryParse<PostgresType>(rowObj["RowType"]?.GetValue<string>(), out var pt) ? pt : PostgresType.VarChar,
+                                        fieldName: TemplateStr(rowObj["Name"]) ?? "field",
+                                        description: TemplateStr(rowObj["Description"]) ?? "",
+                                        postgresType: Enum.TryParse<PostgresType>(TemplateStr(rowObj["RowType"]), true, out var pt) ? pt : PostgresType.VarChar,
                                         customType: "",
                                         elementLimit: limit,
-                                        isArray: rowObj["IsArray"]?.GetValue<bool>() ?? false,
-                                        arrayLimit: int.TryParse(rowObj["ArrayLimit"]?.GetValue<string>(), out var al) ? al : null,
-                                        isEncrypted: rowObj["EncryptedAndNOTMedia"]?.GetValue<bool>() ?? false,
-                                        isMedia: rowObj["Media"]?.GetValue<bool>() ?? false,
-                                        isPrimary: rowObj["IsPrimary"]?.GetValue<bool>() ?? false,
-                                        isUnique: rowObj["IsUnique"]?.GetValue<bool>() ?? false,
-                                        isNotNull: rowObj["IsNotNull"]?.GetValue<bool>() ?? false,
-                                        defaultValue: rowObj["DefaultValue"]?.GetValue<string>(),
-                                        check: rowObj["Check"]?.GetValue<string>(),
-                                        defaultIsKeyword: rowObj["DefaultIsPostgresFunction"]?.GetValue<bool>() ?? false
+                                        isArray: TemplateBool(rowObj["IsArray"]),
+                                        arrayLimit: TemplateInt(rowObj["ArrayLimit"]),
+                                        isEncrypted: TemplateBool(rowObj["EncryptedAndNOTMedia"]),
+                                        isMedia: TemplateBool(rowObj["Media"]),
+                                        isPrimary: TemplateBool(rowObj["IsPrimary"]),
+                                        isUnique: TemplateBool(rowObj["IsUnique"]),
+                                        isNotNull: TemplateBool(rowObj["IsNotNull"]),
+                                        defaultValue: TemplateStr(rowObj["DefaultValue"]),
+                                        check: TemplateStr(rowObj["Check"]),
+                                        defaultIsKeyword: TemplateBool(rowObj["DefaultIsPostgresFunction"])
                                     ));
                                 }
                             }
@@ -295,12 +293,12 @@ namespace Database_Designer
                                 {
                                     var refObj = refItem.AsObject();
                                     references.Add(new Reference.ReferenceOptions(
-                                        refObj["MainTable"]?.GetValue<string>(),
-                                        refObj["RefTable"]?.GetValue<string>(),
-                                        refObj["ForeignKey"]?.GetValue<string>(),
-                                        refObj["RefTableKey"]?.GetValue<string>(),
-                                        Enum.TryParse<ReferentialAction>(refObj["OnDeleteAction"]?.GetValue<string>(), true, out var oda) ? oda : ReferentialAction.NoAction,
-                                        Enum.TryParse<ReferentialAction>(refObj["OnUpdateAction"]?.GetValue<string>(), true, out var oua) ? oua : ReferentialAction.NoAction
+                                        TemplateStr(refObj["MainTable"]),
+                                        TemplateStr(refObj["RefTable"]),
+                                        TemplateStr(refObj["ForeignKey"]),
+                                        TemplateStr(refObj["RefTableKey"]),
+                                        Enum.TryParse<ReferentialAction>(TemplateStr(refObj["OnDeleteAction"]), true, out var oda) ? oda : ReferentialAction.NoAction,
+                                        Enum.TryParse<ReferentialAction>(TemplateStr(refObj["OnUpdateAction"]), true, out var oua) ? oua : ReferentialAction.NoAction
                                     ));
                                 }
                             }
@@ -316,16 +314,16 @@ namespace Database_Designer
                                     var cols = idxObj["ColumnNames"]?.AsArray();
                                     if (cols != null)
                                         foreach (var c in cols)
-                                            colNames.Add(c.GetValue<string>());
+                                            colNames.Add(TemplateStr(c));
                                     indexes.Add(new IndexDefinition(
-                                        idxObj["TableName"]?.GetValue<string>() ?? fullTableName,
-                                        idxObj["IndexName"]?.GetValue<string>() ?? $"{tableName}_idx",
+                                        TemplateStr(idxObj["TableName"]) ?? fullTableName,
+                                        TemplateStr(idxObj["IndexName"]) ?? $"{tableName}_idx",
                                         colNames.ToArray(),
-                                        Enum.TryParse<IndexType>(idxObj["IndexType"]?.GetValue<string>(), true, out var it) ? it : IndexType.Basic,
-                                        idxObj["Condition"]?.GetValue<string>() ?? "",
-                                        idxObj["Expression"]?.GetValue<string>() ?? "",
-                                        idxObj["IndexTypeCustom"]?.GetValue<string>() ?? "",
-                                        idxObj["UseJsonbPathOps"]?.GetValue<bool>() ?? false
+                                        Enum.TryParse<IndexType>(TemplateStr(idxObj["IndexType"]), true, out var it) ? it : IndexType.Basic,
+                                        TemplateStr(idxObj["Condition"]) ?? "",
+                                        TemplateStr(idxObj["Expression"]) ?? "",
+                                        TemplateStr(idxObj["IndexTypeCustom"]) ?? "",
+                                        TemplateBool(idxObj["UseJsonbPathOps"])
                                     ));
                                 }
                             }
@@ -334,9 +332,9 @@ namespace Database_Designer
                         }
 
                         // Extract RLS, API JSON and session logo from root level
-                        string rlsJson = json["rlsJson"]?.GetValue<string>() ?? "";
-                        string apiJson = json["apiJson"]?.GetValue<string>() ?? "";
-                        string sessionLogo = json["sessionLogo"]?.GetValue<string>();
+                        string rlsJson = TemplateStr(json["rlsJson"]) ?? "";
+                        string apiJson = TemplateStr(json["apiJson"]) ?? "";
+                        string sessionLogo = TemplateStr(json["sessionLogo"]);
 
                         var session = new SessionStorage.DBDesignerSession
                         {
@@ -422,6 +420,47 @@ namespace Database_Designer
 
                 ProjectPanel.Children.Add(templateButton);
             }
+        }
+
+        private static int? TemplateInt(JsonNode n)
+        {
+            if (n is null) return null;
+            try
+            {
+                if (n.GetValueKind() == System.Text.Json.JsonValueKind.Number) return n.GetValue<int>();
+                if (n.GetValueKind() == System.Text.Json.JsonValueKind.String &&
+                    int.TryParse(n.GetValue<string>(), out var v)) return v;
+            }
+            catch { }
+            return null;
+        }
+
+        private static string TemplateStr(JsonNode n)
+        {
+            if (n is null) return null;
+            try
+            {
+                var k = n.GetValueKind();
+                if (k == System.Text.Json.JsonValueKind.Null) return null;
+                if (k == System.Text.Json.JsonValueKind.String) return n.GetValue<string>();
+                return n.ToString();
+            }
+            catch { return null; }
+        }
+
+        private static bool TemplateBool(JsonNode n)
+        {
+            if (n is null) return false;
+            try
+            {
+                var k = n.GetValueKind();
+                if (k == System.Text.Json.JsonValueKind.True) return true;
+                if (k == System.Text.Json.JsonValueKind.False) return false;
+                if (k == System.Text.Json.JsonValueKind.String && bool.TryParse(n.GetValue<string>(), out var b)) return b;
+                if (k == System.Text.Json.JsonValueKind.Number) return n.GetValue<double>() != 0;
+            }
+            catch { }
+            return false;
         }
 
 		public void RemoveWindow()

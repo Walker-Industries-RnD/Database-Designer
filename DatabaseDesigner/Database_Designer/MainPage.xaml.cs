@@ -2105,6 +2105,11 @@ namespace Database_Designer
             try
             {
                 var uf = Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString());
+                Directory.CreateDirectory(uf);
+                var pcFile = Path.Combine(uf, "playcounts.json");
+                if (!File.Exists(pcFile)) File.WriteAllText(pcFile, "{}");
+                var plFile = Path.Combine(uf, "playlists.json");
+                if (!File.Exists(plFile)) File.WriteAllText(plFile, "{}");
                 DefaultTemplates.Install(uf);
                 ThemeManager.InstallStarterThemes(uf);
                 ApplyTheme(ThemeManager.GetDefault(uf));

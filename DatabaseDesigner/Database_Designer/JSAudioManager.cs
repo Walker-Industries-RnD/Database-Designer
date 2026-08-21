@@ -98,6 +98,12 @@ namespace Database_Designer
             OpenSilver.Interop.ExecuteJavaScript($"if (window.customAudioPlayer) window.customAudioPlayer.volume = {volume};");
         }
 
+        public static void SetLoop(bool loop)
+        {
+            if (AudioBridge.Available) { AudioBridge.SetLoop?.Invoke(loop); return; }
+            OpenSilver.Interop.ExecuteJavaScript($"if (window.customAudioPlayer) window.customAudioPlayer.loop = {(loop ? "true" : "false")};");
+        }
+
         public static string GetCurrentCustomSong() => _currentCustomSong;
 
         public static bool IsCustomPlayerActive() => _isCustomPlayerPlaying;

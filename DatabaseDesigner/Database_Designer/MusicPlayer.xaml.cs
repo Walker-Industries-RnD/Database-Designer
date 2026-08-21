@@ -29,6 +29,7 @@ namespace Database_Designer
         private bool userDragging = false;
         private bool isPlaying = false;
         private bool isCustomSongPlaying = false;
+        private string _currentCustomPath = "";
 
         private Dictionary<string, int> playCounts;
         private string PlayCountsFile => Path.Combine(
@@ -511,8 +512,103 @@ namespace Database_Designer
             PlayNextSong();
         }
 
+        private static string FormatSeconds(double seconds)
+        {
+            if (double.IsNaN(seconds) || seconds < 0) seconds = 0;
+            int m = (int)(seconds / 60);
+            int s = (int)(seconds % 60);
+            return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+        }
+
+        // Plays a custom (library) song by its real file path through the desktop
+        // audio engine, updating the now-playing UI, total time, and progress.
+        private void PlayCustomByPath(string rawPath, bool countPlay = true)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(rawPath)) return;
+
+                Track track = new Track(rawPath);
+                var name = track.Title ?? Path.GetFileNameWithoutExtension(rawPath);
+                var artist = track.Artist ?? "";
+                double duration = track.Duration;
+
+                try { mainPage.BGM.Stop(); } catch { }
+                mainPage.BGM.Source = null;
+
+                AudioBridge.Ended = () => Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try { if (isCustomSongPlaying) PlayNextSong(); } catch { }
+                }));
+
+                JSAudioManager.PlayCustomSong(rawPath);
+                JSAudioManager.SetVolume(mainPage.BGM.Volume);
+                JSAudioManager.SetLoop(mainPage.BGM.IsLooping);
+
+                if (duration <= 0) duration = JSAudioManager.GetCustomSongDuration();
+                ProgressSlider.Minimum = 0;
+                ProgressSlider.Maximum = duration > 0 ? duration : 1;
+                ProgressSlider.Value = 0;
+                TotalTime.Text = FormatSeconds(duration);
+                TimerTick.Text = "00:00";
+
+                ImageSource img;
+                try
+                {
+                    if (track.EmbeddedPictures != null && track.EmbeddedPictures.Any())
+                        img = GetImageFromBytes(track.EmbeddedPictures.First().PictureData);
+                    else
+                        img = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/notfound.png", UriKind.Relative));
+                }
+                catch { img = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/notfound.png", UriKind.Relative)); }
+
+                SongTitle.Text = name;
+                ArtistName.Text = artist;
+                AlbumCoverBrush.ImageSource = img;
+                SongImgBG.Source = img;
+
+                _currentCustomPath = rawPath;
+                isCustomSongPlaying = true;
+                isPlaying = true;
+                PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/pause.png", UriKind.Relative));
+
+                if (countPlay) IncrementPlayCount(name);
+            }
+            catch (Exception ex) { Console.WriteLine($"PlayCustomByPath failed: {ex.Message}"); }
+        }
+
+        // Next/previous within the current custom-song list, keyed off the real
+        // path currently playing (BGM.Source is null while a custom song plays).
+        private bool TryCustomStep(int direction)
+        {
+            if (!isCustomSongPlaying) return false;
+            var songs = mainPage.customSongs;
+            if (songs == null || songs.Count == 0) return false;
+
+            string currentUri = string.IsNullOrEmpty(_currentCustomPath) ? "" : new Uri(_currentCustomPath).OriginalString;
+            int idx = songs.IndexOf(currentUri);
+            if (idx == -1) idx = 0;
+
+            int target;
+            if (mainPage.isShuffle && songs.Count > 1)
+            {
+                var rnd = new Random();
+                do { target = rnd.Next(songs.Count); } while (target == idx);
+            }
+            else
+            {
+                target = (idx + direction) % songs.Count;
+                if (target < 0) target += songs.Count;
+            }
+
+            try { PlayCustomByPath(new Uri(songs[target]).LocalPath); }
+            catch { PlayCustomByPath(songs[target]); }
+            return true;
+        }
+
         private void PlayPreviousSong()
         {
+            if (TryCustomStep(-1)) return;
             if (mainPage.currentPlaylist == null || mainPage.currentPlaylist.Count == 0) return;
 
             int currentIndex = mainPage.currentPlaylist.IndexOf(mainPage.BGM.Source?.OriginalString ?? "");
@@ -536,6 +632,7 @@ namespace Database_Designer
 
         private void PlayNextSong()
         {
+            if (TryCustomStep(1)) return;
             if (mainPage.currentPlaylist == null || mainPage.currentPlaylist.Count == 0) return;
 
             int currentIndex = mainPage.currentPlaylist.IndexOf(mainPage.BGM.Source?.OriginalString ?? "");
@@ -824,25 +921,19 @@ namespace Database_Designer
                     }
                     else
                     {
-                        try { mainPage.BGM.Stop(); } catch { }
-                        mainPage.BGM.Source = null;
-
-                        AudioBridge.Ended = () => Dispatcher.BeginInvoke(new Action(() =>
+                        // Already counted above; play through the shared helper so
+                        // duration, transport and loop all work for custom songs.
+                        PlayCustomByPath(songPath, countPlay: false);
+                        // Prefer the richer list artwork/title we already computed.
+                        SongTitle.Text = SongName;
+                        ArtistName.Text = SongArtist;
+                        if (imgToUse != null)
                         {
-                            try { if (isCustomSongPlaying) PlayNextSong(); } catch { }
-                        }));
-
-                        JSAudioManager.PlayCustomSong(songPath);
-                        JSAudioManager.SetVolume(mainPage.BGM.Volume);
-
-                        double dur = JSAudioManager.GetCustomSongDuration();
-                        ProgressSlider.Minimum = 0;
-                        ProgressSlider.Maximum = dur > 0 ? dur : 1;
-                        ProgressSlider.Value = 0;
-
-                        isPlaying = true;
-                        isCustomSongPlaying = true;
-                        PlayPauseImg.Source = new BitmapImage(new Uri("/Database_Designer;component/assets/images/volumeui/pause.png", UriKind.Relative));
+                            AlbumCoverBrush.ImageSource = imgToUse;
+                            SongImgBG.Source = imgToUse;
+                        }
+                        Console.WriteLine($"Playing: {SongName}");
+                        return;
                     }
 
                     SongTitle.Text = SongName;
@@ -933,6 +1024,7 @@ namespace Database_Designer
         {
             mainPage.BGM.IsLooping = !mainPage.BGM.IsLooping;
             mainPage.isShuffle = false;
+            JSAudioManager.SetLoop(mainPage.BGM.IsLooping);
             Loop.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(mainPage.BGM.IsLooping ? "#FF837349" : "#FF9D9785"));
             Shuffle.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9D9785"));
         }

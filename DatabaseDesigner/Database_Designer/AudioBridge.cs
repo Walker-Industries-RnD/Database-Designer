@@ -13,6 +13,7 @@ namespace Database_Designer
         public static Func<double> Position;
         public static Func<double> Duration;
         public static Func<bool> Playing;
+        public static Action<bool> SetLoop;
         public static Action Ended;
 
         public static bool Available => Play != null;
