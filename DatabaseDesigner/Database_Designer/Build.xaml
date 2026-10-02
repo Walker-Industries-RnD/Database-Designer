@@ -63,8 +63,6 @@
                 </TextBlock>
                 <ValidationSummary Margin="40,272,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="640" Height="160" Name="ProjectErrorCheck">
                     <ValidationSummary.Errors>
-                        <ValidationSummaryItem Message="Name is required." />
-                        <ValidationSummaryItem Message="Age must be a positive number." />
                     </ValidationSummary.Errors>
                 </ValidationSummary>
                 <Button Content="Build Check" Margin="48,232,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="32" Background="#B89D9785" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="BuildCheck" >
@@ -114,7 +112,7 @@ Content="Export Specific Rows" Name="ExportSpecificRows"  Foreground="Black" Wid
             </Grid>
 
             <Grid VerticalAlignment="Top" Height="452" Name="ExportTemplateUI" Visibility="Collapsed">
-                <Button Content="BackHome" Margin="976,24,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="32" Background="#B89D9785" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="BackBtn4" >
+                <Button Content="Home" Margin="896,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="32" Background="#B89D9785" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="BackBtn4" >
                     <Button.Foreground>
                         <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
                     </Button.Foreground>
@@ -231,8 +229,6 @@ Source="/Database_Designer;component/assets/images/classroom2.png" />
                                             <TextBlock Text="Template Details Here" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Top" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Margin="0,0,0,4" Width="434" TextWrapping="Wrap" Name="Q2" />
                                             <ValidationSummary Height="121" FontSize="12" Name="ValidationCheck2" IsEnabled="True">
                                                 <ValidationSummary.Errors>
-                                                    <ValidationSummaryItem Message="Name is required." />
-                                                    <ValidationSummaryItem Message="Age must be a positive number." />
                                                 </ValidationSummary.Errors>
                                             </ValidationSummary>
                                         </StackPanel>
@@ -253,7 +249,7 @@ Source="/Database_Designer;component/assets/images/classroom2.png" />
 
 
             <Grid VerticalAlignment="Top" Height="452" Name="ExportRow" Visibility="Collapsed">
-                <Button Content="BackHome" Margin="976,24,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="32" Background="#B89D9785" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="BackBtn3" >
+                <Button Content="Home" Margin="896,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="32" Background="#B89D9785" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Name="BackBtn3" >
                     <Button.Foreground>
                         <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
                     </Button.Foreground>
@@ -286,7 +282,6 @@ Source="/Database_Designer;component/assets/images/classroom2.png" />
                                         </ListBox>
                                     </StackPanel>
                                     </StackPanel>
-                                    <TextBlock Text="Item Descriptions (Optional)" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" />
      
                                 </StackPanel>
                             <StackPanel Orientation="Vertical" Width="493" Background="#00D4D4D4" >
@@ -294,8 +289,8 @@ Source="/Database_Designer;component/assets/images/classroom2.png" />
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" Height="233" Margin="0,4,0,0" >
                                     <DataGrid x:Name="Descriptionse" ItemsSource="{Binding DescInfo}" AutoGenerateColumns="False">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Name" Binding="{Binding TableName}" />
-                                            <DataGridTextColumn Header="Description (Optional)" Binding="{Binding Description}" />
+                                            <DataGridTextColumn Header="Name" Binding="{Binding TableName}" IsReadOnly="True" />
+                                            <DataGridTextColumn Header="Description (Optional)" Binding="{Binding Description, Mode=TwoWay}" />
                                         </DataGrid.Columns>
                                     </DataGrid>
                                 </ScrollViewer>
@@ -380,8 +375,6 @@ Source="/Database_Designer;component/assets/images/classroom2.png" />
                                                 <TextBlock Text="Template Details Here" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Top" FontFamily="Assets\Fonts\Inter_28pt-ExtraLight.ttf" Margin="0,0,0,4" Width="434" TextWrapping="Wrap" Name="V2" />
                                             <ValidationSummary Height="121" FontSize="12" Name="ValidationCheck1" IsEnabled="True">
                                                 <ValidationSummary.Errors>
-                                                    <ValidationSummaryItem Message="Name is required." />
-                                                    <ValidationSummaryItem Message="Age must be a positive number." />
                                                 </ValidationSummary.Errors>
                                             </ValidationSummary>
                                         </StackPanel>

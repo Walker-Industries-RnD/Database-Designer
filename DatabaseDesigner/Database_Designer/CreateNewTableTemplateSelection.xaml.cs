@@ -165,50 +165,62 @@ namespace Database_Designer
 
                 selectButton.Click += (sender, args) =>
                 {
+                    if (mainPage?.ProjectName == null)
+                    {
+                        MessageBox.Show("Open a project first, then add tables from a template.");
+                        return;
+                    }
                     try
                     {
-                        // Use the new unencrypted format
+                        var tables = new List<SessionStorage.TableObject>();
+                        var problems = new List<string>();
+                        string packRls = null, packApi = null;
+
                         var templateItems = MainPage.ParseTemplatePackNew(jsonContent);
-                        if (templateItems.Count == 0)
-                        {
-                            // Fallback: try old parse method for encrypted templates
-                            try
-                            {
-                                var fallbackItems = MainPage.ParseTemplatePack(jsonContent);
-                                foreach (var (fullTableName, description, rows, references, indexes) in fallbackItems)
-                                {
-                                    DBDesigner.DatabaseDesigner(
-                                        fullTableName,
-                                        description,
-                                        rows,
-                                        null,
-                                        references,
-                                        indexes
-                                    );
-                                }
-                            }
-                            catch { }
-                        }
-                        else
+                        if (templateItems.Count > 0)
                         {
                             foreach (var (fullTableName, description, rows, references, indexes, rlsJson, apiJson) in templateItems)
                             {
-                                DBDesigner.DatabaseDesigner(
-                                    fullTableName,
-                                    description,
-                                    rows,
-                                    null,
-                                    references,
-                                    indexes
-                                );
+                                try
+                                {
+                                    // Generating the SQL checks the table before it goes into the project.
+                                    DBDesigner.DatabaseDesigner(fullTableName, description, rows, null, references, indexes);
+                                    tables.Add(TemplateTables.ToTableObject(fullTableName, description, rows, references, indexes));
+                                }
+                                catch (Exception ex) { problems.Add($"{fullTableName}: {ex.Message}"); }
+                            }
+                            packRls = templateItems[0].rlsJson;
+                            packApi = templateItems[0].apiJson;
+                        }
+                        else
+                        {
+                            // Older template files.
+                            foreach (var (fullTableName, description, rows, references, indexes) in MainPage.ParseTemplatePack(jsonContent))
+                            {
+                                try
+                                {
+                                    DBDesigner.DatabaseDesigner(fullTableName, description, rows, null, references, indexes);
+                                    tables.Add(TemplateTables.ToTableObject(fullTableName, description, rows, references, indexes));
+                                }
+                                catch (Exception ex) { problems.Add($"{fullTableName}: {ex.Message}"); }
                             }
                         }
 
-                        Console.WriteLine($"Successfully imported {templateItems.Count} table(s) from '{packName}'!");
+                        if (!string.IsNullOrEmpty(packRls) && string.IsNullOrEmpty(mainPage.RLSJson))
+                            mainPage.RLSJson = packRls;
+                        if (!string.IsNullOrEmpty(packApi) && string.IsNullOrEmpty(mainPage.APIJson))
+                            mainPage.APIJson = packApi;
+
+                        var (added, skipped) = TemplateTables.AddToProject(mainPage, tables);
+                        var message = $"Added {added} table(s) from {packName}.";
+                        if (skipped.Count > 0) message += $"\n\nAlready in the project, so left as they are: {string.Join(", ", skipped)}";
+                        if (problems.Count > 0) message += $"\n\nCouldn't add: {string.Join("; ", problems)}";
+                        MessageBox.Show(message);
+                        if (added > 0 && mainPage.IntroPage.Children.Contains(this)) mainPage.IntroPage.Children.Remove(this);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to import template pack '{packName}':\n{ex.Message}");
+                        MessageBox.Show($"Couldn't read the template pack {packName}: {ex.Message}");
                     }
                 };
 
@@ -373,6 +385,7 @@ namespace Database_Designer
             if (!string.IsNullOrEmpty(finalPfp))
             {
                 try
+
                 {
                     pfp.Source = new BitmapImage(new Uri(finalPfp, UriKind.Absolute));
                 }

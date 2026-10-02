@@ -15,7 +15,7 @@ namespace Database_Designer
         private readonly List<(string Text, MiraStates Expression)> dialogs = new();
         private int currentDialogIndex = 0;
 
-        // Removed the extra state parameter — we now only use the list
+        // Each line of dialogue carries the expression Mira shows while saying it.
         public MiraMiniPopup(
             List<(string Text, MiraStates Expression)> miraText,
             MainPage mainPaged)

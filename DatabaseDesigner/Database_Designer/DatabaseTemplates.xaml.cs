@@ -71,7 +71,7 @@ namespace Database_Designer
                 return;
             }
 
-            // Only get actual pack folders — exclude any folder starting with "v"
+            // Only get actual pack folders - exclude any folder starting with "v"
             var packFolders = Directory.GetDirectories(projectTemplatesRoot)
                 .Where(d => !Path.GetFileName(d).StartsWith("v", StringComparison.OrdinalIgnoreCase))
                 .ToList();

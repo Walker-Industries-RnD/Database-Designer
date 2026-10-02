@@ -45,7 +45,7 @@ namespace Database_Designer
             ["DELETE"] = Color.FromRgb(0xFF, 0x4C, 0x4C),
         };
 
-        // Optional host — set when this page was opened from inside DBD's
+        // Optional host - set when this page was opened from inside DBD's
         // MainPage. Lets function rows launch the underlying NodeWalker graph
         // editor against the project's per-function session file.
         public MainPage HostPage { get; }

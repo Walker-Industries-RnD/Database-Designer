@@ -43,7 +43,7 @@ xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignWidth="1360
                            MaxWidth="220"/>
             </Border>
 
-            <!-- Warning row — FIXED: Visibility now bound so it collapses when HasWarning=false -->
+            <!-- Warning row; collapses when HasWarning is false -->
             <Border Grid.Row="1"
                     Padding="12,8"
                     Visibility="{Binding HasWarning,                                          RelativeSource={RelativeSource AncestorType=UserControl},                                          Converter={StaticResource BoolToVis}}" Background="#FF3F352F">

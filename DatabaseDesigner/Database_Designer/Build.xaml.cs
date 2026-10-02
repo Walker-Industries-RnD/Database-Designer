@@ -76,77 +76,48 @@ namespace Database_Designer
             void ValidationCheck()
             {
                 ProjectErrorCheck.Errors.Clear();
-                List<(ReferenceOptions, string)> BrokenRefs = new List<(ReferenceOptions, string)>();
-                foreach (var table in mainPage.MainSessionInfo.Tables)
+                var issues = ProjectValidator.Validate(mainPage.MainSessionInfo.Tables, mainPage.RLSJson);
+                int errors = issues.Count(i => i.Severity == ProjectValidator.Severity.Error);
+                int warnings = issues.Count(i => i.Severity == ProjectValidator.Severity.Warning);
+
+                ProjectErrorCheck.Errors.Add(new ValidationSummaryItem
                 {
-                    if (table.References == null)
-                    {
-                        Console.WriteLine($"Skipping table {table.SchemaName}.{table.TableName} because References is null");
-                        continue;
-                    }
-                    Console.WriteLine($"Checking table {table.SchemaName}.{table.TableName} with {table.References.Count} references");
-                    for (int i = 0; i < table.References.Count; i++)
-                    {
-                        var reference = table.References[i];
-                        Console.WriteLine($" Checking reference {i}: RefTable={reference.RefTable}, RefTableKey={reference.RefTableKey}, MainTable={reference.MainTable}");
-                        TableObject targetTable = default;
-                        try
-                        {
-                            // Find the table that this reference points to
-                            targetTable = mainPage.MainSessionInfo.Tables
-                                .First(t => $"{t.SchemaName}.{t.TableName}" == reference.RefTable);
-                            Console.WriteLine($" Found target table: {targetTable.SchemaName}.{targetTable.TableName} with {targetTable.Rows.Count} rows");
-                        }
-                        catch
-                        {
-                            Console.WriteLine($" Could not find target table: {reference.MainTable}");
-                            BrokenRefs.Add((reference, table.SchemaName + "." + table.TableName));
-                            continue;
-                        }
-                        // Validate that the referenced key exists in the target table
-                        bool keyExists = targetTable.Rows.Any(r => r.Name == reference.RefTableKey);
-                        Console.WriteLine($" KeyExists={keyExists} for RefTableKey={reference.RefTableKey}");
-                        if (!keyExists)
-                        {
-                            BrokenRefs.Add((reference, table.SchemaName + "." + table.TableName));
-                        }
-                    }
-                }
-                foreach (var item in BrokenRefs)
+                    Message = errors == 0 && warnings == 0
+                        ? "Congrats, the project is good to go! Export as you please."
+                        : $"{errors} error(s), {warnings} warning(s), {issues.Count - errors - warnings} tip(s). " +
+                          (errors > 0 ? "Fix the errors before exporting — the generated SQL or API would fail." : "You can export, but check the warnings.")
+                });
+
+                foreach (var issue in issues)
                 {
-                    // Create a button to put inside the validation item
+                    var prefix = issue.Severity switch
+                    {
+                        ProjectValidator.Severity.Error => "⛔ ",
+                        ProjectValidator.Severity.Warning => "⚠ ",
+                        _ => "ℹ "
+                    };
                     var errorButton = new Button
                     {
-                        Content = $"Broken Reference In {item.Item2}: Ref {item.Item1.RefTable}.{item.Item1.RefTableKey}",
+                        Content = new TextBlock { Text = prefix + issue.Message, TextWrapping = TextWrapping.Wrap },
                         Margin = new Thickness(2),
                         Background = new SolidColorBrush(Colors.Transparent),
                         BorderThickness = new Thickness(0),
                         HorizontalAlignment = HorizontalAlignment.Stretch,
+                        HorizontalContentAlignment = HorizontalAlignment.Left,
                         FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf"),
-                        FontSize = 16,
+                        FontSize = 14,
                         Foreground = new SolidColorBrush(Colors.White),
-                        Cursor = Cursors.Hand
+                        Cursor = issue.Table != null ? Cursors.Hand : Cursors.Arrow
                     };
-                    errorButton.Click += (s, e) =>
-                    {
-                        mainPage.CreateWindow(() => new DatabaseViewer(mainPage, $"{item.Item1.RefTable}.{item.Item1.RefTableKey}"), "Database Viewer", true);
-                    };
-                    // Wrap it in a ValidationSummaryItem
-                    var validationItem = new ValidationSummaryItem
+                    var target = issue.Table;
+                    if (target != null)
+                        errorButton.Click += (s, e) =>
+                            mainPage.CreateWindow(() => new DatabaseViewer(mainPage, target), "Database Viewer", true);
+                    ProjectErrorCheck.Errors.Add(new ValidationSummaryItem
                     {
                         Context = errorButton,
-                        Message = $"Broken Reference In {item.Item2}: Ref {item.Item1.RefTable}.{item.Item1.RefTableKey}"
-                    };
-                    ProjectErrorCheck.Errors.Add(validationItem);
-                }
-
-                if (BrokenRefs.Count == 0)
-                {
-                    var validationItem = new ValidationSummaryItem
-                    {
-                        Message = $"Congrats, the project is good to go! Export as you please."
-                    };
-                    ProjectErrorCheck.Errors.Add(validationItem);
+                        Message = prefix + issue.Message
+                    });
                 }
             }
             Export.Click += (s, e) =>
@@ -168,6 +139,7 @@ namespace Database_Designer
                 try
                 {
                     List<DatabaseDesign> DatabaseDesignerList = new List<DatabaseDesign>();
+                    var tableSnapshots = new Dictionary<string, MigrationGenerator.TableSnap>(StringComparer.OrdinalIgnoreCase);
                     foreach (var item in mainPaged.MainSessionInfo.Tables)
                     {
                         if (item.Rows.Count == 0)
@@ -234,6 +206,8 @@ namespace Database_Designer
                         }
                         var DBDesignOutput = DBDesigner.DatabaseDesigner((item.SchemaName + "." + item.TableName), TableDescription, TableRows, null, References, Indexes);
                         DatabaseDesignerList.Add(DBDesignOutput);
+                        tableSnapshots[DBDesignOutput.TableName] = MigrationGenerator.SnapshotTable(
+                            DBDesignOutput.TableName, TableRows, References, Indexes, DBDesignOutput.SQL);
                     }
                     
                     var CurrentDirectory = Path.Combine(mainPaged.SeshDirectory.ConvertToString(), mainPaged.SeshUsername.ConvertToString(), "Projects", mainPaged.ProjectName);
@@ -351,14 +325,6 @@ public class SecureMediaSession
                         // item.ClassName now contains the CLR class name (safe)
                         string classNameSafe = item.ClassName;
                         string dbSetName = classNameSafe + "s"; // naive pluralization
-                        string? schemaName = GetSchemaFromTable(item.TableName);
-                        string tableOnly = GetTableNameWithoutSchema(item.TableName);
-
-                        if (!string.IsNullOrEmpty(schemaName))
-                            dbContext.AppendLine($"    [Table(\"{tableOnly}\", Schema = \"{schemaName}\")]");
-                        else
-                            dbContext.AppendLine($"    [Table(\"{tableOnly}\")]");
-
                         dbContext.AppendLine($"    public DbSet<{classNameSafe}> {dbSetName} {{ get; set; }}");
                         dbContext.AppendLine();
                     }
@@ -389,6 +355,7 @@ public class SecureMediaSession
                             .ToList();
 
                         string incremental = versionFolders.Count == 0 ? "v1" : "v" + (versionFolders.Max(name => int.Parse(name.Substring(1))) + 1);
+                        string generatedDbRoot = generatedDBPath;
                         generatedDBPath = Path.Combine(generatedDBPath, incremental);
                     
 
@@ -398,6 +365,18 @@ public class SecureMediaSession
                     File.WriteAllText(Path.Combine(generatedDBPath, "Classes.cs"), classes.ToString());
                     File.WriteAllText(Path.Combine(generatedDBPath, "Models.cs"), dbContext.ToString());
 
+                    var snapshot = new MigrationGenerator.Snapshot
+                    {
+                        Tables = DatabaseDesignerList
+                            .Where(d => tableSnapshots.ContainsKey(d.TableName))
+                            .Select(d => tableSnapshots[d.TableName])
+                            .ToList()
+                    };
+                    var (previousSnapshot, previousVersion) = MigrationGenerator.LoadPrevious(generatedDbRoot, incremental);
+                    MigrationGenerator.Save(snapshot, generatedDBPath);
+                    File.WriteAllText(Path.Combine(generatedDBPath, "Migration.sql"),
+                        MigrationGenerator.Generate(previousSnapshot, snapshot, previousVersion, incremental));
+
                     // --- Generate RLS SQL ---
                     string rlsSql = GenerateRLSSQL(mainPaged.RLSJson, mainPaged.MainSessionInfo.Tables);
                     File.WriteAllText(Path.Combine(generatedDBPath, "RLS.sql"), rlsSql);
@@ -405,13 +384,18 @@ public class SecureMediaSession
                     // --- Generate API (C# Controllers) ---
                     string apiPath = Path.Combine(generatedDBPath, "API");
                     Directory.CreateDirectory(apiPath);
-                    GenerateAPIFiles(apiPath, mainPaged.RLSJson, mainPaged.APIJson);
+                    ApiGenerator.Generate(
+                        apiPath,
+                        DatabaseDesignerList.Select(d => new ApiGenerator.ModelInfo(d.ClassName, d.TableName)).ToList(),
+                        classes.ToString(),
+                        CollectApiFunctions(mainPaged.APIJson),
+                        Path.Combine(CurrentDirectory, "Scripts"),
+                        Path.Combine(AppContext.BaseDirectory, "PariahCybersecurity.dll"));
 
                     // --- Generate SpacetimeDB module ---
                     string spacetimePath = Path.Combine(generatedDBPath, "SpacetimeDB");
                     Directory.CreateDirectory(spacetimePath);
                     GenerateSpacetimeDBFiles(spacetimePath, mainPaged.RLSJson, mainPaged.APIJson);
-
 
 
                     // --- Success UI ---
@@ -421,10 +405,8 @@ public class SecureMediaSession
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Build failed: {ex}");
-                    // Surface the error in the validation summary so the user
-                    // doesn't think the button is dead. Previously the catch
-                    // wrote to the console only and the success UI never
-                    // fired — looked indistinguishable from "nothing happened."
+                    // Show the error in the validation summary so the button
+                    // doesn't look like it did nothing.
                     try
                     {
                         ProjectErrorCheck.Errors.Add(new ValidationSummaryItem
@@ -434,9 +416,6 @@ public class SecureMediaSession
                     }
                     catch { /* validation summary may not be in tree yet */ }
                 }
-
-
-
 
 
             };
@@ -468,7 +447,7 @@ public class SecureMediaSession
             {
                 var txt = new TextBlock
                 {
-                    Text = item.SchemaName + "." + item.TableName,
+                    Text = ProjectValidator.Qualified(item),
                     Margin = new Thickness(2),
                     Cursor = Cursors.Hand,
                     FontSize = 14,
@@ -530,8 +509,7 @@ public class SecureMediaSession
             T1.TextChanged += (s, e) =>
             {
                 PackName = T1.Text;
-                V1.Text = $"Pack Name: {PackName ?? "No Pack Name Provided (Required)"}"
-;
+                V1.Text = $"Pack Name: {(string.IsNullOrWhiteSpace(PackName) ? "No Pack Name Provided (Required)" : PackName)}";
             };
             string Overview = default;
             T2.TextChanged += (s, e) =>
@@ -571,34 +549,42 @@ public class SecureMediaSession
             };
             void SetText()
             {
+                static string Or(string value, string missing) => string.IsNullOrWhiteSpace(value) ? missing : value;
                 string TemplateInfo =
-                    $"Overview: {Overview ?? "No Overview Provided (Required)"} \n" +
-                    $"Author Name: {AuthorName ?? "No Author Provided (Required)"}\n" +
-                    $"Company: {Company ?? "No Company Provided"}\n" +
-                    $"Website: {Website ?? "No Website Provided"}\n" +
-                    $"License: {License ?? "No License Provided"}\n" +
-                    $"Note: {Note ?? "No Note Provided"}";
+                    $"Overview: {Or(Overview, "No Overview Provided (Required)")}\n" +
+                    $"Author Name: {Or(AuthorName, "No Author Provided (Required)")}\n" +
+                    $"Company: {Or(Company, "No Company Provided")}\n" +
+                    $"Website: {Or(Website, "No Website Provided")}\n" +
+                    $"License: {Or(License, "No License Provided")}\n" +
+                    $"Note: {Or(Note, "No Note Provided")}";
                 V2.Text = TemplateInfo;
             }
             void SetErrors()
             {
                 ValidationCheck1.Errors.Clear();
                 BuildRowTemplate.IsEnabled = false;
-                if (string.IsNullOrEmpty(PackName))
+                if (string.IsNullOrWhiteSpace(PackName))
                 {
                     ValidationCheck1.Errors.Add(new ValidationSummaryItem
                     {
                         Message = "A Template Name Must Be Provided"
                     });
                 }
-                if (string.IsNullOrEmpty(Overview))
+                else if (PackName.Trim().IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || PackName.Trim().EndsWith("."))
+                {
+                    ValidationCheck1.Errors.Add(new ValidationSummaryItem
+                    {
+                        Message = "The template name can't contain \\ / : * ? \" < > | or end with a dot"
+                    });
+                }
+                if (string.IsNullOrWhiteSpace(Overview))
                 {
                     ValidationCheck1.Errors.Add(new ValidationSummaryItem
                     {
                         Message = "An Overview Must Be Provided"
                     });
                 }
-                if (string.IsNullOrEmpty(AuthorName))
+                if (string.IsNullOrWhiteSpace(AuthorName))
                 {
                     ValidationCheck1.Errors.Add(new ValidationSummaryItem
                     {
@@ -612,8 +598,14 @@ public class SecureMediaSession
                         Message = "At least one table must be selected"
                     });
                 }
-                if (PackName != null && Overview != null && AuthorName != null && TablesList.SelectedItems.Count >= 1) { BuildRowTemplate.IsEnabled = true; }
+                BuildRowTemplate.IsEnabled = ValidationCheck1.Errors.Count == 0;
             }
+            // Re-check as the form is filled in, not only when switching tabs.
+            foreach (var box in new[] { T1, T2, U1, U2, U3, U4, U5 })
+                box.TextChanged += (s, e) => { SetText(); SetErrors(); };
+            TablesList.SelectionChanged += (s, e) => SetErrors();
+            SetText();
+            SetErrors();
             BuildRowTemplate.Click += async (s, e) =>
             {
                 var creationValues = BuildJson();
@@ -625,7 +617,7 @@ public class SecureMediaSession
                 string basePath = string.IsNullOrEmpty(CurrentDirectory)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                     : CurrentDirectory;
-                string generatedDBPath = Path.Combine(basePath, PackName);
+                string generatedDBPath = Path.Combine(basePath, PackName.Trim());
                 string incremental = "";
                 // --- Ensure GeneratedDB exists ---
                 Directory.CreateDirectory(generatedDBPath);
@@ -662,9 +654,9 @@ public class SecureMediaSession
                 {
                     File.WriteAllBytes(Path.Combine(generatedDBPath, "PFP." + GetImageFormat(_pfpBytes)), _pfpBytes);
                 }
-                // --- Success UI --- the success of the UI system is based  ffrfr3fes
+                // Show a short countdown, then reset the form and go back to the start page.
                 int countdown = 6;
-                BuildRowTemplate.Content = $"Built! Returning to homepage in {countdown} seconds!";
+                BuildRowTemplate.Content = $"Built! Returning to the start page in {countdown} seconds!";
                 BuildRowTemplate.IsEnabled = false;
                 CancelRow.Visibility = Visibility.Collapsed;
                 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -673,16 +665,20 @@ public class SecureMediaSession
                     countdown--;
                     if (countdown > 0)
                     {
-                        BuildRowTemplate.Content = $"Built! Returning to page in {countdown} seconds!";
+                        BuildRowTemplate.Content = $"Built! Returning to the start page in {countdown} seconds!";
                     }
                     else
                     {
                         timer.Stop();
-                        BuildRowTemplate.IsEnabled = true;
-                        BuildRowTemplate.Content = "Build";
+                        BuildRowTemplate.Content = "Finalize";
                         ExportRow.Visibility = Visibility.Collapsed;
                         Home.Visibility = Visibility.Visible;
                         CancelRow.Visibility = Visibility.Visible;
+                        foreach (var box in new[] { T1, T2, U1, U2, U3, U4, U5 }) box.Text = "";
+                        TablesList.SelectedItems.Clear();
+                        SelectedItems.Clear();
+                        TabControl1.SelectedIndex = 0;
+                        SetErrors();
                     }
                 };
                 timer.Start();
@@ -704,7 +700,8 @@ public class SecureMediaSession
                 {
                     // Find the table in the main session
                     TableObject? tempTableObject = mainPage.MainSessionInfo.Tables
-                        .FirstOrDefault(t => $"{t.SchemaName}.{t.TableName}" == item.TableName);
+                        .Cast<TableObject?>()
+                        .FirstOrDefault(t => ProjectValidator.Qualified(t.Value) == item.TableName);
 
                     if (tempTableObject == null) continue;
 
@@ -821,7 +818,6 @@ public class SecureMediaSession
             }
 
 
-
             //Project Template
             // - Author (Folder)
             // - - Author Image
@@ -854,11 +850,15 @@ public class SecureMediaSession
                 //Create reset value system
                 BuildProject.Visibility = Visibility.Visible;
             };
-            CancelRow.Click += (s, e) =>
+            BackBtn3.Click += (s, e) =>
             {
                 ExportRow.Visibility = Visibility.Collapsed;
-                //Create reset value system
-                BuildProject.Visibility = Visibility.Visible;
+                Home.Visibility = Visibility.Visible;
+            };
+            BackBtn4.Click += (s, e) =>
+            {
+                ExportTemplateUI.Visibility = Visibility.Collapsed;
+                Home.Visibility = Visibility.Visible;
             };
             ExportTemplate.Click += (s, e) =>
             {
@@ -887,8 +887,7 @@ public class SecureMediaSession
             S1.TextChanged += (s, e) =>
             {
                 PackName2 = S1.Text;
-                Q1.Text = $"Pack Name: {PackName2 ?? "No Pack Name Provided (Required)"}"
-;
+                Q1.Text = $"Pack Name: {(string.IsNullOrWhiteSpace(PackName2) ? "No Pack Name Provided (Required)" : PackName2)}";
             };
             string Overview2 = default;
             S2.TextChanged += (s, e) =>
@@ -899,7 +898,7 @@ public class SecureMediaSession
             R1.TextChanged += (s, e) =>
             {
                 AuthorName2 = R1.Text;
-                AuthorNameTxt.Text = AuthorName2;
+                AuthorNameTxt2.Text = AuthorName2;
             };
             string Company2 = default;
             R2.TextChanged += (s, e) =>
@@ -928,34 +927,42 @@ public class SecureMediaSession
             };
             void SetTextProject2()
             {
+                static string Or(string value, string missing) => string.IsNullOrWhiteSpace(value) ? missing : value;
                 string TemplateInfo =
-                    $"Overview: {Overview2 ?? "No Overview Provided (Required)"} \n" +
-                    $"Author Name: {AuthorName2 ?? "No Author Provided (Required)"}\n" +
-                    $"Company: {Company2 ?? "No Company Provided"}\n" +
-                    $"Website: {Website2 ?? "No Website Provided"}\n" +
-                    $"License: {License2 ?? "No License Provided"}\n" +
-                    $"Note: {Note2 ?? "No Note Provided"}";
+                    $"Overview: {Or(Overview2, "No Overview Provided (Required)")}\n" +
+                    $"Author Name: {Or(AuthorName2, "No Author Provided (Required)")}\n" +
+                    $"Company: {Or(Company2, "No Company Provided")}\n" +
+                    $"Website: {Or(Website2, "No Website Provided")}\n" +
+                    $"License: {Or(License2, "No License Provided")}\n" +
+                    $"Note: {Or(Note2, "No Note Provided")}";
                 Q2.Text = TemplateInfo;
             }
             void SetErrorsProject2()
             {
                 ValidationCheck2.Errors.Clear();
                 FinalizeBuildProjectBtn.IsEnabled = false;
-                if (string.IsNullOrEmpty(PackName2))
+                if (string.IsNullOrWhiteSpace(PackName2))
                 {
                     ValidationCheck2.Errors.Add(new ValidationSummaryItem
                     {
                         Message = "A Template Name Must Be Provided"
                     });
                 }
-                if (string.IsNullOrEmpty(Overview2))
+                else if (PackName2.Trim().IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || PackName2.Trim().EndsWith("."))
+                {
+                    ValidationCheck2.Errors.Add(new ValidationSummaryItem
+                    {
+                        Message = "The template name can't contain \\ / : * ? \" < > | or end with a dot"
+                    });
+                }
+                if (string.IsNullOrWhiteSpace(Overview2))
                 {
                     ValidationCheck2.Errors.Add(new ValidationSummaryItem
                     {
                         Message = "An Overview Must Be Provided"
                     });
                 }
-                if (string.IsNullOrEmpty(AuthorName2))
+                if (string.IsNullOrWhiteSpace(AuthorName2))
                 {
                     ValidationCheck2.Errors.Add(new ValidationSummaryItem
                     {
@@ -966,11 +973,16 @@ public class SecureMediaSession
                 {
                     ValidationCheck2.Errors.Add(new ValidationSummaryItem
                     {
-                        Message = "At least one table must be selected"
+                        Message = "Pick the project to turn into a template"
                     });
                 }
-                if (PackName2 != null && Overview2 != null && AuthorName2 != null && ProjectsListUI.SelectedItem != null) { FinalizeBuildProjectBtn.IsEnabled = true; }
+                FinalizeBuildProjectBtn.IsEnabled = ValidationCheck2.Errors.Count == 0;
             }
+            foreach (var box in new[] { S1, S2, R1, R2, R3, R4, R5 })
+                box.TextChanged += (s, e) => { SetTextProject2(); SetErrorsProject2(); };
+            ProjectsListUI.SelectionChanged += (s, e) => SetErrorsProject2();
+            SetTextProject2();
+            SetErrorsProject2();
             FinalizeBuildProjectBtn.Click += async (s, e) =>
             {
                 // Project templates are user-global too: DatabaseTemplates reads
@@ -981,7 +993,7 @@ public class SecureMediaSession
                 string basePath = string.IsNullOrEmpty(CurrentDirectory)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                     : CurrentDirectory;
-                string generatedDBPath = Path.Combine(basePath, PackName2);
+                string generatedDBPath = Path.Combine(basePath, PackName2.Trim());
                 string incremental = "";
                 // --- Ensure GeneratedDB exists ---
                 Directory.CreateDirectory(generatedDBPath);
@@ -1274,69 +1286,26 @@ public class SecureMediaSession
                 CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
         }
 
-        // Same slug the API editor uses to name a function's NodeWalker session.
-        private static string SlugPart(string s) =>
-            string.IsNullOrWhiteSpace(s) ? "untitled" :
-            new string(s.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
-
-        // Loads the NodeWalker graph for an API function, compiles it to a
-        // sibling Logic/<slug>.g.cs file, and returns the controller-action
-        // statements that call it. Falls back to a stub if no graph exists.
-        private List<string> BuildFunctionBody(string moduleName, string endpointName, string functionName, string scriptsDir, string logicDir)
+        private static List<ApiGenerator.ApiFunction> CollectApiFunctions(string apiJson)
         {
-            var stub = new List<string>
-            {
-                "// No NodeWalker graph found for this endpoint yet.",
-                "return Ok(new { message = \"Implement endpoint logic in NodeWalker (NODEWLKR).\" });"
-            };
-
+            var list = new List<ApiGenerator.ApiFunction>();
+            if (string.IsNullOrEmpty(apiJson)) return list;
             try
             {
-                var slug = $"API_{SlugPart(moduleName)}_{SlugPart(endpointName)}_{SlugPart(functionName)}";
-                var sessionPath = Path.Combine(scriptsDir, slug + ".json");
-                if (!File.Exists(sessionPath)) return stub;
-
-                var session = NodeOperations.LoadSession(slug, scriptsDir).GetAwaiter().GetResult();
-                if (session?.Nodes == null || session.Nodes.Count == 0) return stub;
-
-                Directory.CreateDirectory(logicDir);
-                File.WriteAllText(Path.Combine(logicDir, slug + ".g.cs"), NodeCompiler.CompileToScript(session));
-
-                var e = NodeCompiler.DescribeEntry(session);
-                var pointer = $"// Logic generated from NodeWalker graph -> Controllers/Logic/{slug}.g.cs";
-
-                if (e.HasParams)
-                {
-                    return new List<string>
-                    {
-                        pointer,
-                        $"// This graph takes inputs — call {e.ClassName}.{e.Method}(...) with values from the request.",
-                        "return Ok(new { message = \"Supply inputs and call the generated logic.\" });"
-                    };
-                }
-
-                var call = (e.IsAsync ? "await " : "") + $"{e.ClassName}.{e.Method}()";
-                var lines = new List<string> { pointer };
-                if (e.ReturnsValue)
-                {
-                    lines.Add($"var result = {call};");
-                    lines.Add("return Ok(result);");
-                }
-                else
-                {
-                    lines.Add($"{call};");
-                    lines.Add("return Ok();");
-                }
-                return lines;
+                var apiData = System.Text.Json.JsonSerializer.Deserialize<APIData>(apiJson);
+                foreach (var module in apiData?.Modules ?? new())
+                    foreach (var endpoint in module.Endpoints ?? new())
+                        foreach (var function in endpoint.Functions ?? new())
+                        {
+                            if (string.IsNullOrWhiteSpace(module.Name) || string.IsNullOrWhiteSpace(endpoint.Name)) continue;
+                            list.Add(new ApiGenerator.ApiFunction(module.Name, endpoint.Name, function.Name, function.Verb, function.Description));
+                        }
             }
             catch (Exception ex)
             {
-                return new List<string>
-                {
-                    $"// Failed to load NodeWalker logic: {ex.Message}",
-                    "return Ok(new { message = \"Logic generation failed; see build log.\" });"
-                };
+                Console.WriteLine($"[Build] Could not read API definitions: {ex.Message}");
             }
+            return list;
         }
 
         string GetImageFormat(byte[] bytes)
@@ -1420,606 +1389,28 @@ public class SecureMediaSession
         {
         }
 
-        private void GenerateAPIFiles(string apiPath, string rlsJson, string apiJson)
-        {
-            try
-            {
-                // Generate Program.cs with full configuration
-                var programCs = new System.Text.StringBuilder();
-                programCs.AppendLine("using Microsoft.EntityFrameworkCore;");
-                programCs.AppendLine("using Microsoft.OpenApi.Models;");
-                programCs.AppendLine("using System.Text.Json.Serialization;");
-                programCs.AppendLine();
-                programCs.AppendLine("var builder = WebApplication.CreateBuilder(args);");
-                programCs.AppendLine();
-                programCs.AppendLine("// Configure PostgreSQL connection");
-                programCs.AppendLine("var connectionString = builder.Configuration.GetConnectionString(\"Default\") ??");
-                programCs.AppendLine("    \"Host=localhost;Database=yourdatabase;Username=postgres;Password=yourpassword\";");
-                programCs.AppendLine("builder.Services.AddDbContext<AppDbContext>(options =>");
-                programCs.AppendLine("    options.UseNpgsql(connectionString));");
-                programCs.AppendLine();
-                programCs.AppendLine("builder.Services.AddControllers()");
-                programCs.AppendLine("    .AddJsonOptions(options =>");
-                programCs.AppendLine("    {");
-                programCs.AppendLine("        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;");
-                programCs.AppendLine("    });");
-                programCs.AppendLine("builder.Services.AddEndpointsApiExplorer();");
-                programCs.AppendLine("builder.Services.AddSwaggerGen(c =>");
-                programCs.AppendLine("{");
-                programCs.AppendLine("    c.SwaggerDoc(\"v1\", new OpenApiInfo");
-                programCs.AppendLine("    {");
-                programCs.AppendLine("        Title = \"Database Designer API\",");
-                programCs.AppendLine("        Version = \"v1\",");
-                programCs.AppendLine("        Description = \"Auto-generated API from Database Designer\"");
-                programCs.AppendLine("    });");
-                programCs.AppendLine("});");
-                programCs.AppendLine();
-                programCs.AppendLine("var app = builder.Build();");
-                programCs.AppendLine();
-                programCs.AppendLine("// Ensure database is created and migrated");
-                programCs.AppendLine("using (var scope = app.Services.CreateScope())");
-                programCs.AppendLine("{");
-                programCs.AppendLine("    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();");
-                programCs.AppendLine("    db.Database.EnsureCreated();");
-                programCs.AppendLine("}");
-                programCs.AppendLine();
-                programCs.AppendLine("app.UseSwagger();");
-                programCs.AppendLine("app.UseSwaggerUI();");
-                programCs.AppendLine("app.UseRouting();");
-                programCs.AppendLine("app.MapControllers();");
-                programCs.AppendLine("app.Run();");
-                File.WriteAllText(Path.Combine(apiPath, "Program.cs"), programCs.ToString());
-
-                // Generate appsettings.json
-                var appsettings = @"{
-  ""Logging"": {
-    ""LogLevel"": {
-      ""Default"": ""Information"",
-      ""Microsoft.AspNetCore"": ""Warning"",
-      ""Microsoft.EntityFrameworkCore"": ""Warning""
-    }
-  },
-  ""AllowedHosts"": ""*"",
-  ""ConnectionStrings"": {
-    ""Default"": ""Host=localhost;Database=yourdatabase;Username=postgres;Password=yourpassword""
-  }
-}";
-                File.WriteAllText(Path.Combine(apiPath, "appsettings.json"), appsettings);
-
-                // Generate complete AppDbContext from RLS data
-                var dbContextPath = Path.Combine(apiPath, "Models", "AppDbContext.cs");
-                Directory.CreateDirectory(Path.GetDirectoryName(dbContextPath));
-
-                var dbContext = new System.Text.StringBuilder();
-                dbContext.AppendLine("using Microsoft.EntityFrameworkCore;");
-                dbContext.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
-                dbContext.AppendLine();
-                dbContext.AppendLine("public class AppDbContext : DbContext");
-                dbContext.AppendLine("{");
-                dbContext.AppendLine("    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }");
-                dbContext.AppendLine();
-
-                // Parse RLS data for tables
-                if (!string.IsNullOrEmpty(rlsJson))
-                {
-                    try
-                    {
-                        var rlsData = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
-                        if (rlsData?.Roles != null)
-                        {
-                            foreach (var role in rlsData.Roles)
-                            {
-                                if (role.Tables != null)
-                                {
-                                    foreach (var table in role.Tables)
-                                    {
-                                        var className = SanitizeName(table.TableName);
-                                        var dbSetName = className + "s";
-
-                                        string? schemaName = null;
-                                        string tableName = table.TableName;
-                                        if (table.TableName.Contains('.'))
-                                        {
-                                            var parts = table.TableName.Split('.');
-                                            schemaName = parts[0];
-                                            tableName = parts[1];
-                                        }
-
-                                        if (!string.IsNullOrEmpty(schemaName))
-                                            dbContext.AppendLine($"    [Table(\"{tableName}\", Schema = \"{schemaName}\")]");
-                                        else
-                                            dbContext.AppendLine($"    [Table(\"{tableName}\")]");
-
-                                        dbContext.AppendLine($"    public DbSet<{className}> {dbSetName} {{ get; set; }}");
-                                        dbContext.AppendLine();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                }
-
-                dbContext.AppendLine("}");
-
-                // Generate model classes
-                var modelsPath = Path.Combine(apiPath, "Models", "Models.cs");
-                Directory.CreateDirectory(Path.GetDirectoryName(modelsPath));
-
-                var models = new System.Text.StringBuilder();
-                models.AppendLine("// Model classes auto-generated from database schema");
-                models.AppendLine("using System.ComponentModel.DataAnnotations;");
-                models.AppendLine();
-                if (!string.IsNullOrEmpty(rlsJson))
-                {
-                    try
-                    {
-                        var rlsData = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
-                        if (rlsData?.Roles != null)
-                        {
-                            foreach (var role in rlsData.Roles)
-                            {
-                                if (role.Tables != null)
-                                {
-                                    foreach (var table in role.Tables)
-                                    {
-                                        var className = SanitizeName(table.TableName);
-                                        models.AppendLine($"public class {className}");
-                                        models.AppendLine("{");
-                                        models.AppendLine("    [Key]");
-                                        models.AppendLine("    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]");
-                                        models.AppendLine("    public Guid Id { get; set; }");
-                                        models.AppendLine($"    // Table: {table.TableName}");
-                                        models.AppendLine($"    // Description: {table.Description}");
-                                        models.AppendLine($"    public string Name {{ get; set; }} = \"\";");
-                                        models.AppendLine("}");
-                                        models.AppendLine();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                }
-
-                File.WriteAllText(dbContextPath, dbContext.ToString());
-                File.WriteAllText(modelsPath, models.ToString());
-
-                // Generate Controllers folder
-                string controllersPath = Path.Combine(apiPath, "Controllers");
-                Directory.CreateDirectory(controllersPath);
-
-                // NodeWalker function graphs live under the project's Scripts folder,
-                // keyed by the same slug the API editor uses to open them.
-                string scriptsDir = Path.Combine(
-                    mainPage.SeshDirectory.ConvertToString(),
-                    mainPage.SeshUsername.ConvertToString(),
-                    "Projects", mainPage.ProjectName, "Scripts");
-                string logicDir = Path.Combine(controllersPath, "Logic");
-
-                if (!string.IsNullOrEmpty(apiJson))
-                {
-                    var apiData = System.Text.Json.JsonSerializer.Deserialize<APIData>(apiJson);
-                    if (apiData?.Modules != null)
-                    {
-                        foreach (var module in apiData.Modules)
-                        {
-                            if (string.IsNullOrEmpty(module.Name)) continue;
-                            var safeName = SanitizeName(module.Name);
-                            var controllerName = $"{safeName}Controller.cs";
-                            var controllerCode = new System.Text.StringBuilder();
-                            controllerCode.AppendLine("using Microsoft.AspNetCore.Mvc;");
-                            controllerCode.AppendLine("using Microsoft.EntityFrameworkCore;");
-                            controllerCode.AppendLine("using System.Threading.Tasks;");
-                            controllerCode.AppendLine();
-                            controllerCode.AppendLine($"[ApiController]");
-                            controllerCode.AppendLine($"[Route(\"api/{safeName.ToLower()}\")]");
-                            controllerCode.AppendLine($"public class {safeName}Controller : ControllerBase");
-                            controllerCode.AppendLine("{");
-                            controllerCode.AppendLine("    private readonly AppDbContext _db;");
-                            controllerCode.AppendLine($"    public {safeName}Controller(AppDbContext db) => _db = db;");
-                            controllerCode.AppendLine();
-
-                            foreach (var endpoint in module.Endpoints)
-                            {
-                                if (string.IsNullOrEmpty(endpoint.Name)) continue;
-                                controllerCode.AppendLine($"    // Endpoint: {endpoint.Name}");
-                                controllerCode.AppendLine($"    // Description: {endpoint.Description}");
-                                controllerCode.AppendLine();
-
-                                foreach (var function in endpoint.Functions)
-                                {
-                                    var verb = !string.IsNullOrEmpty(function.Verb) ? function.Verb.ToUpper() : "GET";
-                                    var route = !string.IsNullOrEmpty(function.Name) ? SanitizeName(function.Name) : "index";
-                                    controllerCode.AppendLine($"    [{verb}(\"{route}\")]");
-                                    controllerCode.AppendLine($"    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]");
-                                    controllerCode.AppendLine($"    public async Task<IActionResult> {SanitizeName(function.Name)}()");
-                                    controllerCode.AppendLine("    {");
-                                    controllerCode.AppendLine($"        // Endpoint: {function.Name}  ({function.Description})");
-
-                                    var body = BuildFunctionBody(module.Name, endpoint.Name, function.Name, scriptsDir, logicDir);
-                                    foreach (var line in body)
-                                        controllerCode.AppendLine("        " + line);
-
-                                    controllerCode.AppendLine("    }");
-                                    controllerCode.AppendLine();
-                                }
-                            }
-                            controllerCode.AppendLine("}");
-                            File.WriteAllText(Path.Combine(controllersPath, controllerName), controllerCode.ToString());
-                        }
-                    }
-                }
-
-                // Generate .csproj file
-                var csproj = @"<Project Sdk=""Microsoft.NET.Sdk.Web"">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.0"" />
-    <PackageReference Include=""Npgsql.EntityFrameworkCore.PostgreSQL"" Version=""8.0.0"" />
-    <PackageReference Include=""Microsoft.AspNetCore.OpenApi"" Version=""8.0.0"" />
-    <PackageReference Include=""Swashbuckle.AspNetCore"" Version=""6.5.0"" />
-  </ItemGroup>
-</Project>";
-                File.WriteAllText(Path.Combine(apiPath, "API.csproj"), csproj);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to generate API files: {ex.Message}");
-            }
-        }
-
         private void GenerateSpacetimeDBFiles(string spacetimePath, string rlsJson, string apiJson)
         {
-            // ... existing code
+            // Not written yet. The folder is still created so the build layout stays the same.
         }
 
-        private string GenerateRLSSQL(string rlsJson, IEnumerable<TableObject> tables)
+        private static string GenerateRLSSQL(string rlsJson, IEnumerable<TableObject> tables)
         {
-            var sql = new System.Text.StringBuilder();
-            sql.AppendLine("-- ============================================================");
-            sql.AppendLine("-- ROW LEVEL SECURITY (RLS) POLICIES");
-            sql.AppendLine("-- Auto-generated by Database Designer");
-            sql.AppendLine("-- ============================================================");
-            sql.AppendLine();
-
-            if (string.IsNullOrEmpty(rlsJson) || tables == null || !tables.Any())
-            {
-                sql.AppendLine("-- No RLS data or tables defined.");
-                return sql.ToString();
-            }
-
+            RLSData data = null;
             try
             {
-                var rlsData = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
-                if (rlsData?.Roles == null || !rlsData.Roles.Any())
-                {
-                    sql.AppendLine("-- No roles defined in RLS data.");
-                    return sql.ToString();
-                }
-
-                // Build table name lookup for finding columns
-                var tableLookup = tables.ToDictionary(t => $"{t.SchemaName}.{t.TableName}".ToLower(), t => t);
-
-                foreach (var role in rlsData.Roles)
-                {
-                    if (role.Tables == null || !role.Tables.Any()) continue;
-
-                    var roleName = SanitizeRoleName(role.Name);
-                    sql.AppendLine($"-- ============================================================");
-                    sql.AppendLine($"-- Role: {roleName}");
-                    sql.AppendLine($"-- Description: {role.Description}");
-                    sql.AppendLine($"-- ============================================================");
-
-                    // Create role if not exists
-                    sql.AppendLine($"DO $$");
-                    sql.AppendLine($"BEGIN");
-                    sql.AppendLine($"    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{roleName}') THEN");
-                    sql.AppendLine($"        CREATE ROLE {roleName};");
-                    sql.AppendLine($"    END IF;");
-                    sql.AppendLine($"END $$;");
-                    sql.AppendLine();
-
-                    // Process each table for this role
-                    foreach (var tablePolicy in role.Tables)
-                    {
-                        var tableKey = tablePolicy.TableName.ToLower();
-                        var parts = tablePolicy.TableName.Split('.');
-                        string schemaName = parts.Length > 1 ? parts[0] : "public";
-                        string tableName = parts.Length > 1 ? parts[1] : parts[0];
-
-                        // Try to find matching table in tables list
-                        TableObject? matchedTable = null;
-                        foreach (var t in tables)
-                        {
-                            if ($"{t.SchemaName}.{t.TableName}".ToLower() == tableKey ||
-                                t.TableName.ToLower() == tableKey)
-                            {
-                                matchedTable = t;
-                                break;
-                            }
-                        }
-
-                        sql.AppendLine($"-- Table: {schemaName}.{tableName}");
-                        sql.AppendLine($"-- Policy: {tablePolicy.Description}");
-
-                        // Enable RLS on table
-                        sql.AppendLine($"ALTER TABLE {schemaName}.{tableName} ENABLE ROW LEVEL SECURITY;");
-
-                        // Force RLS for table owner too (recommended for security)
-                        sql.AppendLine($"ALTER TABLE {schemaName}.{tableName} FORCE ROW LEVEL SECURITY;");
-
-                        // Create policies based on categories and policies defined
-                        foreach (var policy in tablePolicy.Policies)
-                        {
-                            var policyName = SanitizeIdentifier(policy.Name);
-                            var category = policy.Category ?? "Base Server";
-                            var tag = policy.Tag ?? "";
-
-                            // Generate policy based on category
-                            var policyType = GetPolicyType(category);
-                            var usingExpr = GenerateUsingExpression(category, matchedTable, policy);
-                            var checkExpr = GenerateCheckExpression(category, matchedTable, policy);
-
-                            sql.AppendLine();
-                            sql.AppendLine($"-- Policy: {policy.Name}");
-                            sql.AppendLine($"-- Category: {category}");
-                            if (!string.IsNullOrEmpty(tag))
-                                sql.AppendLine($"-- Tag: {tag}");
-                            sql.AppendLine($"DROP POLICY IF EXISTS \"{policyName}\" ON {schemaName}.{tableName};");
-                            sql.AppendLine($"CREATE POLICY \"{policyName}\" ON {schemaName}.{tableName}");
-                            sql.AppendLine($"    FOR {policyType}");
-
-                            if (!string.IsNullOrEmpty(usingExpr))
-                                sql.AppendLine($"    USING ({usingExpr})");
-
-                            if (!string.IsNullOrEmpty(checkExpr))
-                                sql.AppendLine($"    WITH CHECK ({checkExpr})");
-
-                            sql.AppendLine(";");
-                        }
-
-                        // Grant permissions to role
-                        sql.AppendLine();
-                        sql.AppendLine($"-- Grant permissions for {roleName} on {schemaName}.{tableName}");
-                        sql.AppendLine($"GRANT SELECT, INSERT, UPDATE, DELETE ON {schemaName}.{tableName} TO {roleName};");
-                        sql.AppendLine();
-                    }
-
-                    // Create role hierarchy (admin > moderator > standard)
-                    if (roleName.Contains("admin", StringComparison.OrdinalIgnoreCase))
-                    {
-                        sql.AppendLine($"-- Admin role inherits standard permissions");
-                        sql.AppendLine($"GRANT standard_users TO {roleName};");
-                        sql.AppendLine($"GRANT moderator_users TO {roleName};");
-                        sql.AppendLine();
-                    }
-                    else if (roleName.Contains("moderator", StringComparison.OrdinalIgnoreCase))
-                    {
-                        sql.AppendLine($"-- Moderator inherits standard permissions");
-                        sql.AppendLine($"GRANT standard_users TO {roleName};");
-                        sql.AppendLine();
-                    }
-                }
-
-                // Add helper functions for common RLS patterns
-                sql.AppendLine();
-                sql.AppendLine("-- ============================================================");
-                sql.AppendLine("-- HELPER FUNCTIONS FOR RLS");
-                sql.AppendLine("-- ============================================================");
-                sql.AppendLine();
-                sql.AppendLine(@"
-CREATE OR REPLACE FUNCTION current_user_id()
-RETURNS BIGINT AS $$
-BEGIN
-    RETURN COALESCE(NULLIF(current_setting('app.current_user_id', true), '')::BIGINT, 0);
-EXCEPTION WHEN OTHERS THEN
-    RETURN 0;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION current_user_role()
-RETURNS TEXT AS $$
-BEGIN
-    RETURN COALESCE(NULLIF(current_setting('app.current_user_role', true), ''), 'anonymous');
-EXCEPTION WHEN OTHERS THEN
-    RETURN 'anonymous';
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-    RETURN current_user_role() IN ('admin_users', 'Admin Users', 'admin');
-EXCEPTION WHEN OTHERS THEN
-    RETURN FALSE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION is_moderator()
-RETURNS BOOLEAN AS $$
-BEGIN
-    RETURN current_user_role() IN ('moderator_users', 'Moderator Users', 'admin', 'moderator');
-EXCEPTION WHEN OTHERS THEN
-    RETURN FALSE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-");
+                if (!string.IsNullOrEmpty(rlsJson))
+                    data = System.Text.Json.JsonSerializer.Deserialize<RLSData>(rlsJson);
             }
             catch (Exception ex)
             {
-                sql.AppendLine($"-- Error generating RLS: {ex.Message}");
+                return $"-- Could not read the RLS Editor data: {ex.Message}\n";
             }
-
-            return sql.ToString();
+            return RlsSqlGenerator.Generate(data, ToRlsTables(tables));
         }
 
-        private string GetPolicyType(string category)
-        {
-            return category?.ToLower() switch
-            {
-                "communication" => "SELECT",
-                "profiles" => "ALL",
-                "economy" => "ALL",
-                "base server" => "SELECT",
-                _ => "SELECT"
-            };
-        }
-
-        private string GenerateUsingExpression(string category, TableObject? matchedTable, RLSData.Policy policy)
-        {
-            // Find user_id or similar column
-            string? userIdCol = FindUserIdColumn(matchedTable);
-            string? ownerCol = FindOwnerColumn(matchedTable);
-
-            var conditions = new List<string>();
-
-            // Admin/moderator bypass
-            conditions.Add("(current_user_role() IN ('admin_users', 'Moderator Users') OR is_admin() OR is_moderator())");
-
-            switch (category?.ToLower())
-            {
-                case "communication":
-                    conditions.Add($"(sender_id = current_user_id() OR recipient_id = current_user_id() OR visibility = 'public')");
-                    break;
-
-                case "profiles":
-                    if (!string.IsNullOrEmpty(userIdCol))
-                        conditions.Add($"({userIdCol} = current_user_id())");
-                    if (!string.IsNullOrEmpty(ownerCol))
-                        conditions.Add($"({ownerCol} = current_user_id())");
-                    conditions.Add("(is_public = true OR visibility = 'public')");
-                    break;
-
-                case "economy":
-                    conditions.Add("(is_public = true OR owner_id = current_user_id())");
-                    break;
-
-                default:
-                    if (!string.IsNullOrEmpty(userIdCol))
-                        conditions.Add($"({userIdCol} = current_user_id())");
-                    break;
-            }
-
-            return string.Join("\n        AND ", conditions);
-        }
-
-        private string GenerateCheckExpression(string category, TableObject? matchedTable, RLSData.Policy policy)
-        {
-            string? userIdCol = FindUserIdColumn(matchedTable);
-            string? ownerCol = FindOwnerColumn(matchedTable);
-
-            var conditions = new List<string>();
-
-            // Admin bypass
-            conditions.Add("(is_admin() OR is_moderator())");
-
-            switch (category?.ToLower())
-            {
-                case "communication":
-                    if (!string.IsNullOrEmpty(userIdCol))
-                        conditions.Add($"(sender_id = current_user_id())");
-                    else
-                        conditions.Add("(created_by = current_user_id())");
-                    break;
-
-                case "profiles":
-                    if (!string.IsNullOrEmpty(userIdCol))
-                        conditions.Add($"({userIdCol} = current_user_id())");
-                    break;
-
-                case "economy":
-                    if (!string.IsNullOrEmpty(ownerCol))
-                        conditions.Add($"({ownerCol} = current_user_id())");
-                    break;
-
-                default:
-                    if (!string.IsNullOrEmpty(userIdCol))
-                        conditions.Add($"({userIdCol} = current_user_id())");
-                    break;
-            }
-
-            return string.Join("\n        AND ", conditions);
-        }
-
-        private string? FindUserIdColumn(TableObject? table)
-        {
-            if (table == null) return null;
-            var t = table.Value;
-            if (t.Rows == null) return null;
-            RowCreation found = default;
-            bool foundMatch = false;
-            foreach (var r in t.Rows)
-            {
-                string n = r.Name ?? "";
-                if (n.Equals("user_id", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("owner_id", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("created_by", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("author_id", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("sender_id", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("recipient_id", StringComparison.OrdinalIgnoreCase))
-                {
-                    found = r;
-                    foundMatch = true;
-                    break;
-                }
-            }
-            return foundMatch ? found.Name : null;
-        }
-
-        private string? FindOwnerColumn(TableObject? table)
-        {
-            if (table == null) return null;
-            var t = table.Value;
-            if (t.Rows == null) return null;
-            RowCreation found = default;
-            bool foundMatch = false;
-            foreach (var r in t.Rows)
-            {
-                string n = r.Name ?? "";
-                if (n.Equals("owner_id", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("owner", StringComparison.OrdinalIgnoreCase) ||
-                    n.Equals("user_id", StringComparison.OrdinalIgnoreCase))
-                {
-                    found = r;
-                    foundMatch = true;
-                    break;
-                }
-            }
-            return foundMatch ? found.Name : null;
-        }
-
-        private string SanitizeRoleName(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return "standard_users";
-            var sanitized = new System.Text.StringBuilder();
-            foreach (char c in name.ToLower())
-            {
-                if (char.IsLetterOrDigit(c) || c == '_' || c == ' ')
-                    sanitized.Append(c == ' ' ? '_' : c);
-            }
-            var result = sanitized.ToString().Replace("__", "_").Trim('_');
-            if (result.Length > 0 && char.IsDigit(result[0]))
-                result = "_" + result;
-            return string.IsNullOrEmpty(result) ? "standard_users" : result;
-        }
-
-        private string SanitizeIdentifier(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return "unnamed_policy";
-            var sanitized = new System.Text.StringBuilder();
-            foreach (char c in name)
-            {
-                if (char.IsLetterOrDigit(c) || c == '_' || c == ' ' || c == '-' || c == '(' || c == ')')
-                    sanitized.Append(c);
-            }
-            var result = sanitized.ToString().Replace(" ", "_").Trim();
-            return string.IsNullOrEmpty(result) ? "unnamed_policy" : result;
-        }
+        internal static List<RlsSqlGenerator.Table> ToRlsTables(IEnumerable<TableObject> tables) =>
+            RlsSqlGenerator.FromProject(tables);
 
         private string SanitizeName(string name)
         {
@@ -2053,6 +1444,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
         }
     }
 }
-
-
 

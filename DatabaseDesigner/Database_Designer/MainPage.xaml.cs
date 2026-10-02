@@ -53,7 +53,6 @@ using SecuritySettings = Pariah_Cybersecurity.DataHandler.AccountsWithSessions.S
 //Changing it now would just mean people who used v1 now have their projects trashed
 
 
-
 //NEW UPDATE
 //Focusing on getting rid of the server style system used for security, should fix the unabel to login issue 
 
@@ -61,10 +60,8 @@ using SecuritySettings = Pariah_Cybersecurity.DataHandler.AccountsWithSessions.S
 //CHECK AND FIX THE PATHS, SECDBDESIGNA ND PREVIEW
 
 
-
 namespace Database_Designer
 {
-
 
 
     public struct UIWindowEntry
@@ -88,23 +85,17 @@ namespace Database_Designer
     }
 
 
-
-
     //Ngl a very hard to traverse script, but it works
     public partial class MainPage : Page
     {
 
 
-
         public Canvas WindowsHolder;
-
-
 
 
         public static event EventHandler IndexChanged;
         public static event EventHandler TableChanged;
         public static event EventHandler RefChanged;
-
 
 
         // Safely invoke events on the UI thread when possible. Use reflection to access
@@ -151,21 +142,23 @@ namespace Database_Designer
         }
 
 
-
-
-
-
-
         public static Dictionary<string, (UIElement, UIElement)> DesktopApps = new();
         public DBDesignerSession MainSessionInfo; //This is our Database Designer Session
         public string RLSJson { get; set; } = "";
         public string APIJson { get; set; } = "";
+        public string NotesJson { get; set; } = "";
+        // Connection string for the developer's local test database. Saved in
+        // the encrypted project file only, never in portable exports.
+        public string DevConnection { get; set; } = "";
+        public ProjectHistory History { get; } = new();
 
-        //Function that turns DBDesignerSession into text and back, had this genned by GPT to save time, then checked manually
 
         #region SessionHelpers
 
-        public string ToSessionString(DBDesignerSession session, SecureData password)
+        public string ToSessionString(DBDesignerSession session, SecureData password) =>
+            ToSessionString(session, RLSJson, APIJson, NotesJson, DevConnection);
+
+        public string ToSessionString(DBDesignerSession session, string rlsJson, string apiJson, string notesJson, string devConnection = null)
         {
             using var stream = new MemoryStream();
             using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false });
@@ -188,7 +181,6 @@ namespace Database_Designer
             writer.WriteEndArray();
 
 
-
             // Window statuses
             writer.WritePropertyName("windowStatuses");
             writer.WriteStartObject();
@@ -203,10 +195,15 @@ namespace Database_Designer
             writer.WriteEndObject();
 
             // RLS data
-            writer.WriteString("rlsJson", RLSJson);
+            writer.WriteString("rlsJson", rlsJson ?? "");
 
             // API data
-            writer.WriteString("apiJson", APIJson);
+            writer.WriteString("apiJson", apiJson ?? "");
+
+            writer.WriteString("notesJson", notesJson ?? "");
+
+            if (!string.IsNullOrEmpty(devConnection))
+                writer.WriteString("devConnection", devConnection);
 
             writer.WriteEndObject();
             writer.Flush();
@@ -216,14 +213,30 @@ namespace Database_Designer
         }
         //either change this or remove password; it does nothing but I feel it was supposed to
 
-        public DBDesignerSession FromSessionString(SimpleAESEncryption.AESEncryptedText json, SecureData password)
+        public DBDesignerSession FromSessionString(SimpleAESEncryption.AESEncryptedText json, SecureData password) =>
+            LoadSessionString(json, password).Session;
+
+        public (DBDesignerSession Session, string RlsJson, string ApiJson, string NotesJson, string DevConnection) LoadSessionString(SimpleAESEncryption.AESEncryptedText json, SecureData password)
         {
-            var encryptedData = Walker.Crypto.AsyncAESEncryption.DecryptAsync(json, password).GetAwaiter().GetResult();
-            return FromSessionJson(encryptedData);
+            var plain = Walker.Crypto.AsyncAESEncryption.DecryptAsync(json, password).GetAwaiter().GetResult();
+            var session = ParseSession(plain, out var rls, out var api, out var notes);
+            string dev = "";
+            try
+            {
+                using var doc = JsonDocument.Parse(plain);
+                if (doc.RootElement.TryGetProperty("devConnection", out var d)) dev = d.GetString() ?? "";
+            }
+            catch { }
+            return (session, rls, api, notes, dev);
         }
 
-        public DBDesignerSession FromSessionJson(string plainJson)
+        public DBDesignerSession FromSessionJson(string plainJson) => ParseSession(plainJson, out _, out _, out _);
+
+        public DBDesignerSession ParseSession(string plainJson, out string rlsJson, out string apiJson, out string notesJson)
         {
+            rlsJson = "";
+            apiJson = "";
+            notesJson = "";
             var session = new DBDesignerSession
             {
                 Tables = new ObservableCollection<TableObject>(),
@@ -253,8 +266,9 @@ namespace Database_Designer
             }
 
             // RLS and API data
-            if (root.TryGetProperty("rlsJson", out var rlsElem)) RLSJson = rlsElem.GetString() ?? "";
-            if (root.TryGetProperty("apiJson", out var apiElem)) APIJson = apiElem.GetString() ?? "";
+            if (root.TryGetProperty("rlsJson", out var rlsElem)) rlsJson = rlsElem.GetString() ?? "";
+            if (root.TryGetProperty("apiJson", out var apiElem)) apiJson = apiElem.GetString() ?? "";
+            if (root.TryGetProperty("notesJson", out var notesElem)) notesJson = notesElem.GetString() ?? "";
 
             return session;
         }
@@ -466,7 +480,6 @@ namespace Database_Designer
         }
 
 
-
         public static void WriteCoords(Utf8JsonWriter writer, Coords coords)
         {
             writer.WriteStartObject();
@@ -488,13 +501,6 @@ namespace Database_Designer
         }
 
         #endregion
-
-
-
-
-
-
-
 
 
         internal SecureData SeshUsername;
@@ -594,7 +600,6 @@ namespace Database_Designer
         //Update preview
 
 
-
         internal static async Task OnTables_Changed(MainPage mainPage)
         {
             Tables_Changed?.Invoke(null, EventArgs.Empty);
@@ -613,6 +618,12 @@ namespace Database_Designer
 
                 string sessionAsString = mainPage.ToSessionString(mainPage.MainSessionInfo, mainPage.Password);
 
+                var keySession = mainPage.MainSessionInfo;
+                keySession.WindowStatuses = null;
+                keySession.LastEdited = default;
+                mainPage.History.Record(mainPage.ProjectName, sessionAsString,
+                    mainPage.ToSessionString(keySession, mainPage.RLSJson, mainPage.APIJson, mainPage.NotesJson));
+
                 // Encrypt before saving
                 var aesEncrypted = await AsyncAESEncryption.EncryptAsync(sessionAsString, mainPage.Password);
 
@@ -626,25 +637,18 @@ namespace Database_Designer
                 var overviewFilePath = Path.Combine(CurrentDirectory, (mainPage.ProjectName + ".secdbdesign"));
 
 
-
-
                 await File.WriteAllTextAsync(overviewFilePath, securedJson);
-
 
 
                 //Also create/update file with basic info
 
                 
-
                 var Preview = new ProjectsPreviews(mainPage.MainSessionInfo.SessionName, mainPage.MainSessionInfo.SessionDescription, DateTime.UtcNow.ToString(), null);
 
                 var ProjectPreviewData = Preview.ToString();
 
 
                 var previewFilePath = Path.Combine(CurrentDirectory, (mainPage.ProjectName + ".preview"));
-
-
-
 
 
                 await File.WriteAllTextAsync(previewFilePath, ProjectPreviewData);
@@ -659,18 +663,36 @@ namespace Database_Designer
         public void ApplyTheme(string themeName)
         {
             ThemeManager.Apply(UserFolder, themeName);
+            RefreshWallpaper(force: true);
+        }
+
+        private (string path, UriKind kind) ResolveWallpaper()
+        {
             try
             {
-                if (!string.IsNullOrEmpty(ThemeManager.CurrentBackgroundImage) &&
-                    File.Exists(ThemeManager.CurrentBackgroundImage))
+                if (!string.IsNullOrEmpty(ProjectName))
                 {
-                    var bmp = new BitmapImage();
-                    using var stream = File.OpenRead(ThemeManager.CurrentBackgroundImage);
-                    bmp.SetSource(stream);
-                    MainBG.Source = bmp;
+                    var projectDir = Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString(), "Projects", ProjectName);
+                    if (Directory.Exists(projectDir))
+                    {
+                        var projectWallpaper = Directory.GetFiles(projectDir)
+                            .FirstOrDefault(f => Path.GetFileName(f).StartsWith("Wallpaper.", StringComparison.OrdinalIgnoreCase));
+                        if (projectWallpaper != null) return (projectWallpaper, UriKind.Absolute);
+                    }
                 }
+                if (!string.IsNullOrEmpty(ThemeManager.CurrentBackgroundImage) && File.Exists(ThemeManager.CurrentBackgroundImage))
+                    return (ThemeManager.CurrentBackgroundImage, UriKind.Absolute);
             }
             catch { }
+            return ("Assets/Images/lightbg.png", UriKind.Relative);
+        }
+
+        public void RefreshWallpaper(bool force = false)
+        {
+            var (path, kind) = ResolveWallpaper();
+            if (!force && path == _currentBackgroundPath) return;
+            _currentBackgroundPath = path;
+            _ = FadeChangeBackground(path, kind);
         }
 
         public string ExportsFolder =>
@@ -702,6 +724,7 @@ namespace Database_Designer
             var plainJson = await AsyncAESEncryption.DecryptAsync(aesObj, Password);
 
             var bundle = Path.Combine(ExportsFolder, projectName);
+            if (Directory.Exists(bundle)) Directory.Delete(bundle, recursive: true);
             Directory.CreateDirectory(bundle);
             await File.WriteAllTextAsync(Path.Combine(bundle, "session.json"), plainJson);
 
@@ -716,7 +739,62 @@ namespace Database_Designer
             foreach (var wallpaper in Directory.GetFiles(projectFolder, "Wallpaper.*"))
                 File.Copy(wallpaper, Path.Combine(bundle, Path.GetFileName(wallpaper)), overwrite: true);
 
+            var archive = Path.Combine(ExportsFolder, projectName + PortableExtension);
+            if (File.Exists(archive)) File.Delete(archive);
+            System.IO.Compression.ZipFile.CreateFromDirectory(bundle, archive);
+
             return bundle;
+        }
+
+        public const string PortableExtension = ".ddproject";
+
+        public async Task<(List<string> Imported, List<string> Failed)> ImportAllFromImportsFolder()
+        {
+            var imported = new List<string>();
+            var failed = new List<string>();
+            Directory.CreateDirectory(ImportsFolder);
+            var doneRoot = Path.Combine(ImportsFolder, "Imported");
+
+            var sources = Directory.GetDirectories(ImportsFolder)
+                .Where(d => File.Exists(Path.Combine(d, "session.json")))
+                .Concat(Directory.GetFiles(ImportsFolder)
+                    .Where(f => f.EndsWith(PortableExtension, StringComparison.OrdinalIgnoreCase)
+                             || f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            foreach (var source in sources)
+            {
+                string temp = null;
+                try
+                {
+                    var bundle = source;
+                    if (File.Exists(source))
+                    {
+                        temp = Path.Combine(Path.GetTempPath(), "dd-import-" + Guid.NewGuid().ToString("N"));
+                        System.IO.Compression.ZipFile.ExtractToDirectory(source, temp);
+                        bundle = File.Exists(Path.Combine(temp, "session.json"))
+                            ? temp
+                            : Directory.GetDirectories(temp).FirstOrDefault(d => File.Exists(Path.Combine(d, "session.json")))
+                              ?? throw new FileNotFoundException("archive has no session.json");
+                    }
+
+                    imported.Add(await ImportPortableProject(bundle));
+
+                    Directory.CreateDirectory(doneRoot);
+                    var dest = Path.Combine(doneRoot, $"{DateTime.Now:yyyyMMdd-HHmmss}-{Path.GetFileName(source)}");
+                    if (Directory.Exists(source)) Directory.Move(source, dest);
+                    else File.Move(source, dest);
+                }
+                catch (Exception ex)
+                {
+                    failed.Add($"{Path.GetFileName(source)}: {ex.Message}");
+                }
+                finally
+                {
+                    if (temp != null) try { Directory.Delete(temp, true); } catch { }
+                }
+            }
+            return (imported, failed);
         }
 
         public async Task<string> ImportPortableProject(string bundleFolder)
@@ -726,7 +804,7 @@ namespace Database_Designer
                 throw new FileNotFoundException($"No session.json in {bundleFolder}");
 
             var plainJson = await File.ReadAllTextAsync(sessionFile);
-            var session = FromSessionJson(plainJson);
+            var session = ParseSession(plainJson, out var importedRls, out var importedApi, out var importedNotes);
 
             var projectsRoot = Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString(), "Projects");
             Directory.CreateDirectory(projectsRoot);
@@ -742,7 +820,10 @@ namespace Database_Designer
             var projectFolder = Path.Combine(projectsRoot, name);
             Directory.CreateDirectory(projectFolder);
 
-            var reserialized = ToSessionString(session, Password);
+            session.SessionName = name;
+            session.LastEdited = DateTime.Now;
+
+            var reserialized = ToSessionString(session, importedRls, importedApi, importedNotes);
             var aesEncrypted = await AsyncAESEncryption.EncryptAsync(reserialized, Password);
             var securedJson = Convert.ToBase64String(Encoding.UTF8.GetBytes(aesEncrypted.ToString()));
             await File.WriteAllTextAsync(Path.Combine(projectFolder, name + ".secdbdesign"), securedJson);
@@ -763,8 +844,6 @@ namespace Database_Designer
 
             return name;
         }
-
-
 
 
                     public bool mpSpawned = false;
@@ -831,18 +910,7 @@ namespace Database_Designer
             Console.WriteLine(selectedSong);
 
 
-
-
             this.KeyDown += MainPage_KeyDown;
-
-
-
-
-
-
-
-
-
 
 
             WindowsHolder = IntroPage;
@@ -895,7 +963,6 @@ namespace Database_Designer
                 ;
 
 
-
             DateTime lastKeySound = DateTime.MinValue;
             Random rnd = new Random();
 
@@ -936,7 +1003,6 @@ namespace Database_Designer
             }
 
             //Yo I am NOT organizing ts
-
 
 
             MainBG.Source = new BitmapImage(new Uri("Assets/Images/DBDesignerBG.png", UriKind.Relative));
@@ -1012,8 +1078,6 @@ namespace Database_Designer
             }
 
 
-
-
             MuteBtn.Click += (s, e) =>
             {
                 VolSlider.Value = 0;
@@ -1043,8 +1107,6 @@ namespace Database_Designer
                     VolOption.Visibility = Visibility.Visible;
                 }
             };
-
-
 
 
             MainMenu.Visibility = Visibility.Collapsed;
@@ -1191,13 +1253,10 @@ namespace Database_Designer
             }
 
 
-
             LogoutButton.Click += (s, e) =>
             {
                 CreateWindow(() => new LogoutConfirm(this), "Logging Out...", true);
             };
-
-
 
 
             timer = new DispatcherTimer();
@@ -1236,7 +1295,6 @@ namespace Database_Designer
     ("... I'm gonna go now. (Weirdo)", MiraMiniPopup.MiraStates.Neutral),
 
 
-
 };
 
             CreateWindow(
@@ -1259,6 +1317,13 @@ namespace Database_Designer
             bool isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
             bool isShift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
             bool isAlt = (Keyboard.Modifiers & ModifierKeys.Alt) != 0;
+
+            if (isCtrl && !isAlt && (e.Key == Key.Z || e.Key == Key.Y) && !IsTextInputFocused())
+            {
+                e.Handled = true;
+                if (e.Key == Key.Y || isShift) RedoProject(); else UndoProject();
+                return;
+            }
 
             // Ctrl+R (refresh)
             if (isCtrl && e.Key == Key.R)
@@ -1310,6 +1375,88 @@ namespace Database_Designer
             }
         }
 
+        private bool IsTextInputFocused()
+        {
+            var focused = FocusManager.GetFocusedElement();
+            return focused is TextBox || focused is PasswordBox;
+        }
+
+        public void UndoProject() => ApplyHistory(History.Undo(), "Undone");
+
+        public void RedoProject() => ApplyHistory(History.Redo(), "Redone");
+
+        // Windows that show project data are closed on undo/redo so nothing
+        // keeps editing the old copy. Help, themes, music etc. stay open.
+        private static readonly HashSet<Type> _keepOpenOnUndo = new()
+        {
+            typeof(MiraMiniPopup), typeof(DatabaseDesigner), typeof(FAQ), typeof(DLC), typeof(ThemeSelectorWindow),
+            typeof(Projects), typeof(MusicPlayer), typeof(Roadmap), typeof(RecoveryCodeWindow), typeof(LogoutConfirm),
+        };
+
+        private void ApplyHistory(string snapshot, string verb)
+        {
+            if (ProjectName == null) return;
+            if (snapshot == null)
+            {
+                ShowDesktopToast(verb == "Undone" ? "Nothing to undo." : "Nothing to redo.");
+                return;
+            }
+            try
+            {
+                var session = ParseSession(snapshot, out var rls, out var api, out var notes);
+                foreach (var w in IntroPage.Children.OfType<Page>().Where(p => !_keepOpenOnUndo.Contains(p.GetType())).ToList())
+                {
+                    RemoveWindowShortcut(w);
+                    IntroPage.Children.Remove(w);
+                }
+                RemoveTableUpdater();
+                MainSessionInfo = session;
+                RLSJson = rls;
+                APIJson = api;
+                NotesJson = notes;
+                ForceCollectionChangeUpate();
+                AddTableUpdater();
+                ShowDesktopToast($"{verb}. ({History.UndoCount} undo / {History.RedoCount} redo left)  Ctrl+Z undo · Ctrl+Y redo");
+            }
+            catch (Exception ex)
+            {
+                ShowDesktopToast("Couldn't restore that step: " + ex.Message);
+            }
+        }
+
+        private Border _desktopToast;
+
+        public void ShowDesktopToast(string message, double seconds = 3)
+        {
+            if (_desktopToast != null) LayoutRoot.Children.Remove(_desktopToast);
+            var toast = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(235, 30, 30, 30)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(16, 10, 16, 10),
+                Margin = new Thickness(0, 0, 0, 90),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                IsHitTestVisible = false,
+                Child = new TextBlock { Text = message, Foreground = new SolidColorBrush(Colors.White), FontSize = 13, FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf") }
+            };
+            if (LayoutRoot is Grid g)
+            {
+                Grid.SetRowSpan(toast, Math.Max(1, g.RowDefinitions.Count));
+                Grid.SetColumnSpan(toast, Math.Max(1, g.ColumnDefinitions.Count));
+            }
+            _desktopToast = toast;
+            LayoutRoot.Children.Add(toast);
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                LayoutRoot.Children.Remove(toast);
+                if (_desktopToast == toast) _desktopToast = null;
+            };
+            timer.Start();
+        }
+
         void Tables_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             trie.Clear();
@@ -1348,7 +1495,6 @@ namespace Database_Designer
             _ = Task.Run(() => OnTables_Changed(this));
 
             LoadProject(ProjectName);
-
 
 
         }
@@ -1406,7 +1552,6 @@ namespace Database_Designer
         }
 
 
-
         public Button CreateCustomButton(string ImgPath)
         {
             // Create the Button
@@ -1458,20 +1603,20 @@ namespace Database_Designer
     { "General Project", "Assets/Images/Logos/ControlPanel.png" },
         { "Edit Project", "Assets/Images/Logos/EditProject.png" },
             {"Themes", "Assets/Images/Logos/Theme.png" },
+            {"Notes", "Assets/Images/Logos/File.png" },
+            {"Import SQL", "Assets/Images/Logos/DatabaseTemplates.png" },
+            {"ER Diagram", "Assets/Images/Logos/DatabaseComposition.png" },
+            {"Local Database", "Assets/Images/Logos/DatabaseViewer.png" },
     { "Music Player", "Assets/Images/VolumeUI/Music.png" },
             {"DLC Options", "Assets/Images/Logos/SupporterPack.png"},
 
 
-
-    
     { "API Editor", "Assets/Images/Logos/API Editor.png" },
     { "RLS Editor", "Assets/Images/Logos/RLS Editor.png" },
     { "NODEWLKR", "Assets/NODEWLKR.png" },
 
 
 };
-
-
 
 
         public void MirrorParentVisibility(FrameworkElement child, FrameworkElement parent)
@@ -1559,7 +1704,6 @@ namespace Database_Designer
             }
 
 
-
             BringToFront(control);
 
             // Shortcut setup (only if visible)
@@ -1567,6 +1711,10 @@ namespace Database_Designer
 
             if (LowBar.Visibility == Visibility.Visible || LowerAppBar.Visibility == Visibility.Visible)
             {
+                // Some desktop buttons open their window through CreateWindow
+                // themselves, so the same window comes through here twice.
+                if (_windowShortcuts.ContainsKey(control)) return control;
+
                 // Check if window already has a shortcut (prevent duplicates)
                 var existingType = control.GetType();
                 var existingProp = existingType.GetProperty("WindowInfo");
@@ -1630,6 +1778,9 @@ namespace Database_Designer
                     Padding = new Thickness(4),
                     FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf")
                 };
+
+                _windowShortcuts[control] = (shortcutBtn, hostPanel);
+                StartShortcutSweep();
             }
 
 
@@ -1641,8 +1792,35 @@ namespace Database_Designer
             }
 
 
-
             return control;
+        }
+
+        // Bottom bar icons and the windows they belong to. Windows close by
+        // removing themselves from the desktop (and Unloaded isn't reliable
+        // here), so a short timer takes away the icons of closed windows.
+        private readonly Dictionary<UIElement, (Button Icon, Panel Host)> _windowShortcuts = new();
+        private DispatcherTimer _shortcutSweep;
+
+        private void StartShortcutSweep()
+        {
+            if (_shortcutSweep == null)
+            {
+                _shortcutSweep = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+                _shortcutSweep.Tick += (s, e) => SweepClosedWindowShortcuts();
+            }
+            if (!_shortcutSweep.IsEnabled) _shortcutSweep.Start();
+        }
+
+        private void SweepClosedWindowShortcuts()
+        {
+            foreach (var pair in _windowShortcuts.ToList())
+            {
+                if (pair.Value.Host.Children.Contains(pair.Key)) continue;
+                if (LowerAppBar.Children.Contains(pair.Value.Icon))
+                    LowerAppBar.Children.Remove(pair.Value.Icon);
+                _windowShortcuts.Remove(pair.Key);
+            }
+            if (_windowShortcuts.Count == 0) _shortcutSweep?.Stop();
         }
 
         private void CloseEditorWindow(RLSEditorWindow window)
@@ -1705,6 +1883,13 @@ namespace Database_Designer
             }
         }
 
+        public async Task SaveNotes(string notesJson)
+        {
+            NotesJson = notesJson ?? "";
+            if (ProjectName != null)
+                await OnTables_Changed(this);
+        }
+
         private async void SaveEditorWindow(APIEditorWindow window)
         {
             APIJson = window.SaveToJson();
@@ -1713,8 +1898,6 @@ namespace Database_Designer
                 await OnTables_Changed(this);
             }
         }
-
-
 
 
         private void MoveChildToFront(UIElement element, Panel panel)
@@ -1766,8 +1949,6 @@ namespace Database_Designer
             DesktopApps.Add("DLC Options", (DLC.Item1, AboutUsUI.Item2));
 
 
-
-
         }
 
         public (StackPanel, Button) CreateDesktopAppButton(
@@ -1801,10 +1982,6 @@ namespace Database_Designer
 
 
             string usedImg = AppIcon.ContainsKey(WindowKey) ? AppIcon[WindowKey] : "Assets/Images/MiraGraphic1.png";
-
-
- 
-
 
 
             // Add Image
@@ -1859,9 +2036,12 @@ namespace Database_Designer
             DesktopScreen.Children.Add(desktopAppButton);
 
             // Set up click event handler
+            // A double-click sends two clicks; open the window once.
+            DateTime lastOpened = DateTime.MinValue;
             desktopAppButton.Click += (s, e) =>
             {
-
+                if ((DateTime.Now - lastOpened).TotalMilliseconds < 700) return;
+                lastOpened = DateTime.Now;
                 CreateWindow(createControl, ShortcutText, appearsAtBottom);
             };
 
@@ -2049,7 +2229,6 @@ namespace Database_Designer
         }
 
 
-
         private void LayoutRoot_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Alt)
@@ -2100,8 +2279,6 @@ namespace Database_Designer
             Password = Pass;
 
             // Install defaults and apply the user's default/saved theme. ApplyTheme
-            // sets the palette and, when the theme has one, the MainBG wallpaper.
-            bool themedBackground = false;
             try
             {
                 var uf = Path.Combine(SeshDirectory.ConvertToString(), SeshUsername.ConvertToString());
@@ -2113,15 +2290,11 @@ namespace Database_Designer
                 DefaultTemplates.Install(uf);
                 ThemeManager.InstallStarterThemes(uf);
                 ApplyTheme(ThemeManager.GetDefault(uf));
-                themedBackground = !string.IsNullOrEmpty(ThemeManager.CurrentBackgroundImage)
-                                   && File.Exists(ThemeManager.CurrentBackgroundImage);
             }
-            catch { }
-
-            // Only fall back to the stock light background when the theme has none —
-            // otherwise this async fade would overwrite the theme wallpaper.
-            if (!themedBackground)
-                FadeChangeBackground("Assets/Images/lightbg.png", UriKind.Relative);
+            catch
+            {
+                RefreshWallpaper(force: true);
+            }
 
             if (resetScreen)
             {
@@ -2154,6 +2327,12 @@ namespace Database_Designer
                 600
             );
 
+            if (AccountRecovery.PendingCodeToShow is string recoveryCode)
+            {
+                AccountRecovery.PendingCodeToShow = null;
+                CreateWindow(() => new RecoveryCodeWindow(this, recoveryCode), "Recovery Code", true, null, 620, 420);
+            }
+
         }
 
         public void SetupDefaultScreen()
@@ -2161,9 +2340,9 @@ namespace Database_Designer
             try { LowerAppBar.Children.Clear(); } catch { }
 
 
-
             CreateDesktopAppButton("Projects", Apps, () => new Projects(this), "My Projects", true);
             CreateDesktopAppButton("About", Apps, () => new DatabaseDesigner(this), "About", true);
+            CreateDesktopAppButton("Themes", Apps, () => CreateWindow(() => new ThemeSelectorWindow(this), "Themes", true), "Themes", true);
             CreateDesktopAppButton("Logout", Apps, () => new LogoutConfirm(this), "Login", true);
         }
 
@@ -2190,6 +2369,7 @@ namespace Database_Designer
             ProjectName = null;
             MainSessionInfo = new DBDesignerSession();
             DesktopApps.Clear();
+            ThemeManager.ResetToBaseline();
 
             // Reload root page
             Application.Current.RootVisual = new MainPage();
@@ -2210,22 +2390,7 @@ private string _currentBackgroundPath = "Assets/Images/lightbg.png"; // Track cu
                 ProjectName
             );
 
-            string filePath = "Assets/Images/lightbg.png"; // default wallpaper
-            UriKind uriKind = UriKind.Relative;
-
-            // Check if directory exists and has any "Wallpaper.*" files (case-insensitive)
-            if (Directory.Exists(currentDirectory))
-            {
-                var existingWallpaper = Directory
-                    .GetFiles(currentDirectory)
-                    .FirstOrDefault(f => Path.GetFileName(f).StartsWith("Wallpaper.", StringComparison.OrdinalIgnoreCase));
-
-                if (existingWallpaper != null)
-                {
-                    filePath = existingWallpaper;
-                    uriKind = UriKind.Absolute; // local file
-                }
-            }
+            var (filePath, uriKind) = ResolveWallpaper();
 
             // ONLY FADE IF WE SWITCHED TO A DIFFERENT PROJECT (or wallpaper changed in same project - rare but safe)
             bool projectChanged = _currentProjectName != ProjectName;
@@ -2255,7 +2420,7 @@ private string _currentBackgroundPath = "Assets/Images/lightbg.png"; // Track cu
 
                 CreateDesktopAppButton("Projects", Apps, () => new Projects(this), "Projects", true);
                 CreateDesktopAppButton("Table Editor", Apps, () => new FolderViewer(this), "Table Editor", true);
-                // Two NodeWalker entry points — RLS policies + API functions.
+                // Two NodeWalker entry points - RLS policies + API functions.
                 // Each opens the matching creator page (3-zone layout) which
                 // handles drilling down into individual policies / functions
                 // and from there into the underlying node-graph editor.
@@ -2308,6 +2473,35 @@ return CreateWindow(
                    Apps,
                    () => CreateWindow(() => new ThemeSelectorWindow(this), "Themes", true),
                    "Themes",
+                   true);
+
+                CreateDesktopAppButton(
+                   "Notes",
+                   Apps,
+                   () => CreateWindow(() => new NotesWindow(this), "Notes", true, null, 980, 640),
+                   "Notes",
+                   true);
+
+                CreateDesktopAppButton(
+                   "ER Diagram",
+                   Apps,
+                   () => CreateWindow(() => new ErDiagramWindow(this), "ER Diagram", true, null,
+                       Math.Max(1000, IntroPage.ActualWidth * 0.85), Math.Max(640, IntroPage.ActualHeight * 0.85)),
+                   "ER Diagram",
+                   true);
+
+                CreateDesktopAppButton(
+                   "Local Database",
+                   Apps,
+                   () => CreateWindow(() => new LocalDatabaseWindow(this), "Local Database", true, null, 1120, 720),
+                   "Local Database",
+                   true);
+
+                CreateDesktopAppButton(
+                   "Import SQL",
+                   Apps,
+                   () => CreateWindow(() => new SqlImportWindow(this), "Import SQL", true, null, 1040, 660),
+                   "Import SQL",
                    true);
 
                 // Use a snapshot of trie words to avoid concurrent modification issues
@@ -2430,9 +2624,6 @@ return CreateWindow(
             AppsMenu.Children.Add(desktopAppButton);
 
 
-
-
-
             switch (sType)
             {
                 case ShortcutType.Folder:
@@ -2460,7 +2651,6 @@ return CreateWindow(
 
             return (stackPanel, desktopAppButton);
         }
-
 
 
         public static List<(string fullTableName, string description, List<RowOptions> rows, List<Reference.ReferenceOptions> references, List<IndexDefinition> indexes, string rlsJson, string apiJson)> ParseTemplatePackNew(string templateJsonContent)
@@ -2509,9 +2699,9 @@ return CreateWindow(
                                 description: rowElem.TryGetProperty("Description", out var d) ? d.GetString() ?? "" : "",
                                 postgresType: rowElem.TryGetProperty("RowType", out var rt) && Enum.TryParse<PostgresType>(rt.GetString(), true, out var type) ? type : PostgresType.Text,
                                 customType: "",
-                                elementLimit: rowElem.TryGetProperty("Limit", out var l) && l.ValueKind == JsonValueKind.Number ? l.GetInt32() : (int?)null,
+                                elementLimit: rowElem.TryGetProperty("Limit", out var l) ? TemplateInt(l) : null,
                                 isArray: rowElem.TryGetProperty("IsArray", out var a) && a.ValueKind == JsonValueKind.True,
-                                arrayLimit: rowElem.TryGetProperty("ArrayLimit", out var al) && al.ValueKind == JsonValueKind.Number ? al.GetInt32() : (int?)null,
+                                arrayLimit: rowElem.TryGetProperty("ArrayLimit", out var al) ? TemplateInt(al) : null,
                                 isEncrypted: rowElem.TryGetProperty("EncryptedAndNOTMedia", out var enc) && enc.ValueKind == JsonValueKind.True,
                                 isMedia: rowElem.TryGetProperty("Media", out var med) && med.ValueKind == JsonValueKind.True,
                                 isPrimary: rowElem.TryGetProperty("IsPrimary", out var p) && p.ValueKind == JsonValueKind.True,
@@ -2576,6 +2766,12 @@ return CreateWindow(
         }
 
         // Parse a full template pack JSON string and return list of ready-to-build items
+        // Template numbers may be written as numbers, as text ("5") or as null.
+        private static int? TemplateInt(JsonElement e) =>
+            e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var n) ? n
+            : e.ValueKind == JsonValueKind.String && int.TryParse(e.GetString(), out var t) ? t
+            : (int?)null;
+
         public static List<(string fullTableName, string description, List<RowOptions> rows, List<Reference.ReferenceOptions> references, List<IndexDefinition> indexes)> ParseTemplatePack(string templateJsonContent)
         {
             var result = new List<(string, string, List<RowOptions>, List<Reference.ReferenceOptions>, List<IndexDefinition>)>();
@@ -2676,20 +2872,19 @@ return CreateWindow(
                     ? type
                     : PostgresType.Text,
                 customType: "",
-                elementLimit: rowElem.TryGetProperty("Limit", out var l) ? l.GetInt32() : null,
-                isArray: rowElem.TryGetProperty("IsArray", out var a) && a.GetBoolean(),
-                arrayLimit: rowElem.TryGetProperty("ArrayLimit", out var al) ? al.GetInt32() : null,
-                isEncrypted: rowElem.TryGetProperty("EncryptedAndNOTMedia", out var enc) && enc.GetBoolean(),
-                isMedia: rowElem.TryGetProperty("Media", out var med) && med.GetBoolean(),
-                isPrimary: rowElem.TryGetProperty("IsPrimary", out var p) && p.GetBoolean(),
-                isUnique: rowElem.TryGetProperty("IsUnique", out var u) && u.GetBoolean(),
-                isNotNull: rowElem.TryGetProperty("IsNotNull", out var nn) && nn.GetBoolean(),
+                elementLimit: rowElem.TryGetProperty("Limit", out var l) ? TemplateInt(l) : null,
+                isArray: rowElem.TryGetProperty("IsArray", out var a) && a.ValueKind == JsonValueKind.True,
+                arrayLimit: rowElem.TryGetProperty("ArrayLimit", out var al) ? TemplateInt(al) : null,
+                isEncrypted: rowElem.TryGetProperty("EncryptedAndNOTMedia", out var enc) && enc.ValueKind == JsonValueKind.True,
+                isMedia: rowElem.TryGetProperty("Media", out var med) && med.ValueKind == JsonValueKind.True,
+                isPrimary: rowElem.TryGetProperty("IsPrimary", out var p) && p.ValueKind == JsonValueKind.True,
+                isUnique: rowElem.TryGetProperty("IsUnique", out var u) && u.ValueKind == JsonValueKind.True,
+                isNotNull: rowElem.TryGetProperty("IsNotNull", out var nn) && nn.ValueKind == JsonValueKind.True,
                 defaultValue: rowElem.TryGetProperty("DefaultValue", out var dv) ? dv.GetString() : null,
                 check: rowElem.TryGetProperty("Check", out var chk) ? chk.GetString() : null,
                 defaultIsKeyword: rowElem.TryGetProperty("DefaultIsPostgresFunction", out var kw) && kw.GetBoolean()
             );
         }
-
 
 
     }
@@ -2780,20 +2975,6 @@ return CreateWindow(
 -=-:-------=+++=**+=----:..-----:.......................:--===-=----==+=-::-===------::=+==--:.............-#%%%
 
      * */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

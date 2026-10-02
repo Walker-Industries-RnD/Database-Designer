@@ -96,7 +96,6 @@ namespace Database_Designer
         }
 
 
-
         //10 Projects Per Page
         int page = 1;
 
@@ -131,31 +130,21 @@ namespace Database_Designer
                 try
                 {
                     var importsRoot = mainPage.ImportsFolder;
-                    Directory.CreateDirectory(importsRoot);
+                    var (names, failed) = await mainPage.ImportAllFromImportsFolder();
 
-                    var bundles = Directory.GetDirectories(importsRoot)
-                        .Where(d => File.Exists(Path.Combine(d, "session.json")))
-                        .ToList();
-
-                    if (bundles.Count == 0)
+                    if (names.Count == 0 && failed.Count == 0)
                     {
                         MessageBox.Show(
-                            $"No project bundles found.\n\nCopy an exported project folder (one containing session.json) into:\n{importsRoot}\n\nthen press Import again.");
+                            $"Nothing to import.\n\nPut an exported project into:\n{importsRoot}\n\n" +
+                            $"Either the single {MainPage.PortableExtension} file or the exported folder (with session.json), then press Import again.");
+                        OpenFolder(importsRoot);
                         return;
                     }
 
-                    int imported = 0;
-                    var names = new List<string>();
-                    foreach (var bundle in bundles)
-                    {
-                        try { names.Add(await mainPage.ImportPortableProject(bundle)); imported++; }
-                        catch (Exception ex) { Console.WriteLine($"[Import] {bundle}: {ex.Message}"); }
-                    }
-
                     this.RefreshProjects();
-                    MessageBox.Show(imported == 0
-                        ? "Found bundles but none could be imported. See logs."
-                        : $"Imported {imported} project(s): {string.Join(", ", names)}");
+                    var msg = names.Count > 0 ? $"Imported {names.Count} project(s): {string.Join(", ", names)}" : "No projects were imported.";
+                    if (failed.Count > 0) msg += "\n\nCould not import:\n" + string.Join("\n", failed);
+                    MessageBox.Show(msg);
                 }
                 catch (Exception ex)
                 {
@@ -183,8 +172,6 @@ namespace Database_Designer
                 page = 1;
                 HandlePage();
             };
-
-
 
 
             GLORYTOMANKIND.Click += async (s, e) =>
@@ -421,7 +408,6 @@ namespace Database_Designer
                 string DescriptionName = "A systems test. Glory to Mankind.";
 
 
-
                 if (ProjectTitle != default && DescriptionName != default)
                 {
                     var CurrentDirectory = Path.Combine(mainPage.SeshDirectory.ConvertToString(), mainPage.SeshUsername.ConvertToString(), "Projects");
@@ -430,9 +416,6 @@ namespace Database_Designer
                     string extension = "secdbdesign";
 
                     bool exists = File.Exists(Path.Combine(CurrentDirectory, (fileName + $".{extension}")));
-
-
-
 
 
                     mainPage.MainSessionInfo = new SessionStorage.DBDesignerSession()
@@ -478,12 +461,8 @@ namespace Database_Designer
                     };
 
 
-
-
                     var overviewFilePath = Path.Combine(SaveDirectory, (ProjectTitle + ".secdbdesign"));
                     await File.WriteAllTextAsync(overviewFilePath, contentBase64);
-
-
 
 
                     mainPage.ProjectName = ProjectTitle;
@@ -522,8 +501,6 @@ namespace Database_Designer
                     this.RefreshProjects();
 
 
-
-
                 }
 
                 Task.Delay(1000); //Logic buffer
@@ -548,7 +525,6 @@ namespace Database_Designer
             };
 
 
-
         }
 
 
@@ -566,7 +542,6 @@ namespace Database_Designer
 
 
         }
-
 
 
         public void HandlePage()
@@ -618,8 +593,6 @@ namespace Database_Designer
                         });
 
 
-
-
                     var PreviewInfo = File.ReadAllText(DBFile);
 
                     var previewData = ProjectsPreviews.FromString(PreviewInfo);
@@ -647,8 +620,6 @@ namespace Database_Designer
             }
 
             HandleProjectsUI();
-
-
 
 
             //12 per page
@@ -730,14 +701,19 @@ namespace Database_Designer
 
                         var ProjectAESToDecrypt = SimpleAESEncryption.AESEncryptedText.FromString(ProjectUTF8);
 
-                        var ProjectData = Task.Run(() =>
+                        var loaded = Task.Run(() =>
                         {
-                            return mainPage.FromSessionString(ProjectAESToDecrypt, mainPage.Password);
+                            return mainPage.LoadSessionString(ProjectAESToDecrypt, mainPage.Password);
                         }).Result;
+                        var ProjectData = loaded.Session;
 
                         Console.WriteLine(ProjectData.SessionName);
 
                         mainPage.MainSessionInfo = ProjectData;
+                        mainPage.RLSJson = loaded.RlsJson ?? "";
+                        mainPage.APIJson = loaded.ApiJson ?? "";
+                        mainPage.NotesJson = loaded.NotesJson ?? "";
+                        mainPage.DevConnection = loaded.DevConnection ?? "";
 
                         mainPage.ProjectName = ProjectData.SessionName;
                         mainPage.LoadProject(mainPage.ProjectName);
@@ -817,7 +793,6 @@ namespace Database_Designer
             }
 
         
-
         // Executes when the user navigates to this page.
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -1078,6 +1053,16 @@ namespace Database_Designer
 
         }
 
+        private static void OpenFolder(string path)
+        {
+            try
+            {
+                Directory.CreateDirectory(path);
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = path, UseShellExecute = true });
+            }
+            catch (Exception ex) { Console.WriteLine($"[Projects] Could not open {path}: {ex.Message}"); }
+        }
+
         public async Task<List<(TableFile, DateTime, DateTime)>> GetProjects(string ProjectsFolder)
         {
             List<(TableFile, DateTime, DateTime)> projects = new List<(TableFile, DateTime, DateTime)>();
@@ -1100,8 +1085,6 @@ namespace Database_Designer
                     });
 
 
-
-
                 var DBInfo = File.ReadAllText(DBFile);
 
                 var newAESObject = SimpleAESEncryption.AESEncryptedText.FromString(DBFile);
@@ -1114,7 +1097,6 @@ namespace Database_Designer
             return projects;
 
         }
-
 
 
         //We will populate the projects UI list
@@ -1324,7 +1306,9 @@ namespace Database_Designer
                 {
                     exportButton.IsEnabled = false;
                     var bundle = await mainPage.ExportPortableProject(ProjectPath);
-                    MessageBox.Show($"Exported to:\n{bundle}\n\nCopy this folder to another machine's Imports/ folder to import it.");
+                    MessageBox.Show($"Exported to:\n{bundle}{MainPage.PortableExtension}\n\n" +
+                                    $"Send that one file (or the folder next to it). The other person drops it into their Imports folder and presses Import Project.");
+                    OpenFolder(Path.GetDirectoryName(bundle));
                 }
                 catch (Exception ex)
                 {
@@ -1336,12 +1320,6 @@ namespace Database_Designer
 
             return (grid, openButton, editButton);
         }
-
-
-
-
-
-
 
 
         //For 1.2

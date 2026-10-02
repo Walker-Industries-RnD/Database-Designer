@@ -77,7 +77,7 @@ namespace DatabaseDesigner
 
             return string.Concat(
                 input
-                    .Split('_', StringSplitOptions.RemoveEmptyEntries) // <-- skip empty strings
+                    .Split('_', StringSplitOptions.RemoveEmptyEntries) // skip empty parts
                     .Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1))
             );
         }
@@ -100,8 +100,6 @@ namespace DatabaseDesigner
         }
 
 
-
-
         public static string RowCreator(RowOptions rowOption)
         {
             if (string.IsNullOrEmpty(rowOption.FieldName) ||
@@ -117,17 +115,13 @@ namespace DatabaseDesigner
             var checks = new List<string>();
 
             // Determine the PostgreSQL type name
-            string typeName = rowOption.PostgresType?.ToString() ?? rowOption.CustomType ??
+            string typeName = (rowOption.PostgresType is { } pt ? SqlTypeName(pt) : null) ?? rowOption.CustomType ??
                               (rowOption.IsEncrypted ? "TEXT" : rowOption.IsMedia ? "SecureMedia" : null);
 
             if (string.IsNullOrEmpty(typeName))
                 throw new Exception("Invalid type definition.");
 
-            if (rowOption.Limit.HasValue && rowOption.Limit.Value > 0 &&
-                (typeName == "CHAR" || typeName == "VARCHAR" || typeName == "NUMERIC" || typeName == "TIME" || typeName == "TIMESTAMP"))
-            {
-                typeName += $"({rowOption.Limit.Value})";
-            }
+            typeName = TypeWithLimit(typeName, rowOption.Limit);
 
 
             if (rowOption.IsArray)
@@ -161,7 +155,7 @@ namespace DatabaseDesigner
                 if (rowOption.DefaultIsKeyword == true)
                     scriptstring += " DEFAULT " + rowOption.DefaultValue;
                 else
-                    scriptstring += " DEFAULT '" + rowOption.DefaultValue + "'";
+                    scriptstring += " DEFAULT '" + rowOption.DefaultValue.Replace("'", "''") + "'";
             }
 
             // Handle check constraints
@@ -239,8 +233,35 @@ namespace DatabaseDesigner
         }
 
 
-
         enum EncodedType : int { Int = 0, Double = 1, Tuple = 2 }
+
+        // The Postgres spelling of a column type. Most enum names already are
+        // valid type names; these aren't.
+        public static string SqlTypeName(DBDesigner.PostgresType type) => type switch
+        {
+            DBDesigner.PostgresType.DoublePrecision => "Double Precision",
+            DBDesigner.PostgresType.Int4RangeBase => "Int4Range",
+            DBDesigner.PostgresType.Int8RangeBase => "Int8Range",
+            DBDesigner.PostgresType.NumRangeBase => "NumRange",
+            DBDesigner.PostgresType.TsRangeBase => "TsRange",
+            DBDesigner.PostgresType.TstzRangeBase => "TstzRange",
+            DBDesigner.PostgresType.DateRangeBase => "DateRange",
+            _ => type.ToString()
+        };
+
+        public static string TypeWithLimit(string typeName, int? limit)
+        {
+            if (string.IsNullOrEmpty(typeName) || limit is not > 0) return typeName;
+            var upper = typeName.ToUpperInvariant();
+            if (upper is "NUMERIC" or "DECIMAL")
+            {
+                if (LimitEncoder.TryDecodeTuple(limit.Value, out var p, out var s)) return $"{typeName}({p},{s})";
+                return $"{typeName}({limit.Value})";
+            }
+            if (upper is "CHAR" or "VARCHAR") return $"{typeName}({limit.Value})";
+            if (upper is "TIME" or "TIMESTAMP") return $"{typeName}({Math.Min(limit.Value, 6)})";
+            return typeName;
+        }
 
         public static class LimitEncoder
         {
@@ -253,6 +274,16 @@ namespace DatabaseDesigner
                 (int a, int b) => ((((a & 0xFFFF) << 16) | (b & 0xFFFF)) << 2) | (int)EncodedType.Tuple,
                 _ => throw new NotSupportedException()
             };
+
+            public static bool TryDecodeTuple(int e, out int precision, out int scale)
+            {
+                precision = scale = 0;
+                if ((e & 3) != (int)EncodedType.Tuple || e < (1 << 18)) return false;
+                var data = e >> 2;
+                precision = (data >> 16) & 0xFFFF;
+                scale = data & 0xFFFF;
+                return precision > 0 && scale <= precision;
+            }
 
             public static object Decode(int e)
             {

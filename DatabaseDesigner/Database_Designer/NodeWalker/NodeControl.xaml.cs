@@ -183,10 +183,14 @@ namespace Database_Designer.NodeWalker
             _portEllipses.Clear();
 
             int i = 0;
+            if (Data != null && NodeWalker.Flow.HasExecIn(Data))
+                InputsPanel.Children.Add(CreatePortElement(new Input(NodeWalker.Flow.ExecIn, typeof(object), NodeWalker.Flow.ExecSemantic, false), isInput: true, index: i++));
             foreach (var input in Inputs)
                 InputsPanel.Children.Add(CreatePortElement(input, isInput: true, index: i++));
 
             int o2 = 0;
+            if (Data != null && NodeWalker.Flow.HasExecOut(Data))
+                OutputsPanel.Children.Add(CreatePortElement(new Output(NodeWalker.Flow.ExecOut, typeof(object), NodeWalker.Flow.ExecSemantic), isInput: false, index: o2++));
             foreach (var output in Outputs)
                 OutputsPanel.Children.Add(CreatePortElement(output, isInput: false, index: o2++));
         }
@@ -214,6 +218,12 @@ namespace Database_Designer.NodeWalker
             var displayType = (typeName == "custom" && !string.IsNullOrEmpty(customType))
                 ? $"custom:{customType}" : typeName;
 
+            bool isExec = NodeWalker.Flow.IsExecType(typeName);
+            var displayName = name == NodeWalker.Flow.ExecIn ? "In"
+                : name == NodeWalker.Flow.ExecOut ? NodeWalker.Flow.ExecOutLabel(Data)
+                : name;
+            if (isExec) displayType = "▶";
+
             var portInfo = new PortInfo { Name = name, IsOutput = !isInput, Index = index };
 
             var panel = new StackPanel
@@ -225,7 +235,9 @@ namespace Database_Designer.NodeWalker
             };
 
             // Port dot colour: red by default, yellow for custom, grey for required-unconnected
-            var dotColor = required
+            var dotColor = isExec
+                ? Color.FromRgb(236, 236, 236)  // white = exec (what runs next)
+                : required
                 ? Color.FromRgb(255, 200, 80)   // amber = required
                 : typeName == "custom"
                     ? Color.FromRgb(180, 120, 255)  // purple = custom
@@ -236,11 +248,14 @@ namespace Database_Designer.NodeWalker
                 Width = 14,
                 Height = 14,
                 Fill = new SolidColorBrush(dotColor),
-                Stroke = Brushes.White,
+                Stroke = isExec ? new SolidColorBrush(Color.FromRgb(90, 90, 90)) : Brushes.White,
                 StrokeThickness = 2,
                 Cursor = Cursors.Cross,
                 Tag = portInfo
             };
+            if (isExec) ToolTipService.SetToolTip(ellipse, name == NodeWalker.Flow.ExecIn
+                ? "Exec in: wire a ▶ output here to choose when this node runs."
+                : "Exec out: wire this to the ▶ In of the node that should run next.");
 
             ellipse.MouseLeftButtonDown += Port_MouseDown;
             ellipse.MouseLeftButtonUp += Port_MouseUp;
@@ -255,7 +270,7 @@ namespace Database_Designer.NodeWalker
 
             var label = new TextBlock
             {
-                Text = name,
+                Text = displayName,
                 FontFamily = new FontFamily("/Database_Designer;component/Assets/Fonts/Inter/Inter_28pt-ThinItalic.ttf#Inter 28pt Thin"),
                 FontSize = 12,
                 Foreground = Brushes.White,

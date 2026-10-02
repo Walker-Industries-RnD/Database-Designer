@@ -144,6 +144,7 @@ namespace Database_Designer
                 fontSize: 10, foreground: Color.FromRgb(0x55, 0x55, 0x55), maxWidth: 200);
             ((Grid)tagEl).Margin = new Thickness(0, 4, 0, 0);
             textStack.Children.Add(tagEl);
+            textStack.Children.Add(BuildRuleEditor(captured));
             Grid.SetColumn(textStack, 1);
             rowGrid.Children.Add(textStack);
 
@@ -186,6 +187,113 @@ namespace Database_Designer
                 CornerRadius = new CornerRadius(4),
                 Child = rowGrid
             };
+        }
+
+        private UIElement BuildRuleEditor(RLSData.Policy p)
+        {
+            var panel = new StackPanel { Margin = new Thickness(0, 10, 0, 0) };
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            var custom = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
+            var effective = new TextBlock
+            {
+                FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 0),
+                Foreground = new SolidColorBrush(Color.FromRgb(0x39, 0xA9, 0x5F))
+            };
+
+            ComboBox Combo(string label, string[] options, string current, Action<string> set)
+            {
+                row.Children.Add(new TextBlock
+                {
+                    Text = label, FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)), Margin = new Thickness(0, 0, 6, 0)
+                });
+                var cb = new ComboBox
+                {
+                    Width = 170, Height = 26, FontSize = 11, Margin = new Thickness(0, 0, 14, 0),
+                    Background = new SolidColorBrush(Color.FromRgb(0x26, 0x26, 0x26)),
+                    Foreground = new SolidColorBrush(Colors.White)
+                };
+                cb.Items.Add("(category default)");
+                foreach (var o in options) cb.Items.Add(o);
+                cb.SelectedItem = options.Contains(current) ? current : "(category default)";
+                cb.SelectionChanged += (s, e) =>
+                {
+                    var v = cb.SelectedItem as string;
+                    set(v == "(category default)" ? null : v);
+                    Refresh();
+                };
+                row.Children.Add(cb);
+                return cb;
+            }
+
+            Combo("Command", RLSData.Commands, p.Command, v => p.Command = v).Width = 110;
+            Combo("Access", RLSData.AccessRules, p.Access, v => p.Access = v);
+
+            row.Children.Add(new TextBlock
+            {
+                Text = "Owner column", FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
+                Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)), Margin = new Thickness(0, 0, 6, 0)
+            });
+            var owner = new TextBox
+            {
+                Width = 120, Height = 26, FontSize = 11, Text = p.OwnerColumn ?? "",
+                PlaceholderText = "auto-detect"
+            };
+            owner.TextChanged += (s, e) => { p.OwnerColumn = string.IsNullOrWhiteSpace(owner.Text) ? null : owner.Text.Trim(); Refresh(); };
+            row.Children.Add(owner);
+            panel.Children.Add(row);
+
+            TextBox SqlBox(string placeholder, string value, Action<string> set)
+            {
+                var tb = new TextBox
+                {
+                    Height = 26, FontSize = 11, Margin = new Thickness(0, 0, 0, 4),
+                    PlaceholderText = placeholder, Text = value ?? ""
+                };
+                tb.TextChanged += (s, e) => { set(tb.Text); Refresh(); };
+                custom.Children.Add(tb);
+                return tb;
+            }
+            SqlBox("USING (…)  e.g. user_id = current_user_id() OR is_public", p.UsingSql, v => p.UsingSql = v);
+            SqlBox("WITH CHECK (...), leave empty to reuse USING", p.CheckSql, v => p.CheckSql = v);
+            panel.Children.Add(custom);
+            panel.Children.Add(effective);
+
+            void Refresh()
+            {
+                custom.Visibility = p.Access == "Custom SQL" ? Visibility.Visible : Visibility.Collapsed;
+                effective.Text = DescribeEffectiveRule(p);
+            }
+            Refresh();
+            return panel;
+        }
+
+        private string DescribeEffectiveRule(RLSData.Policy p)
+        {
+            var projectTables = HostPage?.MainSessionInfo.Tables != null
+                ? Build.ToRlsTables(HostPage.MainSessionInfo.Tables)
+                : new System.Collections.Generic.List<RlsSqlGenerator.Table>();
+            var name = Data.SelectedTable?.TableName ?? "";
+            var table = projectTables.FirstOrDefault(t => t.Qualified.Equals(name, StringComparison.OrdinalIgnoreCase))
+                     ?? projectTables.FirstOrDefault(t => t.Name.Equals(name.Split('.').Last(), StringComparison.OrdinalIgnoreCase));
+            if (table == null)
+                return $"⚠ '{name}' isn't a table in this project; RLS.sql will skip it. Use the exact schema.table name.";
+
+            var r = RlsSqlGenerator.Resolve(p, table);
+            var role = RlsSqlGenerator.RoleName(Data.SelectedRole?.Name);
+            string who = r.Access switch
+            {
+                "Everyone" => "every row",
+                "Nobody" => "no rows",
+                "Custom SQL" => "rows matching your SQL",
+                "Public read, own writes" => $"reads all public rows, writes only rows where {r.OwnerColumn ?? "?"} = the current user",
+                _ => $"only rows where {r.OwnerColumn ?? "?"} = the current user"
+            };
+            var line = $"Effective: {role} may {r.Command} {who} (admins/moderators bypass).";
+            bool needsOwner = r.Access is "Own rows" or "Public read, own writes";
+            if (needsOwner && (r.OwnerColumn == null || !table.Columns.Any(c => c.Name.Equals(r.OwnerColumn, StringComparison.OrdinalIgnoreCase))))
+                line += $"\n⚠ No owner column on {table.Qualified}; set Owner column (e.g. user_id) or only admins will see rows.";
+            return line;
         }
 
         private static string Slug(string s) =>

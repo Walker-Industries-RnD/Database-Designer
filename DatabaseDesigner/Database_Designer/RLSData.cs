@@ -33,7 +33,16 @@ namespace Database_Designer
             public string Description { get; set; } =
                 "User Entered Description Goes Here. Ipsum Lorem Dolor it Cognito Ergo Sum";
             public string Tag { get; set; } = "";
+
+            public string Command { get; set; }
+            public string Access { get; set; }
+            public string OwnerColumn { get; set; }
+            public string UsingSql { get; set; }
+            public string CheckSql { get; set; }
         }
+
+        public static readonly string[] Commands = { "ALL", "SELECT", "INSERT", "UPDATE", "DELETE" };
+        public static readonly string[] AccessRules = { "Own rows", "Public read, own writes", "Everyone", "Nobody", "Custom SQL" };
 
         public List<PolicyRole> Roles { get; set; } = new();
 

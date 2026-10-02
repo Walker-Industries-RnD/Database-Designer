@@ -11,6 +11,7 @@ using static Database_Designer.NodeWalker.NodeWalker.Node;
 using NodeSession    = Database_Designer.NodeWalker.NodeWalker.SessionData;
 using NodeOperations = Database_Designer.NodeWalker.NodeWalker.Operations;
 using NodeCompiler   = Database_Designer.NodeWalker.NodeWalker.Compiler;
+using NodeFlow       = Database_Designer.NodeWalker.NodeWalker.Flow;
 
 namespace Database_Designer.NodeWalker
 {
@@ -54,7 +55,7 @@ namespace Database_Designer.NodeWalker
         // app rather than in %AppData%. AppDomain.CurrentDomain.BaseDirectory
         // resolves to the .exe's folder under both the desktop host and the
         // OpenSilver browser host.
-        // Default fallback location — used when NodeWalker is opened
+        // Default fallback location - used when NodeWalker is opened
         // standalone (no DBD host). When embedded inside Database Designer,
         // SessionDir is overridden by ResolveProjectScriptsDir() so each
         // project gets its own `Scripts/` folder under its save directory.
@@ -142,7 +143,7 @@ namespace Database_Designer.NodeWalker
         {
             InitializeComponent();
             CurrentSession = NewSession();
-            _nodeLibrary = CreateNodeLibrary();
+            _nodeLibrary = NodeLibrary.Create();
             SetupSidebar();
             SetupWorkspaceContextMenu();
             SetupGridPanning();
@@ -151,6 +152,7 @@ namespace Database_Designer.NodeWalker
             SetupToolbarButtons();
             SetupAutoSave();
             SetupConnectionDrag();
+            Dispatcher.BeginInvoke(new Action(RecordGraphSnapshot), System.Windows.Threading.DispatcherPriority.Background);
 
             WorkspaceCanvas.Background = Brushes.Transparent;
             WorkspaceCanvas.MouseRightButtonDown += WorkspaceCanvas_MouseRightButtonDown;
@@ -293,7 +295,57 @@ namespace Database_Designer.NodeWalker
             _autoSaveTimer.Start();
         }
 
-        private void MarkUnsavedChanges() => _hasUnsavedChanges = true;
+        private void MarkUnsavedChanges()
+        {
+            _hasUnsavedChanges = true;
+            ScheduleHistorySnapshot();
+        }
+
+        // Undo/redo: a snapshot is taken shortly after edits stop, so a node
+        // drag becomes one step instead of one per mouse move.
+        private readonly ProjectHistory _graphHistory = new();
+        private System.Windows.Threading.DispatcherTimer _historyTimer;
+
+        private void ScheduleHistorySnapshot()
+        {
+            if (_historyTimer == null)
+            {
+                _historyTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+                _historyTimer.Tick += (s, e) => { _historyTimer.Stop(); RecordGraphSnapshot(); };
+            }
+            _historyTimer.Stop();
+            _historyTimer.Start();
+        }
+
+        private void RecordGraphSnapshot()
+        {
+            if (CurrentSession == null) return;
+            try
+            {
+                UpdateSessionFromCanvas();
+                _graphHistory.Record("graph", NodeOperations.SerializeSession(CurrentSession), NodeOperations.ContentKey(CurrentSession));
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[UNDO] snapshot failed: {ex.Message}"); }
+        }
+
+        private void UndoGraph(bool redo)
+        {
+            if (_historyTimer?.IsEnabled == true) { _historyTimer.Stop(); RecordGraphSnapshot(); }
+            var snapshot = redo ? _graphHistory.Redo() : _graphHistory.Undo();
+            if (snapshot == null)
+            {
+                ShowToast(redo ? "Nothing to redo." : "Nothing to undo.", 1.5);
+                return;
+            }
+            DeselectAllNodes();
+            HideNodeInspector();
+            _selectedConnection = null;
+            CurrentSession = NodeOperations.DeserializeSession(snapshot);
+            RebuildCanvasFromSession();
+            SyncToolbarFromSession();
+            _hasUnsavedChanges = true;
+            ShowToast($"{(redo ? "Redone" : "Undone")}  ·  {_graphHistory.UndoCount} undo / {_graphHistory.RedoCount} redo left", 1.8);
+        }
 
         private async System.Threading.Tasks.Task SaveSession()
         {
@@ -320,6 +372,7 @@ namespace Database_Designer.NodeWalker
                 }
                 var loaded = await NodeOperations.LoadSession(SessionFile, SessionDir);
                 CurrentSession = loaded;
+                _graphHistory.Reset("graph");
                 RebuildCanvasFromSession();
                 SyncToolbarFromSession();
                 System.Diagnostics.Debug.WriteLine("[LOAD] Session loaded successfully.");
@@ -333,7 +386,7 @@ namespace Database_Designer.NodeWalker
         private void UpdateSessionFromCanvas()
         {
             // Connections live on the session itself (added by CreateConnection),
-            // so don't wipe them — only nodes/positions are sourced from the
+            // so don't wipe them - only nodes/positions are sourced from the
             // visual tree on save.
             CurrentSession.Nodes.Clear();
             CurrentSession.NodePositions.Clear();
@@ -349,7 +402,7 @@ namespace Database_Designer.NodeWalker
 
             // Positions are saved raw (whatever Canvas.Left/Top happens to be).
             // The load path always re-centres the layout in the viewport, so
-            // absolute coordinates are arbitrary — only the relative geometry
+            // absolute coordinates are arbitrary - only the relative geometry
             // between nodes matters.
             float Norm(double v) => (float)(double.IsNaN(v) ? 0 : v);
 
@@ -401,10 +454,12 @@ namespace Database_Designer.NodeWalker
 
             // Place every element at whatever raw coordinates were saved,
             // then re-centre the whole layout on the viewport once the canvas
-            // has reported its actual size. Pan offset starts at 0 — it only
+            // has reported its actual size. Pan offset starts at 0 - it only
             // tracks panning since the last load, and isn't persisted.
             _panOffsetX = 0;
             _panOffsetY = 0;
+
+            if (NodeOperations.LayoutMissingNodes(CurrentSession) > 0) MarkUnsavedChanges();
 
             foreach (var node in CurrentSession.Nodes)
             {
@@ -440,6 +495,7 @@ namespace Database_Designer.NodeWalker
             }
 
             FrameAllOnNextLayout();
+            Dispatcher.BeginInvoke(new Action(RecordGraphSnapshot), System.Windows.Threading.DispatcherPriority.Background);
 
             foreach (var cs in CurrentSession.CustomScripts ?? new())
                 _customScripts.Add(cs);
@@ -481,7 +537,7 @@ namespace Database_Designer.NodeWalker
         /// Manual "Frame All" / "fit to content". Default behaviour anchors
         /// the layout's bounding-box top-left to a small padding from the
         /// canvas origin (predictable, always visible, matches what most
-        /// diagram tools do — Graphviz, Mermaid, Lucid, etc.). Pass
+        /// diagram tools do - Graphviz, Mermaid, Lucid, etc.). Pass
         /// <paramref name="centerInViewport"/> = true to instead centre the
         /// bounding box in the visible canvas (Blender's Numpad-Home style).
         /// </summary>
@@ -520,7 +576,7 @@ namespace Database_Designer.NodeWalker
             }
             else
             {
-                // Top-left anchor with padding — visible regardless of canvas size.
+                // Top-left anchor with padding - visible regardless of canvas size.
                 dx = padding - minX;
                 dy = padding - minY;
             }
@@ -553,6 +609,7 @@ namespace Database_Designer.NodeWalker
             BindBtn("RefreshButton",  _ => RefreshAll());
             BindBtn("ReplaceButton",  _ => ShowReplaceDialog());
             BindBtn("ViewCodeButton", _ => ToggleCodeViewer());
+            BindBtn("RunButton",      _ => ShowRunDialog());
             BindBtn("SaveButton",     async _ => await SaveSession());
             BindBtn("LoadButton",     async _ => await LoadSession());
             BindBtn("CreateInputButton",  _ => ShowCreatePortDialog(isInput: false));
@@ -593,6 +650,146 @@ namespace Database_Designer.NodeWalker
         {
             if (FindName(name) is Button btn)
                 btn.Click += (s, e) => handler(e);
+        }
+
+        // Run: compile this graph with the latest export's models and call it
+        // against the Local Database inside a transaction.
+        private System.Threading.CancellationTokenSource _runCts;
+
+        private void ShowRunDialog()
+        {
+            if (HostPage?.ProjectName == null) { ShowToast("Open NodeWalker from a project to run graphs."); return; }
+            var build = Database_Designer.DevRunner.LatestBuild(Database_Designer.DevRunner.ProjectDir(
+                HostPage.SeshDirectory.ConvertToString(), HostPage.SeshUsername.ConvertToString(), HostPage.ProjectName));
+            if (build == null) { ShowToast("Export the project first (Build Project), so the runner knows your tables.", 5); return; }
+            if (string.IsNullOrWhiteSpace(HostPage.DevConnection))
+            {
+                ShowToast("Set up a test database first: open Local Database on the desktop and press Test & save.", 6);
+                return;
+            }
+
+            UpdateSessionFromCanvas();
+            string script;
+            try { script = NodeCompiler.CompileToScript(CurrentSession); }
+            catch (Exception ex) { ShowToast("Couldn't generate code: " + ex.Message, 5); return; }
+            var entry = NodeCompiler.DescribeEntry(CurrentSession);
+            var parameters = NodeCompiler.DescribeParameters(CurrentSession)
+                .Where(p => p.Type is not ("AppDbContext" or "HttpClient")).ToList();
+            var accent = Color.FromRgb(76, 175, 80);
+
+            ShowMiniDialog("Run " + (CurrentSession.FunctionName ?? "graph"), dialog =>
+            {
+                dialog.Width = 460;
+                dialog.Children.Add(new TextBlock
+                {
+                    Text = $"Runs against {DescribeDb(HostPage.DevConnection)} using export {System.IO.Path.GetFileName(build)}. " +
+                           "Changes are rolled back unless you keep them.",
+                    Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)), FontSize = 11, TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 12)
+                });
+                var boxes = parameters.Select(p => (p, box: AddLabeledTextBox(dialog, $"{p.Name}  ({p.Type})", ExampleValue(p.Type)))).ToList();
+                if (boxes.Count == 0)
+                    dialog.Children.Add(new TextBlock { Text = "This graph has no inputs.", Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 10) });
+                var keep = new CheckBox { Content = "Keep database changes", Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 10) };
+                dialog.Children.Add(keep);
+                var output = new TextBox
+                {
+                    IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Height = 200,
+                    FontFamily = new FontFamily("Consolas"), FontSize = 12, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    Background = new SolidColorBrush(Color.FromRgb(24, 24, 24)), Foreground = Brushes.White,
+                    VerticalContentAlignment = VerticalAlignment.Top, Visibility = Visibility.Collapsed, Margin = new Thickness(0, 0, 0, 8)
+                };
+                dialog.Children.Add(output);
+
+                var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
+                Button runBtn = null;
+                MakeBtn(row, "Run", accent, async () =>
+                {
+                    if (_runCts != null) { _runCts.Cancel(); return; }
+                    string args;
+                    try { args = BuildArgumentsJson(boxes.Select(b => (b.p.Name, b.p.Type, b.box.Text))); }
+                    catch (Exception ex) { output.Visibility = Visibility.Visible; output.Text = ex.Message; return; }
+                    output.Visibility = Visibility.Visible;
+                    output.Text = "Compiling and running… (the first run downloads packages and can take a minute)";
+                    _runCts = new System.Threading.CancellationTokenSource();
+                    if (runBtn != null) runBtn.Content = "Stop";
+                    try
+                    {
+                        var result = await Database_Designer.DevRunner.RunGraph(build, script, entry.ClassName, entry.Method, args,
+                            HostPage.DevConnection, keep.IsChecked == true, null, _runCts.Token);
+                        output.Foreground = new SolidColorBrush(result.Ok ? Color.FromRgb(160, 230, 170) : Color.FromRgb(255, 140, 130));
+                        output.Text = result.Ok ? result.Result : result.Error;
+                    }
+                    catch (Exception ex)
+                    {
+                        output.Foreground = new SolidColorBrush(Color.FromRgb(255, 140, 130));
+                        output.Text = ex.Message.Contains("dotnet") || ex is System.ComponentModel.Win32Exception
+                            ? "The .NET SDK isn't installed (the `dotnet` command wasn't found). Get it from https://dot.net."
+                            : ex.Message;
+                    }
+                    finally
+                    {
+                        _runCts = null;
+                        if (runBtn != null) runBtn.Content = "Run";
+                    }
+                });
+                runBtn = row.Children.OfType<Button>().LastOrDefault();
+                MakeBtn(row, "Close", Color.FromRgb(68, 68, 68), () =>
+                {
+                    _runCts?.Cancel();
+                    var overlay = FindOverlay(dialog);
+                    if (overlay != null) CloseDialog(overlay);
+                });
+                dialog.Children.Add(row);
+            }, accent, closeOnAction: false);
+        }
+
+        private static string DescribeDb(string connection)
+        {
+            try
+            {
+                var b = new Npgsql.NpgsqlConnectionStringBuilder(connection);
+                return $"{b.Database} on {b.Host}";
+            }
+            catch { return "your local database"; }
+        }
+
+        private static string ExampleValue(string type) => type switch
+        {
+            "int" or "long" or "short" or "double" or "decimal" or "float" => "1",
+            "bool" => "true",
+            "string" => "",
+            "Guid" => Guid.Empty.ToString(),
+            "DateTime" or "DateTimeOffset" => DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            "DateOnly" => DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            "object" => "",
+            _ when type.StartsWith("List<") || type.EndsWith("[]") => "[]",
+            _ => "{}"
+        };
+
+        // Each box holds a JSON value; plain text for a string is accepted as-is.
+        private static string BuildArgumentsJson(IEnumerable<(string Name, string Type, string Text)> values)
+        {
+            var obj = new System.Text.Json.Nodes.JsonObject();
+            foreach (var (name, type, text) in values)
+            {
+                var t = (text ?? "").Trim();
+                if (t.Length == 0) continue;
+                System.Text.Json.Nodes.JsonNode node;
+                if (type == "string" && !t.StartsWith("\""))
+                    node = System.Text.Json.Nodes.JsonValue.Create(text);
+                else
+                {
+                    try { node = System.Text.Json.Nodes.JsonNode.Parse(t); }
+                    catch
+                    {
+                        if (type is "Guid" or "DateTime" or "DateTimeOffset" or "string") node = System.Text.Json.Nodes.JsonValue.Create(t);
+                        else throw new FormatException($"{name}: \"{t}\" isn't a valid {type}. Use JSON, e.g. 5, true, \"text\" or [1,2].");
+                    }
+                }
+                obj[name] = node;
+            }
+            return obj.ToJsonString();
         }
 
         private void ToggleCodeViewer()
@@ -648,8 +845,8 @@ private void ShowGeneratedCode()
 
         private void ShowCreatePortDialog(bool isInput)
         {
-            // isInput = true → creates "Set Output" node (node that accepts an input port from graph)
-            // isInput = false → creates "Event Input" node (node with output ports representing graph inputs)
+            // isInput = true -> creates "Set Output" node (node that accepts an input port from graph)
+            // isInput = false -> creates "Event Input" node (node with output ports representing graph inputs)
             var title = isInput ? "Create Set Output Node" : "Create Event Input Node";
             var portLabel = isInput ? "Input Name:" : "Output Name:";
             var accent = isInput ? Color.FromRgb(33, 150, 243) : Color.FromRgb(76, 175, 80);
@@ -693,7 +890,7 @@ private void ShowGeneratedCode()
             }, accent);
         }
 
-        // Inline "Add Node" popup — Unity Bolt style
+        // Inline "Add Node" popup - Unity Bolt style
 
         private void ShowAddNodePopup(Point canvasPosition)
         {
@@ -881,7 +1078,7 @@ private void ShowGeneratedCode()
             }
         }
 
-        // Replace dialog — full node-type replacement with port mapping
+        // Replace dialog - full node-type replacement with port mapping
 
         private void ShowReplaceDialog()
         {
@@ -1009,6 +1206,36 @@ private void ShowGeneratedCode()
             if (portBox.Items.Count > 0) portBox.SelectedIndex = 0;
         }
 
+        private Border _toast;
+
+        private void ShowToast(string message, double seconds = 3.5)
+        {
+            if (_toast != null) WorkspaceClip.Children.Remove(_toast);
+            var toast = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(235, 40, 40, 40)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(255, 76, 76)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(14, 8, 14, 8),
+                Margin = new Thickness(0, 14, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Top,
+                IsHitTestVisible = false,
+                Child = new TextBlock { Text = message, Foreground = Brushes.White, FontSize = 13, TextWrapping = TextWrapping.Wrap, MaxWidth = 520 }
+            };
+            _toast = toast;
+            WorkspaceClip.Children.Add(toast);
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                WorkspaceClip.Children.Remove(toast);
+                if (_toast == toast) _toast = null;
+            };
+            timer.Start();
+        }
+
         private void CheckAndShowWarnings()
         {
             var warnings = NodeSession.ValidateRequiredPorts(CurrentSession);
@@ -1046,10 +1273,8 @@ private void ShowGeneratedCode()
             InspectorTitle.Text = node.Data.Title ?? "Untitled";
             InspectorDesc.Text  = node.Data.Description ?? "";
 
-            // Value editor — visible for any node that previously got the
-            // inline editor. Replaces the on-canvas TextBox: edits route into
-            // node.Data.Logic the same way, with the Custom Input port
-            // re-typing side effect preserved.
+            // Value editor for literal-style nodes. Edits go into
+            // node.Data.Logic, and a Custom Input re-types its output port.
             if (NeedsLiteralEditor(node.Data))
             {
                 _inspectorValueLoading = true;
@@ -1119,7 +1344,7 @@ private void ShowGeneratedCode()
             var raw = ExtractEditorText(node);
             if (string.IsNullOrEmpty(raw)) return null;
 
-            // Custom Literal stores "<TypeName>\n<body>" — show first 1-2 lines.
+            // Custom Literal stores "<TypeName>\n<body>" - show first 1-2 lines.
             if (node.Title == "Custom Literal")
             {
                 var nl = raw.IndexOf('\n');
@@ -1129,7 +1354,7 @@ private void ShowGeneratedCode()
                 return $"{t}: {Truncate(rest, 60)}";
             }
 
-            // JSON Literal — collapse newlines for the tag.
+            // JSON Literal - collapse newlines for the tag.
             if (node.Title == "JSON Literal")
                 return Truncate(raw.Replace('\n', ' ').Replace("  ", " "), 80);
 
@@ -1155,9 +1380,9 @@ private void ShowGeneratedCode()
 
         private static string LiteralEditorHint(string title) => title switch
         {
-            "JSON Literal"              => "Auto-detects: JSON shape → parsed; otherwise treated as a string.",
+            "JSON Literal"              => "Auto-detects: JSON-shaped values are parsed, anything else is treated as a string.",
             "Custom Literal"            => "First line: type name. Body: JSON or plain string.",
-            "Custom Input"              => "Format: CUSTOMINPUT(MyType). Becomes a method parameter.",
+            "Custom Input"              => "Format: CUSTOMINPUT(MyType) or CUSTOMINPUT(long orderId). Becomes a method parameter (the name is the API's query/body field).",
             "Expose"                    => "Property name to read off the connected Object.",
             "Cast"                      => "CLR type to cast Value to (e.g. \"User\", \"int\").",
             "HTTP: Read JSON"           => "CLR type to deserialise the response into.",
@@ -1166,8 +1391,7 @@ private void ShowGeneratedCode()
             _                            => "Constant value used wherever this node is wired."
         };
 
-        // Apply the inspector textbox to the currently-targeted node. Mirrors
-        // what AttachLiteralEditor used to do inline.
+        // Writes the inspector's value box into the selected node.
         private void OnInspectorValueChanged(object sender, TextChangedEventArgs e)
         {
             if (_inspectorValueLoading || _inspectorTarget?.Data == null) return;
@@ -1178,10 +1402,9 @@ private void ShowGeneratedCode()
             if (title == "Custom Input")
             {
                 var trimmed = raw.Trim();
-                var m = System.Text.RegularExpressions.Regex.Match(
-                    trimmed, @"^\s*CUSTOMINPUT\s*\(\s*([\w\.]+)\s*\)\s*$");
-                var typeName = m.Success ? m.Groups[1].Value : trimmed;
-                data.Logic = $"CUSTOMINPUT({typeName})";
+                var (parsedType, parsedName) = NodeWalker.Compiler.ParseCustomInput(trimmed);
+                var typeName = parsedType ?? trimmed;
+                data.Logic = $"CUSTOMINPUT({typeName}{(parsedName != null ? " " + parsedName : "")})";
                 var port = data.Outputs.FirstOrDefault();
                 if (port != null && !string.IsNullOrEmpty(typeName))
                 {
@@ -1226,555 +1449,6 @@ private void ShowGeneratedCode()
             _inspectorTarget.ValuePreview = BuildValuePreview(data);
             MarkUnsavedChanges();
         }
-
-        private List<Category> CreateNodeLibrary() => new()
-        {
-            new Category { Name = "Flow", Nodes = new() {
-                CreateNode("Start",       "Entry point of the function", Array.Empty<Input>(), new[]{ new Output("Flow", typeof(object), "object") }),
-                CreateNode("End",         "Exit point of the function",  new[]{ new Input("Flow", typeof(object), "object", false) }, Array.Empty<Output>()),
-                CreateNode("Event Input", "Graph input parameter",       Array.Empty<Input>(), new[]{ new Output("Value", typeof(object), "object") }),
-                CreateNode("Set Output",  "Graph output value",          new[]{ new Input("Value", typeof(object), "object", true) }, Array.Empty<Output>()),
-                // Custom Input belongs with Flow — it adds a typed parameter to
-                // the generated function. CUSTOMINPUT(MyType) marker in Logic.
-                CreateNode("Custom Input", "Adds a custom-typed parameter to the generated function. Set Value to CUSTOMINPUT(MyType).",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(object), "custom") }),
-            }},
-            new Category { Name = "Variables", Nodes = new() {
-                CreateNode("Get Variable", "Retrieves a named variable",
-                    new[]{ new Input("Name", typeof(string), "string", true) },
-                    new[]{ new Output("Value", typeof(object), "object") }),
-                CreateNode("Set Variable", "Stores a value into a named variable",
-                    new[]{ new Input("Name", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
-                    Array.Empty<Output>()),
-            }},
-            new Category { Name = "Math", Nodes = new() {
-                CreateNode("Add",      "A + B", Num2In(), Num1Out()),
-                CreateNode("Subtract", "A - B", Num2In(), Num1Out()),
-                CreateNode("Multiply", "A × B", Num2In(), Num1Out()),
-                CreateNode("Divide",   "A ÷ B (throws on zero)", Num2In(), Num1Out()),
-            }},
-            new Category { Name = "Logic", Nodes = new() {
-                CreateNode("If",  "Conditional branch — accepts any value, evaluates as truthy/falsy",
-                    new[]{ new Input("Condition", typeof(object), "object", true) },
-                    new[]{ new Output("True", typeof(object), "object"), new Output("False", typeof(object), "object") }),
-                CreateNode("And", "A && B — accepts any value (truthy semantics)",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Or",  "A || B — accepts any value (truthy semantics)",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Not", "!Value — accepts any value (truthy semantics)",
-                    new[]{ new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                // Sequencing primitive — wire any output into After to enforce ordering.
-                CreateNode("Run After", "Force this branch to run after another node finishes. Wire any output into After.",
-                    new[]{ new Input("After", typeof(object), "object", true) },
-                    new[]{ new Output("Then", typeof(object), "object") }),
-                // Comparison operators — accept anything, compare via Equals/Comparer.
-                CreateNode("Equals", "A == B (uses object.Equals)",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Not Equals", "A != B",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Less Than", "A < B (Comparer<object>.Default)",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Greater Than", "A > B",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Less Or Equal", "A <= B",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-                CreateNode("Greater Or Equal", "A >= B",
-                    new[]{ new Input("A", typeof(object), "object", true), new Input("B", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(bool), "bool") }),
-            }},
-            new Category { Name = "Lambda Logic", Nodes = new() {
-                CreateNode("Select: Field", "Explicit key selector: x => x.<Property>. Wire into DB: Order By / Order By Desc instead of typing a lambda.",
-                    new[]{ new Input("Property", typeof(string), "string", true) },
-                    new[]{ new Output("Selector", typeof(object), "selector") }),
-                CreateNode("Where: Equals", "Predicate: x.<Property> == <Value>",
-                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Not Equals", "Predicate: x.<Property> != <Value>",
-                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Greater", "Predicate: x.<Property> > <Value>",
-                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Less", "Predicate: x.<Property> < <Value>",
-                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Contains", "Predicate: x.<Property>.Contains(<Value>)",
-                    new[]{ new Input("Property", typeof(string), "string", true), new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: And", "Combine two predicates with &&",
-                    new[]{ new Input("A", typeof(object), "predicate", true), new Input("B", typeof(object), "predicate", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Or", "Combine two predicates with ||",
-                    new[]{ new Input("A", typeof(object), "predicate", true), new Input("B", typeof(object), "predicate", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-                CreateNode("Where: Not", "Negate a predicate with !",
-                    new[]{ new Input("Predicate", typeof(object), "predicate", true) },
-                    new[]{ new Output("Predicate", typeof(object), "predicate") }),
-            }},
-            new Category { Name = "String", Nodes = new() {
-                CreateNode("Concat", "Joins two strings",
-                    new[]{ new Input("A", typeof(string), "string", true), new Input("B", typeof(string), "string", true) },
-                    new[]{ new Output("Result", typeof(string), "string") }),
-                CreateNode("Format", "string.Format(template, arg0)",
-                    new[]{ new Input("Template", typeof(string), "string", true), new Input("Arg0", typeof(object), "object", false) },
-                    new[]{ new Output("Result", typeof(string), "string") }),
-            }},
-            new Category { Name = "Literals", Nodes = new() {
-                CreateNode("String Literal", "A constant string value",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(string), "string") }),
-                CreateNode("Int Literal", "A constant integer value",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(int), "int") }),
-                CreateNode("Float Literal", "A constant floating-point value",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(double), "number") }),
-                CreateNode("Bool Literal", "A constant boolean value",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(bool), "bool") }),
-                CreateNode("Null", "A null reference",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(object), "object") }),
-                CreateNode("JSON Literal", "Multi-line JSON constant (parsed at runtime)",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(object), "object") }),
-                CreateNode("Connection String Literal", "A Postgres connection string",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(string), "string") }),
-                CreateNode("Predicate Literal", "A LINQ predicate, e.g. \"x => x.IsActive\"",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(object), "object") }),
-                CreateNode("Custom Literal", "A custom-typed constant. Inspector field — first line is the type, rest is JSON or string.",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Value", typeof(object), "custom") }),
-                CreateNode("Type Literal", "A constant Type reference (e.g., typeof(Game))",
-                     Array.Empty<Input>(),
-                    new[]{ new Output("Type", typeof(Type), "type") }),
-             }},
-            new Category { Name = "Objects", Nodes = new() {
-                CreateNode("Expose", "Pull a single property out of an object. Inspector field = property name.",
-                    new[]{ new Input("Object", typeof(object), "object", true) },
-                    new[]{ new Output("Value", typeof(object), "object") }),
-                CreateNode("Cast", "Cast a value to a target type. Inspector field = type name (e.g. \"User\").",
-                    new[]{ new Input("Value", typeof(object), "object", true) },
-                    new[]{ new Output("Result", typeof(object), "custom") }),
-                CreateNode("WebURL", "Wraps a URL string as Uri",
-                    new[]{ new Input("URL", typeof(string), "string", true) },
-                    new[]{ new Output("URI", typeof(object), "weburl") }),
-            }},
-            new Category { Name = "HTTP", Nodes = new() {
-                // All HTTP nodes default to HTTP/2 with a fallback to HTTP/1.1.
-                CreateNode("HTTP: New Client",
-                    "Create an HttpClient configured for HTTP/2 (HttpVersion=2.0, VersionPolicy=RequestVersionOrLower).",
-                    Array.Empty<Input>(),
-                    new[]{ new Output("Client", typeof(object), "custom", "HttpClient") }),
-                CreateNode("HTTP: Get", "GET <url> — returns the HttpResponseMessage",
-                    new[]{
-                        new Input("Client", typeof(object), "custom", true, "HttpClient"),
-                        new Input("Url",    typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Response", typeof(object), "custom", "HttpResponseMessage") }),
-                CreateNode("HTTP: Post JSON", "POST a serialised body to <url>",
-                    new[]{
-                        new Input("Client", typeof(object), "custom", true, "HttpClient"),
-                        new Input("Url",    typeof(string), "string", true),
-                        new Input("Body",   typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Response", typeof(object), "custom", "HttpResponseMessage") }),
-                CreateNode("HTTP: Put JSON", "PUT a serialised body to <url>",
-                    new[]{
-                        new Input("Client", typeof(object), "custom", true, "HttpClient"),
-                        new Input("Url",    typeof(string), "string", true),
-                        new Input("Body",   typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Response", typeof(object), "custom", "HttpResponseMessage") }),
-                CreateNode("HTTP: Delete", "DELETE <url>",
-                    new[]{
-                        new Input("Client", typeof(object), "custom", true, "HttpClient"),
-                        new Input("Url",    typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Response", typeof(object), "custom", "HttpResponseMessage") }),
-                CreateNode("HTTP: Send", "Send any HttpRequestMessage (full control)",
-                    new[]{
-                        new Input("Client",  typeof(object), "custom", true, "HttpClient"),
-                        new Input("Request", typeof(object), "custom", true, "HttpRequestMessage")
-                    },
-                    new[]{ new Output("Response", typeof(object), "custom", "HttpResponseMessage") }),
-                CreateNode("HTTP: Read JSON", "Deserialise the response body — Inspector field = target type",
-                    new[]{ new Input("Response", typeof(object), "custom", true, "HttpResponseMessage") },
-                    new[]{ new Output("Value", typeof(object), "custom") }),
-                CreateNode("HTTP: Read String", "Read the response body as a string",
-                    new[]{ new Input("Response", typeof(object), "custom", true, "HttpResponseMessage") },
-                    new[]{ new Output("Body", typeof(string), "string") }),
-                CreateNode("HTTP: Status Code", "HTTP status code as an int",
-                    new[]{ new Input("Response", typeof(object), "custom", true, "HttpResponseMessage") },
-                    new[]{ new Output("Code", typeof(int), "int") }),
-                CreateNode("HTTP: Set Bearer Token", "Authorization: Bearer <token>",
-                    new[]{
-                        new Input("Client", typeof(object), "custom", true, "HttpClient"),
-                        new Input("Token",  typeof(string), "string", true)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("HTTP: Set Header", "Add a default request header",
-                    new[]{
-                        new Input("Client", typeof(object), "custom", true, "HttpClient"),
-                        new Input("Name",   typeof(string), "string", true),
-                        new Input("Value",  typeof(string), "string", true)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("HTTP: Ensure Success", "Throw if the response was not 2xx",
-                    new[]{ new Input("Response", typeof(object), "custom", true, "HttpResponseMessage") },
-                    Array.Empty<Output>()),
-            }},
-            new Category { Name = "EF Core: Easy", Nodes = new() {
-                // Step-by-step beginner nodes that read like English.
-                CreateNode("DB: Open", "Open the project's database (Postgres connection string in)",
-                    new[]{ new Input("ConnectionString", typeof(string), "string", true) },
-                    new[]{ new Output("Db", typeof(object), "custom", "AppDbContext") }),
-                CreateNode("DB: Save", "Save all pending changes to disk",
-                    new[]{ new Input("Db", typeof(object), "custom", true, "AppDbContext") },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: Close", "Close + dispose the database",
-                    new[]{ new Input("Db", typeof(object), "custom", true, "AppDbContext") },
-                    Array.Empty<Output>()),
-                CreateNode("DB: Get All", "Get every row of one table",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                    new Input("EntityType", typeof(Type), "type", true), 
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("DB: Get One By Id", "Get a single row by its primary key",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                    new Input("EntityType", typeof(Type), "type", true),  
-                        new Input("Id",         typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Row", typeof(object), "object") }),
-                CreateNode("DB: Get Where", "Get rows matching a predicate (e.g. \"x => x.IsActive\")",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("Predicate",  typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("DB: Get First", "First match or null",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("Predicate",  typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Row", typeof(object), "object") }),
-                CreateNode("DB: Count", "How many rows match",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("Predicate",  typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Count", typeof(int), "int") }),
-                // Predicate builder nodes live in the "Lambda Logic" category.
-
-                CreateNode("DB: Add", "Stage an entity for insert (call DB: Save afterward)",
-                    new[]{
-                        new Input("Db",     typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Entity", typeof(object), "object", true)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("DB: Add And Save", "Insert immediately",
-                    new[]{
-                        new Input("Db",     typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Entity", typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: Update And Save", "Persist changes on a tracked entity",
-                    new[]{
-                        new Input("Db",     typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Entity", typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: Remove And Save", "Delete a row immediately",
-                    new[]{
-                        new Input("Db",     typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Entity", typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: Exists", "Does any row match?",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("Predicate",  typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Exists", typeof(bool), "bool") }),
-                CreateNode("DB: Begin Tx", "Start a database transaction",
-                    new[]{ new Input("Db", typeof(object), "custom", true, "AppDbContext") },
-                    new[]{ new Output("Tx", typeof(object), "custom", "IDbContextTransaction") }),
-                CreateNode("DB: Commit Tx", "Commit a transaction",
-                    new[]{ new Input("Tx", typeof(object), "custom", true, "IDbContextTransaction") },
-                    Array.Empty<Output>()),
-                CreateNode("DB: Rollback Tx", "Rollback a transaction",
-                    new[]{ new Input("Tx", typeof(object), "custom", true, "IDbContextTransaction") },
-                    Array.Empty<Output>()),
-                // Result-shaping helpers
-                CreateNode("DB: Order By", "Order rows ascending by a key (\"x => x.CreatedAt\")",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("KeySelector",typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("DB: Order By Desc", "Order rows descending by a key",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("KeySelector",typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("DB: Page", "Skip + Take pagination on a table",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("Skip",       typeof(int),    "int",    true),
-                        new Input("Take",       typeof(int),    "int",    true)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("DB: Include", "Eager-load a navigation property",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("EntityType", typeof(Type), "type", true),
-                        new Input("Navigation", typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                // Row-Level Security primitives
-                CreateNode("DB: RLS Enable", "ALTER TABLE x ENABLE ROW LEVEL SECURITY",
-                    new[]{
-                        new Input("Db",    typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Table", typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: RLS Disable", "ALTER TABLE x DISABLE ROW LEVEL SECURITY",
-                    new[]{
-                        new Input("Db",    typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Table", typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: RLS Force", "Force RLS even for the table owner",
-                    new[]{
-                        new Input("Db",    typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Table", typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: RLS Create Policy",
-                    "CREATE POLICY <name> ON <table> FOR <op> TO <role> USING (<using>) WITH CHECK (<check>)",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Table",      typeof(string), "string", true),
-                        new Input("PolicyName", typeof(string), "string", true),
-                        new Input("Operation",  typeof(string), "string", false),    // ALL / SELECT / INSERT / UPDATE / DELETE
-                        new Input("Role",       typeof(string), "string", false),
-                        new Input("Using",      typeof(string), "string", true),
-                        new Input("WithCheck",  typeof(string), "string", false)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: RLS Drop Policy", "DROP POLICY IF EXISTS <name> ON <table>",
-                    new[]{
-                        new Input("Db",         typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Table",      typeof(string), "string", true),
-                        new Input("PolicyName", typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("DB: RLS Set User",
-                    "SET LOCAL app.current_user = '<userId>' — readable as current_setting('app.current_user') in policies",
-                    new[]{
-                        new Input("Db",     typeof(object), "custom", true, "AppDbContext"),
-                        new Input("UserId", typeof(string), "string", true)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("DB: RLS Reset User", "RESET app.current_user",
-                    new[]{ new Input("Db", typeof(object), "custom", true, "AppDbContext") },
-                    Array.Empty<Output>()),
-                CreateNode("DB: Raw SQL", "Execute a raw SQL command — escape hatch for anything",
-                    new[]{
-                        new Input("Db",     typeof(object), "custom", true, "AppDbContext"),
-                        new Input("Sql",    typeof(string), "string", true),
-                        new Input("Params", typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-            }},
-            new Category { Name = "Postgres: Easy", Nodes = new() {
-                CreateNode("PG: Connect", "Open a Postgres connection (Npgsql)",
-                    new[]{ new Input("ConnectionString", typeof(string), "string", true) },
-                    new[]{ new Output("Connection", typeof(object), "custom", "NpgsqlConnection") }),
-                CreateNode("PG: Query", "SELECT — returns rows (Dapper)",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Sql",        typeof(string), "string", true),
-                        new Input("Params",     typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("PG: Query First", "First row only — null if none",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Sql",        typeof(string), "string", true),
-                        new Input("Params",     typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Row", typeof(object), "object") }),
-                CreateNode("PG: Execute", "INSERT/UPDATE/DELETE/DDL — returns rows affected",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Sql",        typeof(string), "string", true),
-                        new Input("Params",     typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("PG: Insert", "INSERT INTO <table> VALUES (@…) RETURNING id",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Table",      typeof(string), "string", true),
-                        new Input("Entity",     typeof(object), "custom", true)
-                    },
-                    new[]{ new Output("Id", typeof(object), "object") }),
-                CreateNode("PG: Update By Id", "UPDATE <table> SET … WHERE id = @id",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Table",      typeof(string), "string", true),
-                        new Input("Entity",     typeof(object), "custom", true),
-                        new Input("Id",         typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("PG: Delete By Id", "DELETE FROM <table> WHERE id = @id",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Table",      typeof(string), "string", true),
-                        new Input("Id",         typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("PG: Close", "Close + dispose a connection",
-                    new[]{ new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection") },
-                    Array.Empty<Output>()),
-            }},
-            new Category { Name = "Postgres: Advanced", Nodes = new() {
-                CreateNode("PG: Bulk Insert", "Streaming COPY — fastest for large inserts. Rows = IEnumerable<T>",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Table",      typeof(string), "string", true),
-                        new Input("Columns",    typeof(object), "object", true), // string[]
-                        new Input("Rows",       typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Affected", typeof(long), "long") }),
-                CreateNode("PG: Begin Tx", "Open a transaction",
-                    new[]{ new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection") },
-                    new[]{ new Output("Transaction", typeof(object), "custom", "NpgsqlTransaction") }),
-                CreateNode("PG: Commit Tx", "Commit a transaction",
-                    new[]{ new Input("Transaction", typeof(object), "custom", true, "NpgsqlTransaction") },
-                    Array.Empty<Output>()),
-                CreateNode("PG: Rollback Tx", "Rollback a transaction",
-                    new[]{ new Input("Transaction", typeof(object), "custom", true, "NpgsqlTransaction") },
-                    Array.Empty<Output>()),
-                CreateNode("PG: Prepare", "Pre-compile a SQL statement; reuse via PG: Run Prepared",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Sql",        typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Command", typeof(object), "custom", "NpgsqlCommand") }),
-                CreateNode("PG: Run Prepared", "Execute a prepared command with named params",
-                    new[]{
-                        new Input("Command", typeof(object), "custom", true, "NpgsqlCommand"),
-                        new Input("Params",  typeof(object), "object", false)
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("PG: Batch Execute", "Send a batch of statements in one round-trip (NpgsqlBatch)",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Statements", typeof(object), "object", true) // string[]
-                    },
-                    new[]{ new Output("Affected", typeof(int), "int") }),
-                CreateNode("PG: Notify", "NOTIFY <channel>, <payload>",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Channel",    typeof(string), "string", true),
-                        new Input("Payload",    typeof(string), "string", false)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("PG: Listen", "LISTEN <channel> + register a callback",
-                    new[]{
-                        new Input("Connection", typeof(object), "custom", true, "NpgsqlConnection"),
-                        new Input("Channel",    typeof(string), "string", true),
-                        new Input("Callback",   typeof(object), "object", true)
-                    },
-                    Array.Empty<Output>()),
-            }},
-            new Category { Name = "SpacetimeDB: Easy", Nodes = new() {
-                CreateNode("SDB: Connect", "Open a SpacetimeDB client connection",
-                    new[]{
-                        new Input("Uri",      typeof(string), "string", true),
-                        new Input("Module",   typeof(string), "string", true),
-                        new Input("AuthToken",typeof(string), "string", false)
-                    },
-                    new[]{ new Output("Conn", typeof(object), "custom", "DbConnection") }),
-                CreateNode("SDB: Disconnect", "Close the client connection",
-                    new[]{ new Input("Conn", typeof(object), "custom", true, "DbConnection") },
-                    Array.Empty<Output>()),
-                CreateNode("SDB: Subscribe", "Subscribe to one or more SQL queries",
-                    new[]{
-                        new Input("Conn",    typeof(object), "custom", true, "DbConnection"),
-                        new Input("Queries", typeof(object), "object", true) // string[]
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("SDB: Call Reducer", "Invoke a server-side reducer by name with positional args",
-                    new[]{
-                        new Input("Conn",    typeof(object), "custom", true, "DbConnection"),
-                        new Input("Reducer", typeof(string), "string", true),
-                        new Input("Args",    typeof(object), "object", false)  // params object[]
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("SDB: Iter Table", "Iterate a synced table",
-                    new[]{
-                        new Input("Conn",  typeof(object), "custom", true, "DbConnection"),
-                        new Input("Table", typeof(string), "string", true)
-                    },
-                    new[]{ new Output("Rows", typeof(object), "object") }),
-                CreateNode("SDB: Find By Pk", "Find a row by primary key on a synced table",
-                    new[]{
-                        new Input("Conn",  typeof(object), "custom", true, "DbConnection"),
-                        new Input("Table", typeof(string), "string", true),
-                        new Input("Pk",    typeof(object), "object", true)
-                    },
-                    new[]{ new Output("Row", typeof(object), "object") }),
-                CreateNode("SDB: On Insert", "Register an insert callback for a table",
-                    new[]{
-                        new Input("Conn",     typeof(object), "custom", true, "DbConnection"),
-                        new Input("Table",    typeof(string), "string", true),
-                        new Input("Callback", typeof(object), "object", true)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("SDB: On Update", "Register an update callback for a table",
-                    new[]{
-                        new Input("Conn",     typeof(object), "custom", true, "DbConnection"),
-                        new Input("Table",    typeof(string), "string", true),
-                        new Input("Callback", typeof(object), "object", true)
-                    },
-                    Array.Empty<Output>()),
-                CreateNode("SDB: On Delete", "Register a delete callback for a table",
-                    new[]{
-                        new Input("Conn",     typeof(object), "custom", true, "DbConnection"),
-                        new Input("Table",    typeof(string), "string", true),
-                        new Input("Callback", typeof(object), "object", true)
-                    },
-                    Array.Empty<Output>()),
-            }}
-        };
-
-        private static Input[] Num2In() => new[] { new Input("A", typeof(double), "number", true), new Input("B", typeof(double), "number", true) };
-        private static Output[] Num1Out()    => new[] { new Output("Result", typeof(double), "number") };
-        private static Input[] Bool2In() => new[] { new Input("A", typeof(bool), "bool", true), new Input("B", typeof(bool), "bool", true) };
-        private static Output[] Bool1Out()    => new[] { new Output("Result", typeof(bool), "bool") };
 
         private List<BareNode> _customScripts = new();
 
@@ -2039,7 +1713,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
         /// Edit the project-level using directives. Each line in the textbox
         /// is one namespace (with or without a leading "using"/trailing ";").
         /// Saved to CurrentSession.Usings; the compiler unions these with its
-        /// defaults and any "using …;" lines hoisted out of custom-node Logic
+        /// defaults and any "using ...;" lines hoisted out of custom-node Logic
         /// before emitting them at the top of the generated file.
         /// </summary>
         private void ShowUsingsDialog()
@@ -2107,7 +1781,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             // Walk up looking for a NodeControl. Earlier code returned silently
             // when right-clicking inside a node, which left users with no menu
             // at all (nodes didn't have their own right-click handler). Now we
-            // route the click to the workspace context menu regardless — but
+            // route the click to the workspace context menu regardless - but
             // remember the node so future per-node menus can hook in.
             NodeControl hitNode = null;
             var dep = e.OriginalSource as DependencyObject;
@@ -2238,7 +1912,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
 
                 // ChunksCanvas sits below WorkspaceCanvas, so plain left-clicks
                 // on a chunk land here instead of on the chunk. Hit-test
-                // manually and route to the chunk's drag/select machinery —
+                // manually and route to the chunk's drag/select machinery -
                 // mirrors what the right-click handler already does. Also
                 // route resize-thumb hits so the bottom-right gripper works.
                 var canvasPos = e.GetPosition(WorkspaceCanvas);
@@ -2251,7 +1925,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                     if (canvasPos.X < cl || canvasPos.X > cl + cw) continue;
                     if (canvasPos.Y < ct || canvasPos.Y > ct + ch) continue;
 
-                    // Bottom-right 24×24 → resize start.
+                    // Bottom-right 24x24 -> resize start.
                     bool inResize = canvasPos.X >= cl + cw - 28 && canvasPos.Y >= ct + ch - 28;
                     chunk.BeginPointerInteraction(canvasPos, inResize);
                     e.Handled = true;
@@ -2389,6 +2063,13 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             KeyDown += (s, e) =>
             {
                 bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+                bool typing = FocusManager.GetFocusedElement() is TextBox;
+                if (ctrl && !typing && (e.Key == Key.Z || e.Key == Key.Y))
+                {
+                    e.Handled = true;
+                    UndoGraph(redo: e.Key == Key.Y || Keyboard.Modifiers.HasFlag(ModifierKeys.Shift));
+                    return;
+                }
                 if (ctrl && e.Key == Key.A) SelectAllNodes();
                 if (ctrl && e.Key == Key.C) CopySelectedNodes();
                 if (ctrl && e.Key == Key.V) PasteNodes();
@@ -2481,10 +2162,10 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             if (host == null) return;
 
             // Decide editor shape based on the node title.
-            //   JSON Literal → multi-line, monospace, ~140 px tall
-            //   Custom Input → store CUSTOMINPUT(Type) and re-type the output port live
-            //   Predicate Literal → wider single-line (lambda code)
-            //   everything else → single-line
+            //   JSON Literal -> multi-line, monospace, ~140 px tall
+            //   Custom Input -> store CUSTOMINPUT(Type) and re-type the output port live
+            //   Predicate Literal -> wider single-line (lambda code)
+            //   everything else -> single-line
             string title = node.Title ?? "";
             bool multiLine     = title == "JSON Literal" || title == "Custom Literal";
             bool isCustomInput = title == "Custom Input";
@@ -2534,10 +2215,9 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                 if (isCustomInput)
                 {
                     var raw = (tb.Text ?? "").Trim();
-                    var m = System.Text.RegularExpressions.Regex.Match(
-                        raw, @"^\s*CUSTOMINPUT\s*\(\s*([\w\.]+)\s*\)\s*$");
-                    var typeName = m.Success ? m.Groups[1].Value : raw;
-                    node.Logic = $"CUSTOMINPUT({typeName})";
+                    var (parsedType, parsedName) = NodeWalker.Compiler.ParseCustomInput(raw);
+                    var typeName = parsedType ?? raw;
+                    node.Logic = $"CUSTOMINPUT({typeName}{(parsedName != null ? " " + parsedName : "")})";
 
                     var port = node.Outputs.FirstOrDefault();
                     if (port != null)
@@ -2598,6 +2278,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             "Predicate Literal"         => "x => x.IsActive",
             "Custom Input"              => "CUSTOMINPUT(MyType)",
             "Custom Literal"            => "MyType\n{\n  \"name\": \"value\"\n}",
+            "List Literal"              => "red, green, blue",
             "Expose"                    => "PropertyName",
             "Cast"                      => "TargetType",
             "HTTP: Read JSON"           => "TargetType",
@@ -2614,16 +2295,6 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             UUID = Guid.NewGuid().ToString(),
             Logic = src.Logic,
             SyncType = src.SyncType
-        };
-
-        private static BareNode CreateNode(string title, string desc,
-            IEnumerable<Input> inputs, IEnumerable<Output> outputs, string logic = null) => new()
-        {
-            Title = title, Description = desc,
-            Inputs = inputs.ToHashSet(), Outputs = outputs.ToHashSet(),
-            UUID = Guid.NewGuid().ToString(),
-            Logic = logic ?? $"// {title}",
-            SyncType = "Sync"
         };
 
         private void SetupNodeEvents(NodeControl vc)
@@ -2734,6 +2405,25 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                 return;
             }
 
+            bool execOut = NodeFlow.IsExecOutput(outData, outPort);
+            bool execIn = inPort == NodeFlow.ExecIn;
+            if (execOut || execIn)
+            {
+                if (execOut != execIn)
+                {
+                    ShowToast("Exec pins (▶) only connect to other exec pins.");
+                    return;
+                }
+                try
+                {
+                    NodeOperations.ConnectNode(CurrentSession, new Connection(outUUID, inUUID, outPort, inPort));
+                    Dispatcher.BeginInvoke(new Action(RefreshConnections), System.Windows.Threading.DispatcherPriority.Loaded);
+                    MarkUnsavedChanges();
+                }
+                catch (Exception ex) { ShowToast(ex.Message); }
+                return;
+            }
+
             var outPort_ = outData.Outputs.FirstOrDefault(o => o.Name == outPort);
             var inPort_  = inData.Inputs.FirstOrDefault(i => i.Name == inPort);
             if (outPort_ == null || inPort_ == null)
@@ -2750,7 +2440,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             string b = (inPort_.SemanticType  ?? "object").Trim().ToLowerInvariant();
             // Any numeric-family tag connects to any other numeric-family tag.
             // (The codegen layer keeps each precision distinct on its own
-            // node — this is just for wire compatibility.)
+            // node - this is just for wire compatibility.)
             bool numeric(string t) =>
                    t == "number" || t == "int" || t == "long"
                 || t == "float"  || t == "decimal";
@@ -2766,7 +2456,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
 
             if (!typeMatch)
             {
-                System.Diagnostics.Debug.WriteLine($"[CONN] rejected: type mismatch {a} → {b}.");
+                System.Diagnostics.Debug.WriteLine($"[CONN] rejected: type mismatch {a} to {b}.");
                 return;
             }
 
@@ -2785,7 +2475,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
         private int _refreshRetryCount;
         private const int _refreshMaxRetries = 8;
 
-        // Persistent map of Connection → its visual control. Reusing the
+        // Persistent map of Connection -> its visual control. Reusing the
         // ConnectionControl lets us mutate the bezier path data in place
         // instead of clearing the whole canvas every drag tick (which is
         // what made connections blink out of existence while moving nodes).
@@ -2816,7 +2506,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                 var inCtrl  = FindNodeByUUID(conn.Node2UUID);
                 if (outCtrl == null || inCtrl == null) continue;
 
-                // If a node hasn't been measured yet, defer and retry — but
+                // If a node hasn't been measured yet, defer and retry - but
                 // DON'T tear the existing visual down in the meantime.
                 if (outCtrl.ActualWidth == 0 || inCtrl.ActualWidth == 0)
                 {
@@ -2831,13 +2521,14 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
 
                     if (_connViews.TryGetValue(conn, out var existing))
                     {
-                        // Mutate in place — no removal, no flicker.
+                        // Mutate in place - no removal, no flicker.
                         existing.UpdateGeometry(BuildBezierGeometry(startPos.X, startPos.Y, endPos.X, endPos.Y));
                     }
                     else
                     {
                         var path = DrawBezier(startPos.X, startPos.Y, endPos.X, endPos.Y);
                         var cc = new ConnectionControl(conn, path);
+                        cc.ApplyKind(NodeFlow.IsExecConnection(conn, outCtrl.Data));
                         ConnectionsCanvas.Children.Add(cc);
                         _connViews[conn] = cc;
                     }
@@ -3099,7 +2790,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             var result = new List<NodeWalker.SessionData.EntityDef>();
             if (string.IsNullOrWhiteSpace(source)) return result;
 
-            // Strip attribute lines / blocks ([Table("…")], [Key], [ForeignKey(…)]).
+            // Strip attribute lines / blocks ([Table("...")], [Key], [ForeignKey(...)]).
             // Multiline so a [Foo]\npublic class Bar still leaves the class line intact.
             source = System.Text.RegularExpressions.Regex.Replace(
                 source, @"^[ \t]*\[[^\]\r\n]+\][ \t]*\r?\n",
@@ -3136,7 +2827,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                     if (string.IsNullOrEmpty(typeName)) continue;
                     if (typeName.StartsWith("class") || typeName == "static") continue;
 
-                    // Skip navigation properties — collection types, or anything
+                    // Skip navigation properties - collection types, or anything
                     // that's plainly a reference to another model class. We can't
                     // tell those apart with 100% certainty without a real C#
                     // parser, so use a heuristic: if the type name starts with
@@ -3145,7 +2836,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                     if (IsCollectionType(typeName)) continue;
                     if (IsNavReference(typeName)) continue;
 
-                    // Trim trailing nullability — node ports don't track it.
+                    // Trim trailing nullability - node ports don't track it.
                     var clean = typeName.TrimEnd('?');
                     props[propName] = clean;
                 }
@@ -3198,10 +2889,10 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
         {
             // Generic / array / nullable-of-scalar all stay as-is (so they
             // become a port). Only flag bare "PascalCase" types that aren't
-            // a scalar — those are almost certainly a sibling entity.
+            // a scalar - those are almost certainly a sibling entity.
             if (typeName.IndexOfAny(new[] { '<', '[', '?', '.' }) >= 0)
             {
-                // If a "?" suffix on a known scalar → keep.
+                // If a "?" suffix on a known scalar -> keep.
                 var bare = typeName.TrimEnd('?');
                 if (_scalarTypeNames.Contains(bare)) return false;
                 // Generics / arrays already filtered by IsCollectionType.
@@ -3285,7 +2976,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                     if (!next.Properties.TryGetValue(inp.Name, out var newType))
                     { bad.Add($"removed: {inp.Name}"); continue; }
                     if (prev.Properties.TryGetValue(inp.Name, out var oldType) && oldType != newType)
-                        bad.Add($"type change: {inp.Name} {oldType} → {newType}");
+                        bad.Add($"type change: {inp.Name} from {oldType} to {newType}");
                 }
 
                 if (bad.Count > 0)
@@ -3372,7 +3063,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
                 });
             menu.Items.Add(rename);
 
-            // Colour picker — opens a dialog of clickable swatches. Trying to
+            // Colour picker - opens a dialog of clickable swatches. Trying to
             // colourise MenuItem.Foreground or stuff complex content into a
             // submenu's Header is unreliable in OpenSilver, so we route to a
             // plain dialog with regular Buttons that we know renders correctly.
@@ -3497,7 +3188,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
             };
         }
 
-        // Map a type name (CLR or DBDesigner-style) → CLR Type. Used when
+        // Map a type name (CLR or DBDesigner-style) -> CLR Type. Used when
         // hydrating Input/Output instances on import. Preserves precision
         // (no more "every numeric becomes int" bucketing).
         private Type GetTypeFromString(string t) => t.Trim().TrimEnd('?').ToLower() switch
@@ -3766,12 +3457,6 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
         private void ShowScriptToNodeWindow() { /* legacy — handled inline */ }
     }
 
-    public class Category
-    {
-        public string Name { get; set; }
-        public List<BareNode> Nodes { get; set; } = new();
-    }
-
     public static class CanvasExtensions
     {
         // Monotonically-increasing counter so each call wins the z-order race
@@ -3782,7 +3467,7 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
         {
             // The previous implementation removed and re-added the element to
             // its parent panel. That works visually, but Children.Remove blows
-            // away any in-flight mouse capture — which means a node that was
+            // away any in-flight mouse capture - which means a node that was
             // mid-drag would silently stop receiving MouseMove events the
             // instant it became "selected" (because OnDragStarted calls this).
             // Use Canvas.ZIndex instead: same visual result, capture intact.
@@ -3839,8 +3524,20 @@ item.MouseLeftButtonDown += (s, e) => { AddNodeFromTemplate(node); e.Handled = t
         {
             if (!_isSelected) return;
             _isSelected = false;
-            _path.Stroke = new SolidColorBrush(Color.FromRgb(255, 76, 76));
-            _path.StrokeThickness = 2.5;
+            _path.Stroke = new SolidColorBrush(IsExec ? ExecWireColor : Color.FromRgb(255, 76, 76));
+            _path.StrokeThickness = IsExec ? 3.5 : 2.5;
+        }
+
+        public static readonly Color ExecWireColor = Color.FromRgb(236, 236, 236);
+
+        public bool IsExec { get; set; }
+
+        public void ApplyKind(bool isExec)
+        {
+            IsExec = isExec;
+            if (_isSelected) return;
+            _path.Stroke = new SolidColorBrush(isExec ? ExecWireColor : Color.FromRgb(255, 76, 76));
+            _path.StrokeThickness = isExec ? 3.5 : 2.5;
         }
 
         private void ShowContextMenu()

@@ -38,7 +38,6 @@ namespace Database_Designer
     {
 
 
-
         internal static SecureData Username;
         internal static SecureData Password;
         internal static SecureData Directory;
@@ -82,7 +81,6 @@ namespace Database_Designer
             {
                 RemoveWindow();
             };
-
 
 
         }
@@ -209,9 +207,6 @@ namespace Database_Designer
             }
 
 
-
-
-
             var Tab1 = CreateBasicsTab(CreateAccTabControl);
             var Tab2 = CreateProfileImageTab(CreateAccTabControl);
             var Tab3 = CreateAccountOverviewTab(CreateAccTabControl);
@@ -237,6 +232,10 @@ namespace Database_Designer
 
                 var usernameStr = Username.ConvertToString();
                 var passwordStr = PasswordInputLogin.Password;
+                var recoveryUser = new string(usernameStr.AsSpan());
+                // Pariah clears the strings it is given, so keep a copy for the greeting.
+                var displayName = new string(usernameStr.AsSpan());
+                var recoveryPassword = new string(passwordStr.AsSpan());
 
 
                 try
@@ -245,6 +244,7 @@ namespace Database_Designer
                     var ACS = new Pariah_Cybersecurity.DataHandler.AccountsWithSessions();
 
                     var loginResponse = await ACS.LoginUser(usernameStr, dbDesignDir, passwordStr.ToSecureData(), true);
+                    await AccountRecovery.EnsureVaultAfterLogin(dbDesignDir, recoveryUser, recoveryPassword);
 
 
                     SignIn.Visibility = Visibility.Collapsed;
@@ -267,7 +267,7 @@ namespace Database_Designer
                         };
 
                         var randomPhrase = WelcomePhrase[new Random().Next(WelcomePhrase.Count)];
-                        WelcomeText.Text = $"{randomPhrase}, {usernameStr}.";
+                        WelcomeText.Text = $"{randomPhrase}, {displayName}.";
 
                         InitializeMainSoftware();
                     }
@@ -282,9 +282,7 @@ namespace Database_Designer
                 }
 
 
-
             };
-
 
 
             var textTimer = new DispatcherTimer();
@@ -341,6 +339,21 @@ namespace Database_Designer
             };
 
 
+            ForgotPasswordBtn.Click += (s, e) =>
+            {
+                var username = Username.ConvertToString();
+                if (string.IsNullOrEmpty(username)) return;
+                Grid overlay = null;
+                overlay = new Grid { Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x20, 0x1E, 0x1A)) };
+                overlay.Children.Add(new PasswordRecoveryPanel(username, () =>
+                {
+                    SignIn.Children.Remove(overlay);
+                    PasswordInputLogin.Password = "";
+                    ErrorLogin.Text = " ";
+                }));
+                SignIn.Children.Add(overlay);
+            };
+
             CancelLogin.Click += (s, e) =>
             {
                 Accounts.Visibility = Visibility.Visible;
@@ -350,7 +363,6 @@ namespace Database_Designer
 
 
         }
-
 
 
         public void ResetPage()
@@ -428,9 +440,6 @@ namespace Database_Designer
                 }
 
 
-
-
-            
                 UsersGrid.Children.Clear();
 
                 var CreateAccBtn = CreateUserTile("Create Account", "/Database_Designer;component/assets/images/blacklogo.png");
@@ -479,7 +488,6 @@ namespace Database_Designer
                     _ = Setup_User_Creation_Suite();
                 };
             }
-
 
 
         }
@@ -561,7 +569,6 @@ namespace Database_Designer
         //Updated to use methodology from "BasicDatabaseDesigner" file
 
 
-
         // 1. Basics Tab
         public TabItem CreateBasicsTab(TabControl TabControlItem)
         {
@@ -638,7 +645,6 @@ namespace Database_Designer
                 Visibility = Visibility.Collapsed
             };
             stack.Children.Add(CreateUsernameError);
-
 
 
             stack.Children.Add(new TextBlock
@@ -726,10 +732,6 @@ namespace Database_Designer
             stack.Children.Add(buttonPanel);
 
 
-
-
-
-
             var CreateAccCancel = new Button
             {
                 Content = "Cancel",
@@ -759,8 +761,6 @@ namespace Database_Designer
                 Name = "CreateAccNext1"
             };
             buttonPanel.Children.Add(ContinueButton);
-
-
 
 
             tab.Content = stack;
@@ -884,16 +884,12 @@ namespace Database_Designer
                 }
 
 
-
                 #endregion
-
 
 
                 Username = CreateUsernameInput.Text.ToSecureData();
                 Password = passDoubleCheck.ToSecureData();
                 TabControlItem.SelectedIndex = 1;
-
-
 
 
             };
@@ -908,11 +904,6 @@ namespace Database_Designer
 
 
             };
-
-
-
-
-
 
 
             return tab;
@@ -952,7 +943,6 @@ namespace Database_Designer
                 Width = 764,
                 Name = "PFPOptions"
             };
-
 
 
             string basePath = "assets/images/PFPs/";
@@ -1020,10 +1010,6 @@ namespace Database_Designer
                 };
                 wrap.Children.Add(PFPOption);
             }
-
-
-
-
 
 
             scroll.Content = wrap;
@@ -1104,7 +1090,6 @@ namespace Database_Designer
             {
                 TabControlItem.SelectedIndex = 0; // Go back to Basics Tab
             };
-
 
 
             tab.Content = stack;
@@ -1341,7 +1326,9 @@ namespace Database_Designer
 
                 var ACS = new Pariah_Cybersecurity.DataHandler.AccountsWithSessions();
 
-                var recoveryKey = await ACS.CreateUser(Username.ConvertToString(), Password, dbDesignDir);
+                var newUsername = Username.ConvertToString();
+                var newPassword = Password.ConvertToString();
+                await ACS.CreateUser(Username.ConvertToString(), Password, dbDesignDir);
 
 
                 #endregion
@@ -1355,7 +1342,6 @@ namespace Database_Designer
 
 
                 System.IO.Directory.CreateDirectory(userFolder);
-
 
 
                 #endregion
@@ -1396,10 +1382,11 @@ namespace Database_Designer
                 DefaultTemplates.Install(userFolder);
 
 
-
                 #endregion
 
-                var KeyTab = CreateRecoveryKeyTab(TabControlItem, recoveryKey);
+                var recoveryCode = AccountRecovery.GenerateCode();
+                await AccountRecovery.WriteVault(dbDesignDir, newUsername, newPassword, recoveryCode);
+                var KeyTab = CreateRecoveryKeyTab(TabControlItem, new string(recoveryCode.AsSpan()).ToSecureData());
                 TabControlItem.Items.Add(KeyTab);
                 TabControlItem.SelectedIndex = 3;
 
@@ -1426,19 +1413,19 @@ namespace Database_Designer
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 20, 0, 0),
-                Width = 835,
+                MaxWidth = 560,
                 Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
             });
             stack.Children.Add(new TextBlock
             {
-                Text = "This is your recovery key. Save it now; without it, you won't be able to recover this account.",
+                Text = "This is your recovery code. Save it now: if you forget your password, \"Forgot Password?\" on the sign-in screen asks for it. Without it the account can't be recovered.",
                 FontSize = 20,
                 FontFamily = new FontFamily("Assets/Fonts/Inter_28pt-Light.ttf"),
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 30, 0, 0),
                 TextWrapping = TextWrapping.Wrap,
-                Width = 835,
+                MaxWidth = 560,
                 Name = "RecoveryKeyText",
                 IsEnabled = false,
                 Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black)
@@ -1453,7 +1440,7 @@ namespace Database_Designer
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 20, 0, 0),
-                Width = 760,
+                MaxWidth = 560,
                 Name = "RecoveryKeyDisplay",
                 Foreground = ThemeManager.ResolveBrush("Theme_BackgroundColor", Colors.Black),
                 Visibility = Visibility.Visible,
@@ -1478,7 +1465,7 @@ namespace Database_Designer
             {
                 Content = "Copy To Clipboard (CLICK THIS FIRST)",
                 Height = 46,
-                Width = 220,
+                Width = 300,
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF454138")),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 50, 0, 0),
@@ -1513,12 +1500,6 @@ namespace Database_Designer
         }
 
 
-
-
-
-
-
-
         private async Task Setup_User_Creation_Suite()
         {
             await Check_DB_Setup();
@@ -1545,17 +1526,7 @@ namespace Database_Designer
             PFP = default;
 
 
-
-
         }
-
-
-
-
-
-
-
-
 
 
     }

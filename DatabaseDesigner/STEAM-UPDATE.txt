@@ -1,0 +1,79 @@
+Title: Database Designer 3.0: flow nodes, local testing, undo, migrations, ER diagrams, SQL import and password recovery
+
+[h1]Database Designer 3.0[/h1]
+
+This one is big enough to be 3.0. The goal was simple: you should be able to design a real backend (a store with stock and payments) in Database Designer, export it, and have it actually run. Along the way we found and fixed a pile of things that were quietly broken, so even if you don't care about stores, please update.
+
+[h2]New[/h2]
+[list]
+[*][b]Migrations.[/b] Every export now also writes a [i]Migration.sql[/i] that upgrades a database built from your previous export: new tables and columns, changed types, defaults, constraints, foreign keys and indexes. It runs as one transaction, and anything that would delete data is left commented out for you to check first.
+[*][b]ER Diagram.[/b] See every table and every relationship at once. Drag the cards around (your layout is saved), zoom, and click a table to open it.
+[*][b]Import SQL.[/b] Paste an existing Postgres schema (a pg_dump works) and it becomes tables in your project, with keys, references, indexes and comments.
+[*][b]Notes.[/b] A notes app inside each project with search, pinning, checklists and links to tables. Notes are encrypted with the rest of your project.
+[*][b]Password recovery.[/b] "Forgot Password?" finally works. You get a recovery code (existing accounts get one on their next sign-in, so save it!) and can use it, or your current password, to set a new one. Your projects are re-encrypted and backed up automatically.
+[*][b]A much smarter build check.[/b] Before you export it now catches missing primary keys, reserved words used as column names, capital letters in column names, mistyped or broken references, cycles, bad indexes and RLS policies that can't work. Click any issue to jump to the table.
+[*][b]Store guide and template.[/b] A step-by-step guide to building a store with inventory and Stripe payments, using only NodeWalker blocks. The finished store also ships as the [i]Simple Store[/i] project template.
+[*][b]Local Database.[/b] Connect to your own Postgres and try your project before shipping it: build the tables from your export, fill them with sample data, preview queries, and start the exported API with Swagger in one click.
+[*][b]Undo and redo.[/b] Ctrl+Z / Ctrl+Y for project changes and inside NodeWalker.
+[*][b]Foreign key picker.[/b] Pick the table and column a reference points at from a list. Only valid targets can be picked, and mismatched types are flagged.
+[*][b]ER Diagram export.[/b] Save your diagram as SVG or PNG.
+[/list]
+
+[h2]NodeWalker (logic creator)[/h2]
+[list]
+[*][b]Flow wires.[/b] Blocks now have white ▶ pins that decide what runs next, separate from the data wires. New flow blocks: [b]Branch[/b] (run these blocks if true, those if false), [b]Sequence[/b], [b]For Each[/b], [b]Repeat[/b], [b]Try[/b] and [b]Return[/b]. Old graphs work exactly as before.
+[*][b]▶ Run[/b] a graph against your local database and see the result, or the error and which block caused it. Changes are rolled back unless you choose to keep them.
+[*]Lots of new [b]Lambda Logic[/b] blocks: Greater/Less Or Equal, Starts/Ends With, Like, Is Null, Is True, Between, In, plus [b]DB: Query[/b] (filter, sort and page in one block).
+[*]New [b]List Logic[/b] blocks: Filter, First Where, Any, Count, Sort By, Map Field, Sum Field.
+[*]New [b]Store & API[/b] blocks: Fail If (returns a clean error like "Out of stock"), Env Var (keeps API keys out of your graphs), Set Field, Object: Build, atomic DB: Update / Increment / Decrement Where, HTTP: Post Form and HTTP: Read JSON Field.
+[*]Custom Input can be named: [i]CUSTOMINPUT(long orderId)[/i].
+[*][b]Comparisons fixed.[/b] Equals, Greater Than and the rest no longer throw "Object must be of type Double" when the two sides are different types. Numbers compare by value, number-like text counts as a number, dates compare as dates and nulls are handled.
+[*]Graphs that come from a template are laid out neatly the first time you open them, instead of piled in one corner.
+[*]Fixed a lot of blocks that produced code that didn't compile: Start/End, Type Literal, Event Input, Custom Input, Cast, If/And/Or, WebURL and several database blocks. Graphs that talk to the database now work without extra setup.
+[/list]
+
+[h2]Exported API[/h2]
+[list]
+[*]Models are now generated from your real tables, and controllers compile.
+[*]Graph inputs become request parameters automatically (query string or JSON body).
+[*]Column defaults are respected, optional columns are really optional, and array columns work.
+[/list]
+
+[h2]Row Level Security[/h2]
+[list]
+[*]RLS.sql now runs cleanly on a real Postgres database, and policies do what they say. Admins and moderators get the access they should, and regular users only see their own rows.
+[*]Each policy now lets you choose what it covers and who can see what, and shows a plain-English line explaining exactly what it allows.
+[/list]
+
+[h2]Themes & projects[/h2]
+[list]
+[*]The Default theme looks the way the app did before themes were added. Text and panels that came out inverted (light on light, a white NodeWalker header) are back to normal.
+[*]Switching themes (including back to Default) works properly, and the wallpaper follows your theme.
+[*]Table templates: choosing a template pack now actually adds its tables to your project (it used to do nothing). The template builder checks your entries as you type, rejects names that can't be folder names, and its Home and Cancel buttons no longer sit on top of each other.
+[*]The text boxes in Notes, Import SQL and Local Database fill their window and scroll.
+[*]Themes are available from the home screen.
+[*]Wallpapers no longer stretch on ultra-wide monitors. They fill the screen and crop the edges instead.
+[*][b]Music player:[/b] it opens again properly while one of your own songs is playing, and play counts now go up when a song finishes (and every time it loops) instead of when you click it.
+[*]Double-clicking a desktop icon opens one window instead of two, and closing a window removes its icon from the lower bar.
+[*]The login greeting shows your name again, and the recovery code screen fits its window.
+[*]Portable exports are now a single [i].ddproject[/i] file. Importing no longer creates duplicates or overwrites the original project.
+[*]Fixed a bug where opening one project could carry over RLS/API settings from the previous one.
+[/list]
+
+[h2]Generated SQL fixes[/h2]
+[list]
+[*]Column lengths were being dropped (varchar(50) came out as plain varchar). They're applied now, and Numeric supports precision,scale like 10,2.
+[*]Default values containing an apostrophe work.
+[*]Composite primary keys generate valid SQL.
+[*]Double Precision and range columns (int4range, daterange and so on) now use type names Postgres understands.
+[/list]
+
+[h2]Heads up[/h2]
+[list]
+[*]If you set a length or precision on a column before this update, your next export will include it, so check Migration.sql before running it on a live database.
+[*]Existing accounts will be shown a recovery code the first time you sign in. Put it somewhere safe; it's the only way back in if you forget your password.
+[/list]
+
+The wiki has been updated for 3.0 too, including new pages for Local Database, migrations and the store guide.
+
+Thanks for sticking with us, and as always, tell us what breaks!

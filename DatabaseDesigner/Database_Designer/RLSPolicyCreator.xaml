@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top toolbar — section label + General toggle -->
+        <!-- Top toolbar - section label + General toggle-->
         <Border Grid.Row="0" Background="#1A1A1A" Padding="12,4" Margin="0,0,0,2">
             <CheckBox x:Name="GeneralRlsToggle" Content="General RLS"
                       Foreground="#CCC" FontSize="11"/>
@@ -44,7 +44,7 @@
             </StackPanel>
         </Border>
 
-        <!-- ZONE 2: Selected role detail — table cards with role's policies -->
+        <!-- ZONE 2: Selected role detail - table cards with role's policies-->
         <Border Grid.Row="2" Background="#0E0E0E" Padding="16" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -100,7 +100,7 @@
             </Grid>
         </Border>
 
-        <!-- ZONE 3: Policy editor for one table — categories + per-policy rows -->
+        <!-- ZONE 3: Policy editor for one table - categories + per-policy rows-->
         <Border Grid.Row="3" Background="#0E0E0E" Padding="16">
             <StackPanel>
                 <Grid Margin="0,0,0,12">
@@ -127,7 +127,7 @@
                         <StackPanel x:Name="EditorTableUsageBars" Orientation="Horizontal" Margin="0,8,0,0"/>
                     </StackPanel>
 
-                    <!-- Category legend — populated by RebuildPolicyEditor -->
+                    <!-- Category legend - populated by RebuildPolicyEditor-->
                     <ItemsControl Grid.Column="1" Margin="20,0,0,0" x:Name="CategoryLegendHost">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>

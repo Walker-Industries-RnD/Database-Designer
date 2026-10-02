@@ -108,6 +108,10 @@
                             <Button x:Name="ViewCodeButton" Content="View Code" Margin="5" Height="29" Width="100"
                                     FontFamily="/Database_Designer;component/Assets/Fonts/Inter_28pt-Light.ttf#Inter 28pt"
                                     FontSize="12" Background="#3A3A3A" Foreground="#E6E2D6" BorderThickness="0"/>
+                            <Button x:Name="RunButton" Content="▶ Run" Margin="5" Height="29" Width="80"
+                                    ToolTipService.ToolTip="Run this graph against your Local Database"
+                                    FontFamily="/Database_Designer;component/Assets/Fonts/Inter_28pt-Light.ttf#Inter 28pt"
+                                    FontSize="12" Background="#2F6B45" Foreground="#E6E2D6" BorderThickness="0"/>
                         </StackPanel>
                     </Grid>
                 </Border>

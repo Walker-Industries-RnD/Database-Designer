@@ -15,9 +15,12 @@ namespace Database_Designer
         public static Func<bool> Playing;
         public static Action<bool> SetLoop;
         public static Action Ended;
+        // Raised each time a looping song starts over.
+        public static Action Looped;
 
         public static bool Available => Play != null;
 
         public static void RaiseEnded() => Ended?.Invoke();
+        public static void RaiseLooped() => Looped?.Invoke();
     }
 }

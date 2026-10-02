@@ -38,7 +38,7 @@
                 <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />
             </Rectangle.Fill>
         </Rectangle>
-        <Image Source="/Database_Designer;component/assets/images/olderwallpaper.png" Stretch="Fill" Name="MainBG" />
+        <Image Source="/Database_Designer;component/assets/images/olderwallpaper.png" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" Name="MainBG" />
 
 
 

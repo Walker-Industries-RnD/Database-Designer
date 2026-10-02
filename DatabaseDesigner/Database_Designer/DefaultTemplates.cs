@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Database_Designer
 {
@@ -151,10 +152,36 @@ namespace Database_Designer
             {
                 WritePacks(Path.Combine(userFolder, "Row Templates"), RowTemplates);
                 WritePacks(Path.Combine(userFolder, "Project Templates"), ProjectTemplates);
+                WriteEmbeddedPacks(Path.Combine(userFolder, "Project Templates"));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[DefaultTemplates] Install failed: {ex.Message}");
+            }
+        }
+
+        // Bigger project templates (with NodeWalker graphs in Scripts/) ship as
+        // embedded files under Templates/<Pack>/ and are copied out as v1.
+        private const string EmbeddedPrefix = "DDTemplate/";
+
+        private static void WriteEmbeddedPacks(string root)
+        {
+            var asm = typeof(DefaultTemplates).Assembly;
+            var files = asm.GetManifestResourceNames().Where(n => n.StartsWith(EmbeddedPrefix, StringComparison.Ordinal)).ToList();
+            foreach (var pack in files.GroupBy(n => n.Substring(EmbeddedPrefix.Length).Replace('\\', '/').Split('/')[0]))
+            {
+                var packFolder = Path.Combine(root, pack.Key);
+                if (Directory.Exists(packFolder)) continue;
+                var versionFolder = Path.Combine(packFolder, "v1");
+                foreach (var name in pack)
+                {
+                    var relative = name.Substring(EmbeddedPrefix.Length).Replace('\\', '/').Substring(pack.Key.Length + 1);
+                    var target = Path.Combine(versionFolder, relative.Replace('/', Path.DirectorySeparatorChar));
+                    Directory.CreateDirectory(Path.GetDirectoryName(target));
+                    using var stream = asm.GetManifestResourceStream(name);
+                    using var file = File.Create(target);
+                    stream.CopyTo(file);
+                }
             }
         }
 

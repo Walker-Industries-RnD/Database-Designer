@@ -83,7 +83,7 @@ namespace Database_Designer
 
             VNText.Text = dialogs[currentDialogIndex].Text;
 
-            // ← This is the important part: change image for current line
+            // Show the expression for the current line.
             SetVNImage(dialogs[currentDialogIndex].Expression);
 
             Continue.Content = (currentDialogIndex == dialogs.Count - 1)

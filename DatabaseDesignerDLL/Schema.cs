@@ -23,12 +23,12 @@ namespace DatabaseDesigner
             }
             else if (parts.Length == 2)
             {
-                // Exactly one dot → keep schema and table as-is
+                // Exactly one dot -> keep schema and table as-is
                 return (parts[0].Trim(), parts[1].Trim());
             }
             else
             {
-                // More than one dot → replace intermediate dots with underscores
+                // More than one dot -> replace intermediate dots with underscores
                 string table = parts.Last().Trim();
                 string schema = string.Join("_", parts.Take(parts.Length - 1).Select(p => p.Trim()));
                 return (schema, table);

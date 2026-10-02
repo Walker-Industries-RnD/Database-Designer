@@ -88,12 +88,10 @@ namespace Database_Designer
             ExitButton.Click += (s, e) => RemoveWindow();
 
 
-
             this.Unloaded += (s, e) =>
             {
                 RemoveWindow();
             };
-
 
 
         }
@@ -153,7 +151,6 @@ namespace Database_Designer
         }
 
 
-
         // Executes when the user navigates to this page.
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -166,7 +163,6 @@ namespace Database_Designer
         private Projects projectPage;
 
         string AllowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.()-=+,:;/\\!?@[]{} ";
-
 
 
         private List<Button> _buttons = new List<Button>();
@@ -236,8 +232,6 @@ namespace Database_Designer
             Tabs.Items.Add(BasicsTab);
 
 
-
-
             if (sessionItem == null)
             {
                 NameOfRow.Item1.Text = "";
@@ -299,10 +293,6 @@ namespace Database_Designer
             }
 
 
-
-
-
-
             #endregion
 
 
@@ -361,13 +351,8 @@ namespace Database_Designer
             Tabs.Items.Add(DataTypesTab);
 
 
-
-
             var dataTypeTitle = UIHelpers.CreateBasicTitle("What Data Type Is This?");
             contentPanel2.Children.Add(dataTypeTitle);
-
-
-
 
 
             var encryptionQuestion = UIHelpers.CreateSubTitle("Is this row encrypted and NOT media?");
@@ -510,7 +495,6 @@ namespace Database_Designer
                             sessionData.RowType = parsedType;
 
                          
-
                         }
 
 
@@ -536,16 +520,9 @@ namespace Database_Designer
                 UIHelpers.EnableHighlighting(mediaYesButtonListTemp, selectedButton);
 
 
-
-
             }
 
             
-
-
-
-
-
             void OnEncryptedNotMediaYes(object sender, RoutedEventArgs e)
             {
                 UIHelpers.TrimStackPanel(contentPanel2, 4);
@@ -625,11 +602,6 @@ namespace Database_Designer
 
 
             }
-
-
-
-
-
 
 
             #endregion
@@ -750,7 +722,6 @@ namespace Database_Designer
         }
 
 
-
             var scalarLimitTitle = UIHelpers.CreateSubTitle("Do variables in this row have a length limit?");
 
             var scalarLimitYes = UIHelpers.CreateBasicButton("Yes");
@@ -838,7 +809,10 @@ namespace Database_Designer
                     return;
                 }
 
-                sessionData.Limit = Row.LimitEncoder.Encode(input);
+                var parts = input.Split(',');
+                sessionData.Limit = parts.Length == 2
+                    ? Row.LimitEncoder.Encode((int.Parse(parts[0].Trim()), int.Parse(parts[1].Trim())))
+                    : int.Parse(input.Trim());
             }
 
             var scalarButtonList = new List<Button> { scalarLimitYes.Item1, scalarLimitNo.Item1 };
@@ -958,7 +932,6 @@ namespace Database_Designer
             };
 
 
-
             // Fix This
             Tabs.SelectionChanged += (sender, args) =>
             {
@@ -1002,7 +975,6 @@ namespace Database_Designer
                     UIHelpers.ResetError(scalarError);
                 }
             };
-
 
 
             #endregion
@@ -1077,7 +1049,6 @@ namespace Database_Designer
             isNotNullButtonList.Add(isNotNullNo.Item1);
 
 
-
             isNotNullYes.Item1.Click += (s, e) =>
             {
                 sessionData.IsNotNull = true;
@@ -1108,10 +1079,6 @@ namespace Database_Designer
             };
 
 
-
-
-
-
             // Add to UI
             contentPanelPK.Children.Add(titlePK);
             contentPanelPK.Children.Add(SelectionD);
@@ -1135,7 +1102,6 @@ namespace Database_Designer
             isUniqueNo.Item2.Visibility = Visibility.Collapsed;
 
 
-
             if (sessionData.IsPrimary != null)
             {
                 if (sessionData.IsPrimary == true)
@@ -1152,8 +1118,6 @@ namespace Database_Designer
                     isRowUnique.Visibility = Visibility.Visible;
                     isUniqueYes.Item2.Visibility = Visibility.Visible;
                     isUniqueNo.Item2.Visibility = Visibility.Visible;
-
-
 
 
                     if (sessionData.IsNotNull != null)
@@ -1177,8 +1141,6 @@ namespace Database_Designer
                     }
 
 
-
-
                     if (sessionData.IsUnique != null)
                     {
                         if (sessionData.IsUnique == true)
@@ -1198,7 +1160,6 @@ namespace Database_Designer
                         UIHelpers.EnableHighlighting(isUniqueButtonList);
 
                     }
-
 
 
                 }
@@ -1362,7 +1323,6 @@ namespace Database_Designer
             };
 
 
-
             // Initialize from session data
             if (sessionData.DefaultValue != null)
             {
@@ -1459,7 +1419,6 @@ namespace Database_Designer
             };
 
 
-
             #endregion
 
             #region Finalize
@@ -1500,7 +1459,6 @@ namespace Database_Designer
             Tabs.Items.Add(finalizeTab);
 
 
-
             Tabs.SelectionChanged += (sender, args) =>
             {
                 contentPanelFinal.Children.Clear();
@@ -1532,7 +1490,6 @@ namespace Database_Designer
                 {
                     arrayText = "array status is unknown";
                 }
-
 
 
                 contentPanelFinal.Children.Add(UIHelpers.CreateParagraph(
@@ -1597,10 +1554,6 @@ namespace Database_Designer
                 }
 
 
-
-
-
-
                 if(IsValidRowOptions(sessionData))
                 {
                     var finalizeText = UIHelpers.CreateSubTitle("You can finalize this row!");
@@ -1620,7 +1573,6 @@ namespace Database_Designer
                         int refTableHash = sessionDataHistory.GetHashCode();
 
                         var SessionTable = mainPage.MainSessionInfo.Tables.SingleOrDefault(s => s.GetHashCode() == refTable.GetHashCode());
-
 
 
                         int index;
@@ -1646,7 +1598,6 @@ namespace Database_Designer
 
                             SessionTable.Rows.RemoveAt(index);
                             SessionTable.Rows.Insert(index, sessionData);
-
 
 
                             //Find all referenes and replace
@@ -1692,7 +1643,6 @@ namespace Database_Designer
                         }
 
 
-
                     };
 
 
@@ -1716,8 +1666,6 @@ RemoveWindow();
             };
 
             #endregion
-
-
 
 
         }
@@ -1785,229 +1733,58 @@ RemoveWindow();
             Tabs.Items.Add(BasicsTab);
 
 
-            SessionStorage.RowCreation? rowReferencedInTableA;
-
-            SessionStorage.TableObject? tableB;
-
             BasicsTab.Content = contentPanel;
 
             var Title = UIHelpers.CreateBasicTitle("What rows are going to be connected?");
 
-            var SubtitleA = UIHelpers.CreateSubTitle("What Row Will Be Affected On This Table?");
-            var SubtitleB = UIHelpers.CreateSubTitle("Note: The referenced columns MUST be unique or a primary key, else it won't work!");
+            var SubtitleA = UIHelpers.CreateSubTitle("Which column on this table holds the reference?");
+            var ParagraphA = UIHelpers.CreateParagraph("For example, orders.customer_id holds the id of a row in customers.");
 
             var rowsOnThisTable = refTable.Rows.Select(s => s.Name).ToList();
 
-            var dropdownA = UIHelpers.CreateDropdown(rowsOnThisTable, $"Rows on {refTable.TableName}");
+            var dropdownA = UIHelpers.CreateDropdown(rowsOnThisTable, $"Columns on {refTable.TableName}");
 
             if (referenceData.ForeignKey != null)
             {
                 foreach (ComboBoxItem item in dropdownA.Item1.Items)
                 {
-
-                    if (item.Content == referenceData.ForeignKey)
-                    {
+                    if (item.Content?.ToString() == referenceData.ForeignKey)
                         dropdownA.Item1.SelectedItem = item;
-                    }
-
                 }
             }
 
+            var SubtitleC = UIHelpers.CreateSubTitle("Which table and column does it point to?");
 
+            var picker = new ReferenceTargetPicker(
+                mainPage.MainSessionInfo.Tables,
+                referenceData.RefTable,
+                referenceData.RefTableKey,
+                () => refTable.Rows.Cast<SessionStorage.RowCreation?>().FirstOrDefault(r => r.Value.Name == referenceData.ForeignKey));
 
-            var SubtitleC = UIHelpers.CreateSubTitle("What Table Will We Be Changing Based On The First?");
-            var ParagraphA = UIHelpers.CreateParagraph("The referenced row must match one from the first table. For example, pick a name from Table A (like Jeff or Mary) to look for here.");
-
-            contentPanel.Children.Add(ParagraphA);
-
-  
-
-
-            var TableOptions = mainPage.MainSessionInfo.Tables
-    .Select(t => string.IsNullOrEmpty(t.SchemaName)
-                    ? t.TableName
-                    : t.SchemaName + "." + t.TableName)
-    .ToList();
-
-            var dropdownB = UIHelpers.CreateDropdown(TableOptions, "Tables");
+            picker.TargetChanged += (table, column) =>
+            {
+                referenceData.RefTable = table;
+                referenceData.RefTableKey = column;
+            };
 
             contentPanel.Children.Add(Title);
             contentPanel.Children.Add(SubtitleA);
-            contentPanel.Children.Add(SubtitleB);
+            contentPanel.Children.Add(ParagraphA);
             contentPanel.Children.Add(dropdownA.Item2);
             contentPanel.Children.Add(SubtitleC);
-            contentPanel.Children.Add(dropdownB.Item2);
-
-            dropdownA.Item1.SelectionChanged += (s, e) =>
-            {
-                var selectedRow = refTable.Rows.SingleOrDefault(s => s.Name == dropdownA.Item1.SelectedItem.ToString());
-
-                rowReferencedInTableA = selectedRow;
-            };
-
-            if (referenceData.RefTable != null)
-            {
-                for (int i = 0; i < dropdownB.Item1.Items.Count; i++)
-                {
-                    var cbi = (ComboBoxItem)dropdownB.Item1.Items[i];
-                    if (cbi.Content?.ToString() == referenceData.RefTable)
-                    {
-                        dropdownB.Item1.SelectedIndex = i;
-                        break;
-                    }
-                }
-            }
-
-
-
-
-
-            bool DropdownSetup = false;
-
-
-            if (referenceData.RefTable != null && referenceData.RefTableKey != null)
-            {
-                SetupDropdownC();
-            }
-
-
-
-            dropdownB.Item1.SelectionChanged += (s, e) =>
-            {
-
-                SetupDropdownC();
-
-            };
-
-            void SetupDropdownC()
-            {
-
-                var cbi = (ComboBoxItem)dropdownB.Item1.SelectedItem;
-                var selectedName = (string)cbi.Content;
-                var selectedTable = mainPage.MainSessionInfo.Tables
-                    .Single(t =>
-                        string.IsNullOrEmpty(t.SchemaName)
-                            ? t.TableName == selectedName
-                            : t.SchemaName + "." + t.TableName == selectedName
-                    );
-
-
-                tableB = selectedTable;
-
-                ParagraphA.Visibility = Visibility.Visible;
-
-                List<string> RowOptions = selectedTable.Rows.Select(s => s.Name).ToList();
-
-                if (DropdownSetup == false)
-                {
-                    DropdownSetup = true;
-                    var dropdownSetup = UIHelpers.CreateDropdown(RowOptions, "Rows on Selected Table");
-                    contentPanel.Children.Add(dropdownSetup.Item2);
-
-                    dropdownSetup.Item1.SelectionChanged += (s, e) =>
-                    {
-
-                        var cbi = (ComboBoxItem)dropdownSetup.Item1.SelectedItem;
-
-                        var selectedName = (string)cbi.Content;
-
-                        referenceData.RefTableKey = selectedName;
-
-
-                    };
-
-
-                    if (referenceData.RefTable != null && referenceData.RefTableKey != null)
-                    {
-                        foreach (ComboBoxItem item in dropdownSetup.Item1.Items)
-                        {
-
-                            if (item.Content == referenceData.RefTableKey)
-                            {
-                                dropdownSetup.Item1.SelectedItem = item;
-                            }
-
-                        }
-                    }
-
-                }
-
-                else
-                {
-                    UIHelpers.TrimStackPanel(contentPanel, contentPanel.Children.Count - 1);
-                    var dropdownSetup = UIHelpers.CreateDropdown(RowOptions, "Rows on Selected Table");
-                    contentPanel.Children.Add(dropdownSetup.Item2);
-
-                    dropdownSetup.Item1.SelectionChanged += (s, e) =>
-                    {
-
-                        var cbi = (ComboBoxItem)dropdownSetup.Item1.SelectedItem;
-
-                        var selectedName = (string)cbi.Content;
-
-                        referenceData.RefTableKey = selectedName;
-
-
-                    };
-
-                    if (referenceData.RefTable != null && referenceData.RefTableKey != null)
-                    {
-                        foreach (ComboBoxItem item in dropdownSetup.Item1.Items)
-                        {
-
-                            if (item.Content == referenceData.RefTableKey)
-                            {
-                                dropdownSetup.Item1.SelectedItem = item;
-                            }
-
-                        }
-                    }
-
-
-
-                }
-            }
-
+            contentPanel.Children.Add(picker);
 
             referenceData.MainTable = refTable.TableName;
 
-
             dropdownA.Item1.SelectionChanged += (s, e) =>
             {
-
-                var cbi = (ComboBoxItem)dropdownA.Item1.SelectedItem;
-
-                var selectedName = (string)cbi.Content;
-
-                referenceData.ForeignKey = selectedName;
-
-
-            };
-
-            dropdownB.Item1.SelectionChanged += (s, e) =>
-            {
-
-                var cbi = (ComboBoxItem)dropdownB.Item1.SelectedItem;
-
-                var selectedName = (string)cbi.Content;
-
-                referenceData.RefTable = selectedName;
-
-
+                if (dropdownA.Item1.SelectedItem is not ComboBoxItem cbi) return;
+                referenceData.ForeignKey = cbi.Content?.ToString();
+                picker.Refresh();
             };
 
             
-
-
             //Initial Setup
-
-
-
-
-
-
-
-
 
 
             #endregion
@@ -2046,7 +1823,6 @@ RemoveWindow();
             var OnUpdate3 = UIHelpers.CreateBasicButton("When the referenced key is updated, related foreign key columns in this table are set to their default values.");
             var OnUpdate4 = UIHelpers.CreateBasicButton("Updating the referenced key is blocked if it's still being used in this table.");
             var OnUpdate5 = UIHelpers.CreateBasicButton("No automatic changes happen when the referenced key is updated.");
-
 
 
             // Add controls to the scrollable panel
@@ -2126,8 +1902,6 @@ RemoveWindow();
             };
 
 
-
-
             #endregion
 
 
@@ -2163,7 +1937,6 @@ RemoveWindow();
             var OnDelete3 = UIHelpers.CreateBasicButton("When a referenced row is deleted, related foreign key columns in this table are set to their default values.");
             var OnDelete4 = UIHelpers.CreateBasicButton("Deletion of the referenced row is blocked if it's still being used in this table.");
             var OnDelete5 = UIHelpers.CreateBasicButton("No automatic changes happen when a referenced row is deleted.");
-
 
 
             // Add controls to the scrollable panel
@@ -2344,10 +2117,8 @@ RemoveWindow();
                 contentPanelFinal.Children.Add(UIHelpers.CreateSubTitle("Foreign Key Behavior"));
 
 
-
                 contentPanelFinal.Children.Add(UIHelpers.CreateParagraph($"ON UPDATE: {updateActionDescription}"));
                 contentPanelFinal.Children.Add(UIHelpers.CreateParagraph($"ON DELETE: {deleteActionDescription}"));
-
 
 
                 if (referenceData.MainTable != null && referenceData.RefTable != null && referenceData.ForeignKey != null && referenceData.RefTableKey != null)
@@ -2395,7 +2166,6 @@ RemoveWindow();
                         }
 
 
-
                         if (DBViewer != null)
                         {
                             DBViewer.LoadItemView(savedRefItem);
@@ -2410,7 +2180,6 @@ RemoveWindow();
                 }
 
 
-
                 else
                 {
                     var finalizeText = UIHelpers.CreateSubTitle("Reference can't be finalized yet! Origin and Referenced Fields Required!");
@@ -2421,22 +2190,13 @@ RemoveWindow();
                 }
 
 
-
-
             };
-
-
-
 
 
             #endregion
 
 
-
         }
-
-
-
 
 
         public List<TableObject>? DefaultProjectData = null;
@@ -2456,9 +2216,6 @@ RemoveWindow();
 
 
         public List<MainDesigner> Designers = new List<MainDesigner>();
-
-
-
 
 
         public void CreateProject()
@@ -2501,8 +2258,6 @@ RemoveWindow();
 
             BasicsTab.Content = scrollViewerForLimits;
             Tabs.Items.Add(BasicsTab);
-
-
 
 
             string ProjectTitle = default;
@@ -2609,7 +2364,6 @@ RemoveWindow();
             UpdateFinalizeButtonState();
 
 
-
             #endregion
 
             var Templates = new List<Button> { CreateNewButton.Item1, EditTemplateButton.Item1 };
@@ -2670,7 +2424,6 @@ RemoveWindow();
             };
 
 
-
             void SetText1()
             {
                 if (TemplatedItem.Count >= 1)
@@ -2704,7 +2457,6 @@ RemoveWindow();
                     }
 
 
-
                     Text2.Text = str.ToString();
                 }
             }
@@ -2723,7 +2475,6 @@ RemoveWindow();
                 ProjectTitle = ProjectNameText.Item1.Text;
                 SetText1();
             };
-
 
 
             ProjectNameText.Item1.TextChanged += (s, e) =>
@@ -2764,11 +2515,6 @@ RemoveWindow();
                     FinalizeButton.Item1.IsEnabled = true;
                 }
             };
-
-
-
-
-
 
 
             FinalizeButton.Item1.Click += async (s, e) =>
@@ -2861,8 +2607,6 @@ RemoveWindow();
                     await File.WriteAllTextAsync(overviewFilePath, contentBase64);
 
 
-                   
-
                     mainPage.ProjectName = ProjectTitle;
                     mainPage.ForceCollectionChangeUpate();
 
@@ -2909,8 +2653,6 @@ RemoveWindow();
         {
 
             //TableName;
-
-
 
 
             Tabs.Items.Clear();
@@ -2997,7 +2739,6 @@ RemoveWindow();
                 {
                     UIHelpers.ResetError(ErrorText);
                 }
-
 
 
             };
@@ -3131,7 +2872,6 @@ RemoveWindow();
             };
 
 
-
             var usesJsonBPathTitle = UIHelpers.CreateBasicTitle("Does this use JsonBPath?");
             var jsobBPathSubtitle = UIHelpers.CreateSubTitle("This significantly speeds up queries that use JSONPath expressions! Use wisely.");
 
@@ -3263,9 +3003,6 @@ RemoveWindow();
 
                     selectColumn.Text = finalText;
                 };
-
-
-
 
 
             }
@@ -3433,7 +3170,6 @@ RemoveWindow();
                 finalizeStackPanel.Children.Add(error);
 
 
-
                 var finalizeBtn = UIHelpers.CreateBasicButton("Finalize");
                 finalizeBtn.Item1.Visibility = Visibility.Collapsed;
 
@@ -3511,8 +3247,6 @@ RemoveWindow();
                     }
 
 
-
-
                     mainPage.ForceCollectionChangeUpate();
                     DBViewer.PopulatePage();
 
@@ -3531,9 +3265,7 @@ RemoveWindow();
             #endregion
         
 
-
         }
-
 
 
         public void CloseUIElement(UIElement element)
@@ -3550,19 +3282,6 @@ RemoveWindow();
         {
             throw new NotImplementedException();
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         public static class UIHelpers
@@ -4006,12 +3725,7 @@ RemoveWindow();
 };
 
 
-
-
-
-
     }
-
 
 
 }

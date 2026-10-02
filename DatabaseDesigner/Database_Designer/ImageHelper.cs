@@ -33,10 +33,10 @@ namespace Database_Designer
             }));
         }
 
-        public static void SelectAndLoadBytes(Action<object> onBytesReady)
+        public static void SelectAndLoadBytes(Action<object> onBytesReady, string accept = "image/*")
         {
             var fileInput = Interop.ExecuteJavaScript("document.createElement('input')");
-            Interop.ExecuteJavaScript("$0.type = 'file'; $0.accept = 'image/*'; $0.style.display = 'none';", fileInput);
+            Interop.ExecuteJavaScript("$0.type = 'file'; $0.accept = $1; $0.style.display = 'none';", fileInput, accept);
 
             Interop.ExecuteJavaScript(@"
 (function(input, callback) {

@@ -41,7 +41,7 @@
             </StackPanel>
         </Border>
 
-        <!-- ZONE 2: Selected module — endpoint cards -->
+        <!-- ZONE 2: Selected module - endpoint cards-->
         <Border Grid.Row="2" Background="#0E0E0E" Padding="16" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -93,7 +93,7 @@
             </Grid>
         </Border>
 
-        <!-- ZONE 3: Endpoint editor — verbs + per-function rows -->
+        <!-- ZONE 3: Endpoint editor - verbs + per-function rows-->
         <Border Grid.Row="3" Background="#0E0E0E" Padding="16">
             <StackPanel>
                 <Grid Margin="0,0,0,12">

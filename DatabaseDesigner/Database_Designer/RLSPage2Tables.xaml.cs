@@ -161,14 +161,27 @@ namespace Database_Designer
             if (Data.SelectedRole == null) return;
             var n = (NewTableNameBox.Text ?? "").Trim();
             if (n.Length == 0) return;
-            var t = new RLSData.TablePolicies { TableName = n };
+
+            var match = ProjectTableNames().FirstOrDefault(q => q.Equals(n, StringComparison.OrdinalIgnoreCase))
+                     ?? ProjectTableNames().FirstOrDefault(q => q.Split('.').Last().Equals(n.Split('.').Last(), StringComparison.OrdinalIgnoreCase));
+            var t = new RLSData.TablePolicies { TableName = match ?? n };
             Data.SelectedRole.Tables.Add(t);
             NewTableNameBox.Text = "";
             Data.SelectedTableIndex = Data.SelectedRole.Tables.Count - 1;
             LoadRoleInfo();
             RebuildTables();
             UpdateStatus();
+            if (match == null && HostPage != null)
+            {
+                var known = string.Join(", ", ProjectTableNames().Take(8));
+                StatusText.Text = $"⚠ '{n}' isn't a table in this project, so RLS.sql will skip it." +
+                                  (known.Length > 0 ? $" Tables: {known}" : "");
+            }
         }
+
+        private System.Collections.Generic.IEnumerable<string> ProjectTableNames() =>
+            HostPage?.MainSessionInfo.Tables?.Select(x => string.IsNullOrEmpty(x.SchemaName) ? x.TableName : $"{x.SchemaName}.{x.TableName}")
+            ?? Enumerable.Empty<string>();
 
         private void UpdateStatus()
         {

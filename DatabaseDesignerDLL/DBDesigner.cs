@@ -180,12 +180,18 @@ namespace DatabaseDesigner
             // SQL table name used in SQL generation (schema.table or table)
             var sqlTableName = string.IsNullOrWhiteSpace(schemaRaw) ? tableOnlyRaw : $"{schemaRaw}.{tableOnlyRaw}";
 
-            // Build rows SQL
+            var compositePk = rows.Where(r => r.IsPrimary).Select(r => r.FieldName).ToList();
+            bool compositeSql = compositePk.Count > 1;
             StringBuilder rowBuilder = new StringBuilder();
             foreach (var row in rows)
             {
-                rowBuilder.AppendLine(RowCreator(row));
+                var r = row;
+                if (compositeSql && r.IsPrimary) { r.IsPrimary = false; r.IsNotNull = true; }
+                rowBuilder.AppendLine(RowCreator(r));
             }
+            if (compositeSql)
+                customRows = (customRows ?? Array.Empty<string>())
+                    .Concat(new[] { $"    PRIMARY KEY ({string.Join(", ", compositePk)})" }).ToArray();
 
             // Create the table SQL
             if (!string.IsNullOrEmpty(sqlTableName))
@@ -207,7 +213,7 @@ namespace DatabaseDesigner
                 }
             }
 
-            // Indexes — use Index.Generate (deconstruct tuple for safety)
+            // Indexes - use Index.Generate (deconstruct tuple for safety)
             if (indexes != null && indexes.Count > 0)
             {
                 foreach (var item in indexes)
@@ -243,10 +249,20 @@ namespace DatabaseDesigner
 
                 string csType = row.PostgresType.HasValue && DefaultTypeMappings.TryGetValue(row.PostgresType.ToString(), out var mapped)
                                 ? mapped
-                                : row.CustomType ?? "object";
+                                : string.IsNullOrEmpty(row.CustomType) ? "object" : row.CustomType;
+
+                if (row.IsArray && !csType.EndsWith("[]", StringComparison.Ordinal)) csType += "[]";
+                if (!row.IsNotNull && !row.IsPrimary && csType != "object" && !csType.EndsWith("?", StringComparison.Ordinal)) csType += "?";
 
                 // ensure Pascal for property name
                 string propName = ToPascalCase(SafeName(row.FieldName));
+
+                string initializer = null;
+                if (row.DefaultValue != null && !row.IsPrimary)
+                {
+                    if (row.DefaultIsKeyword == true) tempRows.AppendLine("    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]");
+                    else initializer = DefaultInitializer(csType, row.DefaultValue);
+                }
 
                 // Suffix non-nullable reference types with `= null!;` so the
                 // class doesn't emit a CS8618 warning under <Nullable>enable</Nullable>.
@@ -254,8 +270,9 @@ namespace DatabaseDesigner
                 bool isReferenceType = !ValueTypeNames.Contains(csType)
                                        && !csType.EndsWith("?", StringComparison.Ordinal)
                                        && !csType.EndsWith("[]", StringComparison.Ordinal);
-                string initSuffix = (row.IsNotNull && isReferenceType) ? " = null!;" : " { get; set; }";
-                if (initSuffix == " = null!;")
+                if (initializer != null)
+                    tempRows.AppendLine($"    public {csType} {propName} {{ get; set; }} = {initializer};");
+                else if (row.IsNotNull && isReferenceType)
                     tempRows.AppendLine($"    public {csType} {propName} {{ get; set; }} = null!;");
                 else
                     tempRows.AppendLine($"    public {csType} {propName} {{ get; set; }}");
@@ -297,7 +314,7 @@ namespace DatabaseDesigner
             var list = designs.ToList();
             if (list.Count <= 1) return list;
 
-            // Build name → index map. Match on table name without schema since
+            // Build name -> index map. Match on table name without schema since
             // ReferenceOptions stores plain table names.
             string Norm(string s) => GetTableNameWithoutSchema(s ?? "").ToLowerInvariant();
 
@@ -309,7 +326,7 @@ namespace DatabaseDesigner
             var inDegree = new int[list.Count];
             for (int i = 0; i < list.Count; i++) adjacency[i] = new HashSet<int>();
 
-            // Edge from referent → dependent so referent gets emitted first.
+            // Edge from referent -> dependent so referent gets emitted first.
             foreach (var r in references ?? Array.Empty<ReferenceOptions>())
             {
                 if (!byName.TryGetValue(Norm(r.MainTable), out var dep)) continue;
@@ -487,6 +504,34 @@ public class SecureMediaSession
             await Task.CompletedTask;
         }
 
+        private static string DefaultInitializer(string csType, string value)
+        {
+            var t = csType.TrimEnd('?');
+            var v = value.Trim();
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            switch (t)
+            {
+                case "string":
+                    return "\"" + v.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+                case "bool":
+                    if (v.Equals("true", StringComparison.OrdinalIgnoreCase) || v == "1" || v.Equals("t", StringComparison.OrdinalIgnoreCase)) return "true";
+                    if (v.Equals("false", StringComparison.OrdinalIgnoreCase) || v == "0" || v.Equals("f", StringComparison.OrdinalIgnoreCase)) return "false";
+                    return null;
+                case "short":
+                case "int":
+                case "long":
+                    return long.TryParse(v, System.Globalization.NumberStyles.Integer, inv, out var l) ? l.ToString(inv) : null;
+                case "decimal":
+                    return decimal.TryParse(v, System.Globalization.NumberStyles.Number, inv, out var d) ? d.ToString(inv) + "m" : null;
+                case "double":
+                    return double.TryParse(v, System.Globalization.NumberStyles.Float, inv, out var db) ? db.ToString("R", inv) + "d" : null;
+                case "float":
+                    return float.TryParse(v, System.Globalization.NumberStyles.Float, inv, out var f) ? f.ToString("R", inv) + "f" : null;
+                default:
+                    return null;
+            }
+        }
+
         // ---------------------------
         // Nullable-fix / helper logic
         // ---------------------------
@@ -542,7 +587,7 @@ public class SecureMediaSession
                 }
 
                 // If the property uses nullable already (has ?), we leave it.
-                // We intentionally skip reference types (string, byte[], JsonDocument...) — they are reference nullable by default.
+                // We intentionally skip reference types (string, byte[], JsonDocument...) - they are reference nullable by default.
             }
 
             return patched;

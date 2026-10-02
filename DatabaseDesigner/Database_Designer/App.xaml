@@ -5,14 +5,26 @@
     xmlns:local="clr-namespace:Database_Designer">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Clean white palette = the app's baseline ("Default") theme. These
-                 three keys drive every themed surface in the app (SolidColorBrush
-                 Color="{DynamicResource ...}" in XAML, ThemeManager.ResolveBrush in
-                 C#). ThemeManager overrides them at runtime when a theme is applied.
-                 *Color keys are Colors; *Brush keys are Brushes. -->
-            <Color x:Key="Theme_BackgroundColor">#FFFFFFFF</Color>
-            <Color x:Key="Theme_TextOnPrimaryColor">#FF1D1D1D</Color>
-            <SolidColorBrush x:Key="Theme_TextBrush" Color="#FF1D1D1D" />
+            <!-- The "Default" theme. These are the values the ModernTheme Dark
+                 palette gave the app before the theme system existed, so Default
+                 looks the way the app always did. The three keys drive every themed
+                 surface (SolidColorBrush Color="{DynamicResource ...}" in XAML,
+                 ThemeManager.ResolveBrush in C#); ThemeManager overrides them when
+                 another theme is applied. *Color keys are Colors, *Brush keys are Brushes. -->
+            <Color x:Key="Theme_BackgroundColor">#FF000000</Color>
+            <Color x:Key="Theme_TextOnPrimaryColor">#FFFFFFFF</Color>
+            <SolidColorBrush x:Key="Theme_TextBrush" Color="#FFDEDEDE" />
+
+            <Style TargetType="TextBox">
+                <Setter Property="Background" Value="#FFFFFFFF" />
+                <Setter Property="Foreground" Value="#FF000000" />
+                <Setter Property="CaretBrush" Value="#FF000000" />
+            </Style>
+            <Style TargetType="PasswordBox">
+                <Setter Property="Background" Value="#FFFFFFFF" />
+                <Setter Property="Foreground" Value="#FF000000" />
+                <Setter Property="CaretBrush" Value="#FF000000" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
     <Application.Theme>

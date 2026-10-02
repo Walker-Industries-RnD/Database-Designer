@@ -10,7 +10,7 @@ namespace Database_Designer
 {
     public partial class RLSPolicyCreator : Page
     {
-        // Top-level data — kept in-memory so the page stays self-contained;
+        // Top-level data - kept in-memory so the page stays self-contained;
         // hooks at the bottom let MainPage persist this into the project file.
         public class PolicyRole
         {
@@ -47,7 +47,7 @@ namespace Database_Designer
             ["Economy"]       = Color.FromRgb(0x39, 0xA9, 0x5F),
         };
 
-        // Optional host — set when this page was opened from inside DBD's
+        // Optional host - set when this page was opened from inside DBD's
         // MainPage. Lets policy rows launch the underlying NodeWalker graph
         // editor against the project's per-policy session file.
         public MainPage HostPage { get; }
@@ -70,7 +70,7 @@ namespace Database_Designer
             _selectedRole = Roles.FirstOrDefault();
         }
 
-        // ── Top: role cards ───────────────────────────────────────────────
+        // Top: role cards
         private void RebuildAll()
         {
             RebuildRoleCards();
@@ -182,7 +182,7 @@ namespace Database_Designer
             };
         }
 
-        // ── Middle: selected role detail ──────────────────────────────────
+        // Middle: selected role detail
         private void RebuildSelectedRolePanel()
         {
             TableCardsHost.Children.Clear();
@@ -285,7 +285,7 @@ namespace Database_Designer
             return row;
         }
 
-        // ── Bottom: per-table policy editor ───────────────────────────────
+        // Bottom: per-table policy editor
         private void RebuildPolicyEditor()
         {
             PolicyRowsHost.Items.Clear();
@@ -413,7 +413,7 @@ namespace Database_Designer
             };
         }
 
-        // ── Toolbar handlers ──────────────────────────────────────────────
+        // Toolbar handlers
         private void CreateRoleFromInput()
         {
             var n = (NewRoleNameBox.Text ?? "").Trim();

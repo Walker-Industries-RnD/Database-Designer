@@ -114,7 +114,7 @@ BorderThickness="0" Name="Forward" />
                         </TextBlock.Foreground>
                     </TextBlock>
                     <TextBlock Text="Loading Count..." FontSize="24" Margin="48,72,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" FontFamily="Assets\Fonts\Inter_28pt-Light.ttf" Width="368" Name="ProjectsCountUI" Visibility="Visible" Foreground="#FF030303" />
-                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="432" Height="136" Orientation="Vertical" Background="#00D4D4D4" Margin="16,0,0,0" >
+                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="432" Orientation="Vertical" Background="#00D4D4D4" Margin="16,0,0,12" >
                         <Button Content="View Custom Datatypes" HorizontalAlignment="Left" VerticalAlignment="Top" Width="434" Height="44" Background="#FF9D9785" FontSize="15" Margin="0,6,0,0" Visibility="Collapsed" >
                             <Button.Foreground>
                                 <SolidColorBrush Color="{DynamicResource Theme_BackgroundColor}" />

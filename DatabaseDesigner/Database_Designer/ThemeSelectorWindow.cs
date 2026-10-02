@@ -32,7 +32,7 @@ namespace Database_Designer
         {
             _host = host;
             Width = 520;
-            Height = 560;
+            Height = 620;
             Background = new SolidColorBrush(Colors.Transparent);
 
             // Rounded card container
@@ -48,6 +48,7 @@ namespace Database_Designer
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // header
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // divider
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // list
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             root.Children.Add(BuildHeader());
 
@@ -72,6 +73,31 @@ namespace Database_Designer
             Grid.SetRow(scroller, 2);
             root.Children.Add(scroller);
 
+            var footer = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(24, 0, 24, 18)
+            };
+            var openFolder = MakeButton("Open Themes Folder", SecondaryBg, Cream, 150);
+            openFolder.Click += (s, e) =>
+            {
+                try
+                {
+                    var themesRoot = ThemeManager.ThemesRoot(_host.UserFolder);
+                    System.IO.Directory.CreateDirectory(themesRoot);
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = themesRoot, UseShellExecute = true });
+                }
+                catch (Exception ex) { Console.WriteLine($"[Themes] Could not open folder: {ex.Message}"); }
+            };
+            footer.Children.Add(openFolder);
+            var refresh = MakeButton("Refresh", SecondaryBg, Cream, 80);
+            refresh.Margin = new Thickness(8, 0, 0, 0);
+            refresh.Click += (s, e) => Rebuild();
+            footer.Children.Add(refresh);
+            Grid.SetRow(footer, 3);
+            root.Children.Add(footer);
+
             // Close button, overlaid top-right
             var close = new Button
             {
@@ -93,7 +119,7 @@ namespace Database_Designer
             {
                 if (_host.IntroPage.Children.Contains(this)) _host.IntroPage.Children.Remove(this);
             };
-            Grid.SetRowSpan(close, 3);
+            Grid.SetRowSpan(close, 4);
             root.Children.Add(close);
 
             card.Child = root;
@@ -164,7 +190,7 @@ namespace Database_Designer
             text.Children.Add(new TextBlock
             {
                 Text = "Apply a theme instantly, or set one as your default for next launch. " +
-                       "Drop theme folders (each with a theme.json) into your Themes\\ folder — a background image is optional.",
+                       "Drop theme folders (each with a theme.json) into your Themes\\ folder; a background image is optional.",
                 FontSize = 12,
                 FontFamily = Inter,
                 Foreground = new SolidColorBrush(Muted),
@@ -182,15 +208,16 @@ namespace Database_Designer
             _list.Children.Clear();
             var userFolder = _host.UserFolder;
             var current = ThemeManager.GetDefault(userFolder);
+            var active = ThemeManager.CurrentThemeName ?? current;
 
             foreach (var name in ThemeManager.AvailableThemes(userFolder))
             {
                 bool isDefault = name == current;
-                _list.Children.Add(BuildRow(userFolder, name, isDefault));
+                _list.Children.Add(BuildRow(userFolder, name, isDefault, name == active));
             }
         }
 
-        private UIElement BuildRow(string userFolder, string name, bool isDefault)
+        private UIElement BuildRow(string userFolder, string name, bool isDefault, bool isActive)
         {
             var rowBorder = new Border
             {
@@ -237,24 +264,8 @@ namespace Database_Designer
                 Foreground = new SolidColorBrush(Cream),
                 VerticalAlignment = VerticalAlignment.Center
             });
-            if (isDefault)
-            {
-                nameStack.Children.Add(new Border
-                {
-                    CornerRadius = new CornerRadius(6),
-                    Background = new SolidColorBrush(Accent),
-                    Margin = new Thickness(8, 0, 0, 0),
-                    Padding = new Thickness(7, 1, 7, 2),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Child = new TextBlock
-                    {
-                        Text = "DEFAULT",
-                        FontSize = 9,
-                        FontFamily = Inter,
-                        Foreground = new SolidColorBrush(AccentText)
-                    }
-                });
-            }
+            if (isDefault) nameStack.Children.Add(MakePill("DEFAULT", Accent, AccentText));
+            if (isActive) nameStack.Children.Add(MakePill("ACTIVE", Cream, AccentText));
             Grid.SetColumn(nameStack, 1);
             grid.Children.Add(nameStack);
 
@@ -266,7 +277,7 @@ namespace Database_Designer
             };
 
             var applyBtn = MakeButton("Apply", Accent, AccentText, 78);
-            applyBtn.Click += (s, e) => _host.ApplyTheme(name);
+            applyBtn.Click += (s, e) => { _host.ApplyTheme(name); Rebuild(); };
             buttons.Children.Add(applyBtn);
 
             var defaultBtn = MakeButton(isDefault ? "Default" : "Set Default", SecondaryBg, Cream, 100);
@@ -287,6 +298,22 @@ namespace Database_Designer
             rowBorder.Child = grid;
             return rowBorder;
         }
+
+        private static Border MakePill(string text, Color bg, Color fg) => new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            Background = new SolidColorBrush(bg),
+            Margin = new Thickness(8, 0, 0, 0),
+            Padding = new Thickness(7, 1, 7, 2),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock
+            {
+                Text = text,
+                FontSize = 9,
+                FontFamily = Inter,
+                Foreground = new SolidColorBrush(fg)
+            }
+        };
 
         private static Button MakeButton(string label, Color bg, Color fg, double width)
         {

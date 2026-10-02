@@ -31,6 +31,7 @@ namespace Database_Designer.Photino
                     {
                         if (_source.Position == 0 || !_shouldLoop()) break;
                         _source.Position = 0;
+                        AudioBridge.RaiseLooped();
                     }
                     total += read;
                 }
